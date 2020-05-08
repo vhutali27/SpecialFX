@@ -67,3 +67,13 @@ function onWindowResize(){
 
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+
+///////////////////////////////
+// Lighting                  //
+///////////////////////////////
+
+function initLighting(){
+    var directionalLight = new THREE.DirectionalLight(0Xffffff, 0.5); // parameters, color and intensity
+    scene.add(directionalLight);
+}
