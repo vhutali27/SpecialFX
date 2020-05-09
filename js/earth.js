@@ -62,65 +62,82 @@ class Planet{
     this.planet = new THREE.Mesh(planetGeometry, planetMaterial);
     this.planet.position.set(x, y, z);
     scene.add(this.planet);
-    this.theta = 0;
+
+		// Stores all the objects added to the planet
     this.planetObjects = new Array();
   }
 
-  addBall(){
-    var ballMaterial = new THREE.MeshPhongMaterial({
-    map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
-    color: 0xf2f2f2,
-    specular: 0xbbbbbb,
-    shininess: 2
-    });
-    var ball = getSphere(ballMaterial, 2, 48);
-    ball.position.set(this.x + this.radius,this.y,this.z);
-    this.planetObjects.push(ball);
-    scene.add(ball);
+	/**
+		* Attaches an object to the planet. This object will then experience
+		* the gravitational forces of the planets
+		* @param {type} obj Mesh
+		* @param {type} r Float
+		* @param {type} theta Float
+		* @param {type} phi Float
+	*/
+  addObject(obj, r, theta, phi){
+		var vector = new THREE.Vector3();
+		var sphere = new THREE.Spherical(r,theta,phi)
+		vector.setFromSpherical(sphere);
+    obj.position.set(this.x + vector.x,this.y + vector.y, this.z+ vector.z);
+    this.planetObjects.push({ObjectVar: obj, SphereCoordinate: sphere});
+    scene.add(obj);
   }
 
-  rotatePlanet(x_rotate, y_rotate, z_rotate){
-    this.planet.rotation.x += x_rotate;
-    this.planet.rotation.y += y_rotate;
-    this.planet.rotation.z += z_rotate;
+	// We are going to need to use polar coordinates
+	/**
+		* Function to rotate the planet
+		* @param {type} theta Float
+		* @param {type} phi Float
+ 	*/
+  rotatePlanet(theta, phi){
+    this.planet.rotation.x += theta;
+    this.planet.rotation.y += phi;
 
-    var r = this.x + this.radius;
-    this.theta += -y_rotate;
     for(var i = 0; i<this.planetObjects.length; i++){
-      this.planetObjects[i].position.x = r * Math.cos(this.theta);
-      this.planetObjects[i].position.z = r * Math.sin(this.theta);
+			var obj = this.planetObjects[i];
+			obj.SphereCoordinate.theta += theta;
+			obj.SphereCoordinate.phi += phi;
+
+			var vector = new THREE.Vector3();
+			vector.setFromSpherical(obj.SphereCoordinate);
+
+      obj.ObjectVar.position.x = this.x + vector.x;
+			obj.ObjectVar.position.y = this.y + vector.y;
+      obj.ObjectVar.position.z = this.z + vector.z;
     }
   }
 }
 
-//Earth
+// Mars
 var earthMaterial = new THREE.MeshPhongMaterial({
-map: new THREE.ImageUtils.loadTexture("images/planet_2.jpg"),
-color: 0xf2f2f2,
+//map: new THREE.ImageUtils.loadTexture("images/texture2.jpg"),
+color: 0x72f2f2,
 specular: 0xbbbbbb,
 shininess: 2
 });
 var earth = new Planet(20, 50, 50, earthMaterial, 0, 0, 0);
-earth.addBall();
 
-//Earth
-var marsMaterial = new THREE.MeshPhongMaterial({
-map: new THREE.ImageUtils.loadTexture("images/planet_1.jpg"),
+var ballMaterial = new THREE.MeshPhongMaterial({
+//map: new THREE.ImageUtils.loadTexture("images/texture6.jpg"),
 color: 0xf2f2f2,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var mars = new Planet(20, 50, 50, earthMaterial, 40, 40, 40);
-mars.addBall();
-//Clouds
-/*var cloudGeometry = new THREE.SphereGeometry(10.3,  50, 50);
-var cloudMaterial = new THREE.MeshPhongMaterial({
-map: new THREE.ImageUtils.loadTexture("/images/texture4.jpg"),
-transparent: true,
-opacity: 0.1
+earth.addObject(getSphere(ballMaterial, 2, 48),23,0,0);
+earth.addObject(getSphere(earthMaterial, 2, 48),23,1,2);
+
+
+// Mars
+var marsMaterial = new THREE.MeshPhongMaterial({
+//map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
+color: 0x464742,
+specular: 0xbbbbbb,
+shininess: 2
 });
-var clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
-scene.add(clouds);*/
+var mars = new Planet(20, 50, 50, marsMaterial, 40, 40, 40);
+mars.addObject(getSphere(earthMaterial, 2, 48),22,0,0);
+mars.addObject(getSphere(ballMaterial, 2, 48),22,2,0);
 
 //Stars
 var starGeometry = new THREE.SphereGeometry(1000, 50, 50);
@@ -156,8 +173,8 @@ var dz = -.05;
 
 //Render loop
 var render = function() {
-          earth.rotatePlanet(0,.009,0);
-          mars.rotatePlanet(0,0.069,0);
+          earth.rotatePlanet(0.01,0);
+          mars.rotatePlanet(0,0.01);
           //Moon orbit
           theta += dTheta;
           moon.position.x = r * Math.cos(theta);
