@@ -1,39 +1,33 @@
-//////////////////////////////////////////////////
-// GLOBAL vARIABLES                             //
-//////////////////////////////////////////////////
+//Camera, scene, and renderer
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 2000);
 var AnimateObject = new Array();
 var WorldObjects = new Array();
+//var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 2000);
+//scene.add(camera);
+//camera.position.set(0,35,70);
 
+var renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setClearColor( 0xffffff );
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-//////////////////////////////////////////////////
-// LIGHTING                                     //
-//////////////////////////////////////////////////
+window.addEventListener( 'resize', onWindowResize, false );
 
-function initLighting(){
-    //Lights
-    var ambientLight = new THREE.AmbientLight(0xf1f1f1);
-    scene.add(ambientLight);
+//Orbit Controls
+//var orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
 
-    var spotLight = new THREE.DirectionalLight(0xffffff);
-    spotLight.position.set(60,60,60);
-    scene.add(spotLight);
+//Lights
+var ambientLight = new THREE.AmbientLight(0xf1f1f1);
+scene.add(ambientLight);
 
-}
-
-//////////////////////////////////////////////////
-// CREATING THE WORLD                           //
-//////////////////////////////////////////////////
-
-
-// Planet Orbit Variables
-var r = 35;
-var theta = 0;
-var dTheta = 2 * Math.PI / 1000;
-
+var spotLight = new THREE.DirectionalLight(0xffffff);
+spotLight.position.set(60,60,60);
+scene.add(spotLight);
 
 //Objects (We build a mesh using a geometry and a material)
+
 /**
 	* Function that makes a sphere
 	* @param {type} material THREE.SOME_TYPE_OF_CONSTRUCTED_MATERIAL
@@ -54,160 +48,6 @@ function getSquare(material, size){
 	obj.castShadow = true;
 	return obj;
 }
-
-// Class for planets
-class Planet{
-
-  /**
-    * constructor
-    * @param {type} radius Float
-    * @param {type} widthSegments integer
-    * @param {type}  heightSegments integer
-    * @param {type} planetMaterial Material
-
-    for Position
-    * @param {type} x Float
-    * @param {type} y Float
-    * @param {type} z Float
-
-		for rotation
-		* @param {type} theta Float
-		* @param {type} phi Float
-  */
-  constructor(radius, width, height, planetMaterial, x, y, z, theta, phi){
-    var planetGeometry = new THREE.SphereGeometry(radius, width, height);
-
-    this.radius = radius;
-    this.width = width;
-    this.height = height;
-    this.x = x;
-    this.y = y;
-    this.z = z;
-		this.theta = theta;
-		this.phi = phi;
-
-    this.planet = new THREE.Mesh(planetGeometry, planetMaterial);
-    this.planet.position.set(x, y, z);
-    scene.add(this.planet);
-		WorldObjects.push(this.planet);
-
-		// Stores all the objects added to the planet
-    this.planetObjects = new Array();
-  }
-
-	/**
-		* Attaches an object to the planet. This object will then experience
-		* the gravitational forces of the planets
-		* @param {type} obj Mesh
-		* @param {type} r Float
-		* @param {type} theta Float
-		* @param {type} phi Float
-	*/
-  addObject(obj, r, theta, phi){
-		var vector = new THREE.Vector3();
-		var sphere = new THREE.Spherical(r,theta,phi)
-		vector.setFromSpherical(sphere);
-    obj.position.set(this.x + vector.x,this.y + vector.y, this.z+ vector.z);
-    this.planetObjects.push({ObjectVar: obj, SphereCoordinate: sphere});
-    scene.add(obj);
-  }
-
-	// We are going to need to use polar coordinates
-	/**
-		* Function to rotate the planet
-		* @param {type} theta Float
-		* @param {type} phi Float
- 	*/
-  animate(){
-		var theta = this.theta;
-		var phi = this.phi;
-    this.planet.rotation.x += theta;
-    this.planet.rotation.y += phi;
-
-		var planetTheta = this.planet.rotation.x;
-		var planetPhi = this.planet.rotation.y;
-
-		for(var i = 0; i<this.planetObjects.length; i++){
-			var obj = this.planetObjects[i];
-			obj.SphereCoordinate.theta += theta;
-			obj.SphereCoordinate.phi += phi;
-
-			var vector = new THREE.Vector3();
-			vector.setFromSpherical(obj.SphereCoordinate);
-
-      obj.ObjectVar.position.x = this.x + vector.x;
-			obj.ObjectVar.position.y = this.y + vector.y;
-      obj.ObjectVar.position.z = this.z + vector.z;
-    }
-  }
-}
-
-// Earth
-function createEarth(){
-  earthMaterial = new THREE.MeshPhongMaterial({
-  map: new THREE.ImageUtils.loadTexture("images/texture2.jpg"),
-  color: 0x72f2f2,
-  specular: 0xbbbbbb,
-  shininess: 2
-  });
-  earth = new Planet(20, 50, 50, earthMaterial, -20, -200, -70, 0.01, 0);
-
-  ballMaterial = new THREE.MeshPhongMaterial({
-  //map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
-  color: 0xf2f2f2,
-  specular: 0xbbbbbb,
-  shininess: 2
-  });
-  AnimateObject.push(earth);
-  earth.addObject(getSquare(ballMaterial, 2),23,3,3);
-  earth.addObject(getSquare(earthMaterial, 2),23,1,2);
-
-}
-
-// Mars
-function createMars(){
-  var marsMaterial = new THREE.MeshPhongMaterial({
-  //map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
-  color: 0x464742,
-  specular: 0xbbbbbb,
-  shininess: 2
-  });
-  mars = new Planet(20, 50, 50, marsMaterial, 40, 40, 40, 0.02, 0);
-  AnimateObject.push(mars);
-  mars.addObject(getSquare(earthMaterial, 2, 48),22,0,0);
-  mars.addObject(getSquare(ballMaterial, 2, 48),22,2,0);
-}
-
-
-
- //Stars
- function createStars(){
-    var starGeometry = new THREE.SphereGeometry(1000, 50, 500);
-    var starMaterial = new THREE.MeshPhongMaterial({
-    map: new THREE.ImageUtils.loadTexture("/images/galaxy_starfield.png"),
-    side: THREE.DoubleSide,
-    shininess: 0
-    });
-    var starField = new THREE.Mesh(starGeometry, starMaterial);
-    scene.add(starField);
- }
-
-//Moon
-function createMoon(){
-    var moonGeometry = new THREE.SphereGeometry(3.5, 50,50);
-    var moonMaterial = new THREE.MeshPhongMaterial({
-        map: THREE.ImageUtils.loadTexture("/images/texture7.jpg")
-    });
-    moon = new THREE.Mesh(moonGeometry, moonMaterial);
-    moon.position.set(45,20,0);
-    scene.add(moon);
-    WorldObjects.push(moon);
-}
-
-
-//////////////////////////////////////////////////
-// PLAYER                                       //
-//////////////////////////////////////////////////
 
 // Player Controls
 var controlsEnabled = false;
@@ -382,11 +222,152 @@ class Player{
 	}
 }
 
+// Class for planets
+class Planet{
 
-//////////////////////////////////////////////////
-// MENU AND GAME SCREEN.                        //
-//////////////////////////////////////////////////
+  /**
+    * constructor
+    * @param {type} radius Float
+    * @param {type} widthSegments integer
+    * @param {type}  heightSegments integer
+    * @param {type} planetMaterial Material
 
+    for Position
+    * @param {type} x Float
+    * @param {type} y Float
+    * @param {type} z Float
+
+		for rotation
+		* @param {type} theta Float
+		* @param {type} phi Float
+  */
+  constructor(radius, width, height, planetMaterial, x, y, z, theta, phi){
+    var planetGeometry = new THREE.SphereGeometry(radius, width, height);
+
+    this.radius = radius;
+    this.width = width;
+    this.height = height;
+    this.x = x;
+    this.y = y;
+    this.z = z;
+		this.theta = theta;
+		this.phi = phi;
+
+    this.planet = new THREE.Mesh(planetGeometry, planetMaterial);
+    this.planet.position.set(x, y, z);
+    scene.add(this.planet);
+		WorldObjects.push(this.planet);
+
+		// Stores all the objects added to the planet
+    this.planetObjects = new Array();
+  }
+
+	/**
+		* Attaches an object to the planet. This object will then experience
+		* the gravitational forces of the planets
+		* @param {type} obj Mesh
+		* @param {type} r Float
+		* @param {type} theta Float
+		* @param {type} phi Float
+	*/
+  addObject(obj, r, theta, phi){
+		var vector = new THREE.Vector3();
+		var sphere = new THREE.Spherical(r,theta,phi)
+		vector.setFromSpherical(sphere);
+    obj.position.set(this.x + vector.x,this.y + vector.y, this.z+ vector.z);
+    this.planetObjects.push({ObjectVar: obj, SphereCoordinate: sphere});
+    scene.add(obj);
+  }
+
+	// We are going to need to use polar coordinates
+	/**
+		* Function to rotate the planet
+		* @param {type} theta Float
+		* @param {type} phi Float
+ 	*/
+  animate(){
+		var theta = this.theta;
+		var phi = this.phi;
+    this.planet.rotation.x += theta;
+    this.planet.rotation.y += phi;
+
+		var planetTheta = this.planet.rotation.x;
+		var planetPhi = this.planet.rotation.y;
+
+		for(var i = 0; i<this.planetObjects.length; i++){
+			var obj = this.planetObjects[i];
+			obj.SphereCoordinate.theta += theta;
+			obj.SphereCoordinate.phi += phi;
+
+			var vector = new THREE.Vector3();
+			vector.setFromSpherical(obj.SphereCoordinate);
+
+      obj.ObjectVar.position.x = this.x + vector.x;
+			obj.ObjectVar.position.y = this.y + vector.y;
+      obj.ObjectVar.position.z = this.z + vector.z;
+    }
+  }
+}
+
+// Mars
+var earthMaterial = new THREE.MeshPhongMaterial({
+map: new THREE.ImageUtils.loadTexture("images/texture2.jpg"),
+color: 0x72f2f2,
+specular: 0xbbbbbb,
+shininess: 2
+});
+var earth = new Planet(20, 50, 50, earthMaterial, -20, -200, -70, 0.01, 0);
+
+var ballMaterial = new THREE.MeshPhongMaterial({
+//map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
+color: 0xf2f2f2,
+specular: 0xbbbbbb,
+shininess: 2
+});
+AnimateObject.push(earth);
+earth.addObject(getSquare(ballMaterial, 2),23,3,3);
+earth.addObject(getSquare(earthMaterial, 2),23,1,2);
+
+
+// Mars
+var marsMaterial = new THREE.MeshPhongMaterial({
+//map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
+color: 0x464742,
+specular: 0xbbbbbb,
+shininess: 2
+});
+var mars = new Planet(20, 50, 50, marsMaterial, 40, 40, 40, 0.02, 0);
+AnimateObject.push(mars);
+mars.addObject(getSquare(earthMaterial, 2, 48),22,0,0);
+mars.addObject(getSquare(ballMaterial, 2, 48),22,2,0);
+
+//Stars
+var starGeometry = new THREE.SphereGeometry(1000, 50, 500);
+var starMaterial = new THREE.MeshPhongMaterial({
+map: new THREE.ImageUtils.loadTexture("/images/galaxy_starfield.png"),
+side: THREE.DoubleSide,
+shininess: 0
+});
+var starField = new THREE.Mesh(starGeometry, starMaterial);
+scene.add(starField);
+
+//Moon
+var moonGeometry = new THREE.SphereGeometry(3.5, 50,50);
+var moonMaterial = new THREE.MeshPhongMaterial({
+map: THREE.ImageUtils.loadTexture("/images/texture7.jpg")
+});
+var moon = new THREE.Mesh(moonGeometry, moonMaterial);
+moon.position.set(45,20,0);
+scene.add(moon);
+WorldObjects.push(moon);
+
+// Initialize player
+var player = new Player();
+AnimateObject.push(player);
+player.setTargetPlanet(earth);
+
+
+// Menu and Game Screen. FullScreenChange
 var blocker = document.getElementById( 'blocker' );
 var instructions = document.getElementById( 'instructions' );
 // https://www.html5rocks.com/en/tutorials/pointerlock/intro/
@@ -445,65 +426,20 @@ function onWindowResize() {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
+// Planet Orbit Variables
+var r = 35;
+var theta = 0;
+var dTheta = 2 * Math.PI / 1000;
 
-//////////////////////////////////////////////////
-// INIT THREE.JS                                //
-//////////////////////////////////////////////////
-
-function init(){
-    scene = new THREE.Scene();
-    fov = 70; // field of view
-    width = window.innerWidth;
-    height = window.innerHeight;
-    // camera = new THREE.PerspectiveCamera(fov, width/height, 0.1,1000000);
-    // camera.position.set(0,0,-4500); //initial camera position
-
-    renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.setClearColor( 0xffffff );
-    renderer.setPixelRatio( window.devicePixelRatio );
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    window.addEventListener( 'resize', onWindowResize, false );
-
-
-    // Add lighting
-    initLighting();
-
-
-    // Create the planets
-    createEarth();
-    createMars();
-    createMoon();
-    createStars();
-
-
-    // Initialize player
-    var player = new Player();
-    AnimateObject.push(player);
-    player.setTargetPlanet(earth);
-}
-
-
-//////////////////////////////////////////////////
-// RENDERING                                    //
-//////////////////////////////////////////////////
-
-
+//Render loop
 var render = function() {
-  AnimateObject.forEach(function(object){object.animate();});
-  //Moon orbit
-  theta += dTheta;
-  moon.position.x = r * Math.cos(theta);
-  moon.position.z = r * Math.sin(theta);
+					AnimateObject.forEach(function(object){object.animate();});
+          //Moon orbit
+          theta += dTheta;
+          moon.position.x = r * Math.cos(theta);
+          moon.position.z = r * Math.sin(theta);
 
-  renderer.render(scene, camera);
-  requestAnimationFrame(render);
+          renderer.render(scene, camera);
+          requestAnimationFrame(render);
 };
-
-//////////////////////////////////////////////////
-// INITIALISE AND RENDER SCENE                  //
-//////////////////////////////////////////////////
-
-init();
 render();
