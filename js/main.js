@@ -124,7 +124,7 @@ document.addEventListener( 'keyup', onKeyUp, false );
 // Raycasting is used for working out which object the mouse is pointing at
 var raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
 var controls = new THREE.PointerLockControls(camera);
-controls.getObject().position.set(150, 800, 500);
+controls.getObject().position.set(-500, 800, -900);
 scene.add(controls.getObject());
 // Class for Player
 class Player{
@@ -136,6 +136,7 @@ class Player{
 		this.DistanceFromPlanet = 0;
 		this.PlayerHeight = 0;
 		this.TravelDistance = 0;
+		this.quaternion = new THREE.Quaternion();
 	}
 
 	getVector3(xyz){
@@ -152,6 +153,7 @@ class Player{
 		}
 		this.TravelDistance = 0;
 		this.TargetPlanet = planet;
+		this.quaternion.setFromAxisAngle( this.TargetPlanet, Math.PI/2);
 		this.LandedOnPlanet = false;
 		this.DistanceFromPlanet = this.getDistance();
 	}
@@ -179,6 +181,33 @@ class Player{
 				// After you land the SphereCoords are still centered at (0,0,0) instead
 				// of the new planet. We need to find a way to center SphereCoords on the new planet
 				if(this.LandedOnPlanet === true){
+
+					if (moveLeft) { // left
+					    this.quaternion.multiply(new THREE.Quaternion(0, Math.sin(-0.01), 0, Math.cos(-0.01)));
+					}
+
+					if (moveRight) { // right
+					    this.quaternion.multiply(new THREE.Quaternion(0, Math.sin(0.01), 0, Math.cos(0.01)));
+					}
+
+					if (moveForward) { // up
+					    this.quaternion.multiply(new THREE.Quaternion(Math.sin(-0.01), 0, 0, Math.cos(-0.01)));
+					}
+
+					if (moveBackward) { // down
+					    this.quaternion.multiply(new THREE.Quaternion(Math.sin(0.01), 0, 0, Math.cos(0.01)));
+					}
+
+					var qx = this.quaternion.x;
+					var qy = this.quaternion.y;
+					var qz = this.quaternion.z;
+					var qw = this.quaternion.w;
+					var radius = 80;
+					controls.getObject().position.x = 2 * (qy * qw + qz * qx) * radius;
+					controls.getObject().position.y = 2 * (qz * qy - qw * qx) * radius;
+					controls.getObject().position.z = ((qz * qz + qw * qw) - (qx * qx + qy * qy)) * radius;
+
+
 					// This needs to work on all 3 coordinates. It currently works on two.
 					//if ( moveForward ) controls.getObject().position.applyAxisAngle(this.TargetPlanet,Math.PI);//this.SphereCoords.phi -= 1.0 * delta;
 					//if ( moveBackward ) this.SphereCoords.phi += 1.0 * delta;
@@ -294,17 +323,7 @@ class Planet{
   }
 
 	addToPivot(obj){
-		// Move the pivot and the obj to the center. Add then move the pivot back.
-		this.pivot.position.set( 0, 0, 0);
-		obj.position.x -= this.x;
-		obj.position.y -= this.y;
-		obj.position.z -= this.z;
 		this.pivot.add(obj);
-		this.pivot.position.set(this.x, this.y, this.z);
-		obj.position.x += this.x;
-		obj.position.y += this.y;
-		obj.position.z += this.z;
-
 	}
 
 	// We are going to need to use polar coordinates
@@ -316,6 +335,10 @@ class Planet{
   animate(){
     this.planet.rotation.x += this.xRotation;
     this.planet.rotation.y += this.yRotation;
+		for(var i =0; i< this.pivot.length; i++){
+			this.pivot[i].rotation.x += this.xRotation;
+			this.pivot[i].rotation.y += this.yRotation;
+		}
   }
 }
 
@@ -339,10 +362,10 @@ specular: 0xbbbbbb,
 shininess: 2
 });
 AnimateObject.push(earth);
-earth.addObject(getSquare(ballMaterial, 2),22,3,0);
-earth.addObject(getSquare(ballMaterial, 2),22,2,1);
-earth.addObject(getSquare(ballMaterial, 2),22,1,2);
-earth.addObject(getSphere(ballMaterial, 2, 48),22,0,3);
+for(var i=0; i<6; i+=0.5){
+	earth.addObject(getSquare(ballMaterial, 2),22,i,0);
+}
+
 
 //earth.addObject(getSquare(earthMaterial, 2),23,1,2);
 
