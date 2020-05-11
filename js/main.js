@@ -124,9 +124,7 @@ document.addEventListener( 'keyup', onKeyUp, false );
 // Raycasting is used for working out which object the mouse is pointing at
 var raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
 var controls = new THREE.PointerLockControls(camera);
-controls.getObject().position.x = 150;
-controls.getObject().position.y = 800;
-controls.getObject().position.z = 500;
+controls.getObject().position.set(150, 800, 500);
 scene.add(controls.getObject());
 // Class for Player
 class Player{
@@ -135,13 +133,8 @@ class Player{
 		this.TargetPlanet = null;
 		this.LandedOnPlanet = false;
 
-		this.SphereCoords = new THREE.Spherical();
-		this.SphereCoords.setFromVector3(this.getVector3(controls.getObject().position));
-
 		this.DistanceFromPlanet = 0;
-		this.PlayerHeight = 2;
-		this.PlanetSphereCoord = new THREE.Spherical();
-
+		this.PlayerHeight = 0;
 		this.TravelDistance = 0;
 	}
 
@@ -150,21 +143,22 @@ class Player{
 	}
 
 	setTargetPlanet(planet){
+		// Add the characters pivot on the planets pivot
+
+		// Check if is already attached to another planet
+		if(this.TargetPlanet!== null){
+			// Character from that planets pivot
+			this.TargetPlanet.pivot.remove(contorls.getObject());
+		}
 		this.TravelDistance = 0;
 		this.TargetPlanet = planet;
 		this.LandedOnPlanet = false;
 		this.DistanceFromPlanet = this.getDistance();
-		this.PlanetSphereCoord.setFromVector3( this.getVector3(planet) );
 	}
 
 	getDistance(){
-		// The distance between the origin of the planet and the position of the player is going to be r
-		// d = ((x2 - x1)^2 + (y2 - y1)^2 + (z2 - z1)^2)^0.5
 		if(this.TargetPlanet!== null){
-			var con = controls.getObject().position;
-			var planet = this.TargetPlanet;
-			var d = Math.sqrt(Math.pow(planet.x - con.x,2) + Math.pow(planet.y - con.y,2) + Math.pow(planet.z - con.z,2));
-			return d - this.PlayerHeight - planet.radius;
+			return controls.getObject().position.distanceTo(this.TargetPlanet);
 		}
 		else return 0;
 	}
@@ -172,7 +166,6 @@ class Player{
 	animate(){
 		if ( controlsEnabled ) {
 			if(this.TargetPlanet !== null){
-				this.SphereCoords.setFromVector3(this.getVector3(controls.getObject().position));
 
 				raycaster.ray.origin.copy( controls.getObject().position );
 				raycaster.ray.origin.y -= 10;
@@ -187,49 +180,50 @@ class Player{
 				// of the new planet. We need to find a way to center SphereCoords on the new planet
 				if(this.LandedOnPlanet === true){
 					// This needs to work on all 3 coordinates. It currently works on two.
-					if ( moveForward ) this.SphereCoords.phi -= 1.0 * delta;
-					if ( moveBackward ) this.SphereCoords.phi += 1.0 * delta;
-					if ( moveLeft ) this.SphereCoords.theta -= 1.0 * delta;
-					if ( moveRight ) this.SphereCoords.theta += 1.0 * delta;
+					//if ( moveForward ) controls.getObject().position.applyAxisAngle(this.TargetPlanet,Math.PI);//this.SphereCoords.phi -= 1.0 * delta;
+					//if ( moveBackward ) this.SphereCoords.phi += 1.0 * delta;
+					//if ( moveLeft ) this.SphereCoords.theta -= 1.0 * delta;
+					//if ( moveRight ) this.SphereCoords.theta += 1.0 * delta;
 				}
 				else{
 					// Rotate the character
-
 
 					// Move character towards planet
 					var c = controls.getObject().position;
 					var p = this.TargetPlanet;
 					this.TravelDistance+=0.08;
 					var step = (this.TravelDistance/this.DistanceFromPlanet)*(Math.PI/2);
-					controls.getObject().position.x = c.x + ((p.x - c.x)*step);
-					controls.getObject().position.y = c.y + ((p.y - c.y)*step);
-					controls.getObject().position.z = c.z + ((p.z - c.z)*step);
-					this.SphereCoords.setFromVector3(this.getVector3(controls.getObject().position));
+					controls.getObject().position.set( c.x + ((p.x - c.x)*step),// x
+					c.y + ((p.y - c.y)*step),// y
+					c.z + ((p.z - c.z)*step));// z
 				}
 
 				if ( isOnObject === true ) {
+					if (this.LandedOnPlanet === false) {
+						this.TargetPlanet.addToPivot(controls.getObject());
+					}
 					this.LandedOnPlanet = true;
-					//this.SphereCoords.radius = this.PlayerHeight + this.TargetPlanet.radius;
 					canJump = true;
 				}
 				if(this.LandedOnPlanet === true){
-					var Translation = new THREE.Vector3();
-					Translation.setFromSpherical(this.SphereCoords);
-					controls.getObject().position.x = Translation.x;
-					controls.getObject().position.y = Translation.y;
-					controls.getObject().position.z = Translation.z;
+					//var Translation = new THREE.Vector3();
+					//Translation.setFromSpherical(this.SphereCoords);
+					//controls.getObject().position.set( Translation.x,Translation.y,Translation.z);
 				}
-
+				if(this.getDistance()>this.TargetPlanet.Radius+10){
+					this.LandedOnPlanet = false;
+					if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(controls.getObject());
+					isOnObject = false;
+				}
 				if ( this.getDistance()<0 ) {
 					this.LandedOnPlanet = true;
-					this.SphereCoords.setFromVector3(this.getVector3(controls.getObject().position));
-					this.SphereCoords.radius = this.PlayerHeight + this.TargetPlanet.radius;
-					var vec = new THREE.Vector3();
-					vec.setFromSpherical(this.SphereCoords);
-					controls.getObject().position.x = vec.x;
-					controls.getObject().position.y = vec.y;
-					controls.getObject().position.z = vec.z;
-
+					// Move character away from planet
+					var c = controls.getObject().position;
+					var p = this.TargetPlanet;
+					var step = (1-1/this.TargetPlanet.Radius)*(Math.PI/2);
+					controls.getObject().position.set( c.x + ((p.x - c.x)*step),// x
+					c.y + ((p.y - c.y)*step),// y
+					c.z + ((p.z - c.z)*step));// z
 					velocity.y = 0;
 					canJump = true;
 				}
@@ -258,7 +252,7 @@ class Planet{
 		* @param {type} theta Float
 		* @param {type} phi Float
   */
-  constructor(radius, width, height, planetMaterial, x, y, z, theta, phi){
+  constructor(radius, width, height, planetMaterial, x, y, z, xRotation, yRotation){
     var planetGeometry = new THREE.SphereGeometry(radius, width, height);
 
     this.radius = radius;
@@ -267,11 +261,13 @@ class Planet{
     this.x = x;
     this.y = y;
     this.z = z;
-		this.theta = theta;
-		this.phi = phi;
+		this.xRotation = xRotation;
+		this.yRotation = yRotation;
 
     this.planet = new THREE.Mesh(planetGeometry, planetMaterial);
     this.planet.position.set(x, y, z);
+		this.pivot = new THREE.Group();
+		this.planet.add(this.pivot);
     scene.add(this.planet);
 		WorldObjects.push(this.planet);
 
@@ -294,35 +290,32 @@ class Planet{
     obj.position.set(this.x + vector.x,this.y + vector.y, this.z+ vector.z);
     this.planetObjects.push({ObjectVar: obj, SphereCoordinate: sphere});
     scene.add(obj);
+		this.addToPivot(obj);
   }
+
+	addToPivot(obj){
+		// Move the pivot and the obj to the center. Add then move the pivot back.
+		this.pivot.position.set( 0, 0, 0);
+		obj.position.x -= this.x;
+		obj.position.y -= this.y;
+		obj.position.z -= this.z;
+		this.pivot.add(obj);
+		this.pivot.position.set(this.x, this.y, this.z);
+		obj.position.x += this.x;
+		obj.position.y += this.y;
+		obj.position.z += this.z;
+
+	}
 
 	// We are going to need to use polar coordinates
 	/**
 		* Function to rotate the planet
-		* @param {type} theta Float
-		* @param {type} phi Float
+		* @param {type} xRotation Float
+		* @param {type} yRotation Float
  	*/
   animate(){
-		var theta = this.theta;
-		var phi = this.phi;
-    this.planet.rotation.x += theta;
-    this.planet.rotation.y += phi;
-
-		var planetTheta = this.planet.rotation.x;
-		var planetPhi = this.planet.rotation.y;
-
-		for(var i = 0; i<this.planetObjects.length; i++){
-			var obj = this.planetObjects[i];
-			obj.SphereCoordinate.theta += theta;
-			obj.SphereCoordinate.phi += phi;
-
-			var vector = new THREE.Vector3();
-			vector.setFromSpherical(obj.SphereCoordinate);
-
-      obj.ObjectVar.position.x = this.x + vector.x;
-			obj.ObjectVar.position.y = this.y + vector.y;
-      obj.ObjectVar.position.z = this.z + vector.z;
-    }
+    this.planet.rotation.x += this.xRotation;
+    this.planet.rotation.y += this.yRotation;
   }
 }
 
@@ -332,12 +325,12 @@ class Planet{
 
 // Earth
 var earthMaterial = new THREE.MeshPhongMaterial({
-map: new THREE.ImageUtils.loadTexture("images/texture2.jpg"),
+map: new THREE.ImageUtils.loadTexture("images/planet_2.jpg"),
 color: 0x72f2f2,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var earth = new Planet(20, 50, 50, earthMaterial, -20, -200, -70, 0.01, 0);
+var earth = new Planet(20, 50, 50, earthMaterial, 0, 0, 0, 0.01, 0);
 
 var ballMaterial = new THREE.MeshPhongMaterial({
 //map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
@@ -346,20 +339,24 @@ specular: 0xbbbbbb,
 shininess: 2
 });
 AnimateObject.push(earth);
-earth.addObject(getSquare(ballMaterial, 2),23,3,3);
-earth.addObject(getSquare(earthMaterial, 2),23,1,2);
+earth.addObject(getSquare(ballMaterial, 2),22,3,0);
+earth.addObject(getSquare(ballMaterial, 2),22,2,1);
+earth.addObject(getSquare(ballMaterial, 2),22,1,2);
+earth.addObject(getSphere(ballMaterial, 2, 48),22,0,3);
+
+//earth.addObject(getSquare(earthMaterial, 2),23,1,2);
 
 // Mars
 var marsMaterial = new THREE.MeshPhongMaterial({
-//map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
+map: new THREE.ImageUtils.loadTexture("images/planet_1.jpg"),
 color: 0x464742,
 specular: 0xbbbbbb,
 shininess: 2
 });
 var mars = new Planet(20, 50, 50, marsMaterial, 40, 40, 40, 0.02, 0);
 AnimateObject.push(mars);
-mars.addObject(getSquare(earthMaterial, 2, 48),22,0,0);
-mars.addObject(getSquare(ballMaterial, 2, 48),22,2,0);
+//mars.addObject(getSquare(earthMaterial, 2, 48),22,0,0);
+//mars.addObject(getSquare(ballMaterial, 2, 48),22,2,0);
 
 //Stars
 var starGeometry = new THREE.SphereGeometry(1000, 50, 500);
@@ -374,7 +371,7 @@ scene.add(starField);
 //Moon
 var moonGeometry = new THREE.SphereGeometry(3.5, 50,50);
 var moonMaterial = new THREE.MeshPhongMaterial({
-map: THREE.ImageUtils.loadTexture("/images/texture7.jpg")
+map: THREE.ImageUtils.loadTexture("/images/sky-with-stars-illustration-957061.jpg")
 });
 var moon = new THREE.Mesh(moonGeometry, moonMaterial);
 moon.position.set(45,20,0);
@@ -462,8 +459,7 @@ var render = function() {
   AnimateObject.forEach(function(object){object.animate();});
   //Moon orbit
   theta += dTheta;
-  moon.position.x = r * Math.cos(theta);
-  moon.position.z = r * Math.sin(theta);
+  moon.position.set( r * Math.cos(theta), 0, r * Math.sin(theta));
 
   renderer.render(scene, camera);
   requestAnimationFrame(render);
