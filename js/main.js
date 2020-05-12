@@ -68,6 +68,8 @@ function getSquare(material, size){
 
 // Player Controls
 var controlsEnabled = false;
+var rightClick = false;
+var leftClick = false;
 var moveForward = false;
 var moveBackward = false;
 var moveLeft = false;
@@ -77,6 +79,12 @@ var prevTime = performance.now();
 var velocity = new THREE.Vector3();
 var onKeyDown = function ( event ) {
 	switch ( event.keyCode ) {
+		case 1:
+			leftClick = true;
+			break;
+		case 3:
+			rightClick = true;
+			break;
 		case 38: // up
 		case 87: // w
 			moveForward = true;
@@ -100,6 +108,12 @@ var onKeyDown = function ( event ) {
 };
 var onKeyUp = function ( event ) {
 	switch( event.keyCode ) {
+		case 1:
+			leftClick = false;
+			break;
+		case 3:
+			rightClick = false;
+			break;
 		case 38: // up
 		case 87: // w
 			moveForward = false;
@@ -124,7 +138,7 @@ document.addEventListener( 'keyup', onKeyUp, false );
 // Raycasting is used for working out which object the mouse is pointing at
 var raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
 var controls = new THREE.PointerLockControls(camera);
-controls.getObject().position.set(-500, 800, -900);
+controls.getObject().position.set(300, 300, 0);
 scene.add(controls.getObject());
 // Class for Player
 class Player{
@@ -134,7 +148,7 @@ class Player{
 		this.LandedOnPlanet = false;
 
 		this.DistanceFromPlanet = 0;
-		this.PlayerHeight = 0;
+		this.PlayerHeight = 2;
 		this.TravelDistance = 0;
 		this.quaternion = new THREE.Quaternion();
 	}
@@ -153,7 +167,7 @@ class Player{
 		}
 		this.TravelDistance = 0;
 		this.TargetPlanet = planet;
-		this.quaternion.setFromAxisAngle( this.TargetPlanet, Math.PI/2);
+		this.quaternion.setFromAxisAngle( this.TargetPlanet, Math.PI/2);// This axis is incorrect. 
 		this.LandedOnPlanet = false;
 		this.DistanceFromPlanet = this.getDistance();
 	}
@@ -173,46 +187,57 @@ class Player{
 				raycaster.ray.origin.y -= 10;
 
 				var intersections = raycaster.intersectObjects( WorldObjects );
-				var isOnObject = intersections.length > 0;
+				var isOnObject = false;
+				if (intersections.length > 0) {
+					var firstObjectIntersected = intersections[0];
+					isOnObject= true;
+				}
+
+				if ( isOnObject === true ) {
+					if (this.LandedOnPlanet === false) {
+						this.TargetPlanet.addToPivot(controls.getObject());
+					}
+					this.LandedOnPlanet = true;
+					canJump = true;
+				}
 
 				var time = performance.now();
 				var delta = ( time - prevTime ) / 1000;
 
 				// After you land the SphereCoords are still centered at (0,0,0) instead
 				// of the new planet. We need to find a way to center SphereCoords on the new planet
-				if(this.LandedOnPlanet === true){
-
+				if( this.LandedOnPlanet === true){
+					var size = 0.01;
 					if (moveLeft) { // left
-					    this.quaternion.multiply(new THREE.Quaternion(0, Math.sin(-0.01), 0, Math.cos(-0.01)));
+					    this.quaternion.multiply(new THREE.Quaternion(0, Math.sin(-size), 0, Math.cos(-size)));
 					}
 
 					if (moveRight) { // right
-					    this.quaternion.multiply(new THREE.Quaternion(0, Math.sin(0.01), 0, Math.cos(0.01)));
+					    this.quaternion.multiply(new THREE.Quaternion(0, Math.sin(size), 0, Math.cos(size)));
 					}
 
 					if (moveForward) { // up
-					    this.quaternion.multiply(new THREE.Quaternion(Math.sin(-0.01), 0, 0, Math.cos(-0.01)));
+					    this.quaternion.multiply(new THREE.Quaternion(Math.sin(-size), 0, 0, Math.cos(-size)));
 					}
 
 					if (moveBackward) { // down
-					    this.quaternion.multiply(new THREE.Quaternion(Math.sin(0.01), 0, 0, Math.cos(0.01)));
+					    this.quaternion.multiply(new THREE.Quaternion(Math.sin(size), 0, 0, Math.cos(size)));
 					}
 
 					var qx = this.quaternion.x;
 					var qy = this.quaternion.y;
 					var qz = this.quaternion.z;
 					var qw = this.quaternion.w;
-					var radius = 80;
+					var radius = this.TargetPlanet.radius;
+
+					controls.getObject().rotation.x = 2 * (qy * qw + qz * qx) * radius;
+					controls.getObject().rotation.y = 2 * (qz * qy - qw * qx) * radius;
+					controls.getObject().rotation.z = ((qz * qz + qw * qw) - (qx * qx + qy * qy)) * radius;
+
 					controls.getObject().position.x = 2 * (qy * qw + qz * qx) * radius;
 					controls.getObject().position.y = 2 * (qz * qy - qw * qx) * radius;
 					controls.getObject().position.z = ((qz * qz + qw * qw) - (qx * qx + qy * qy)) * radius;
 
-
-					// This needs to work on all 3 coordinates. It currently works on two.
-					//if ( moveForward ) controls.getObject().position.applyAxisAngle(this.TargetPlanet,Math.PI);//this.SphereCoords.phi -= 1.0 * delta;
-					//if ( moveBackward ) this.SphereCoords.phi += 1.0 * delta;
-					//if ( moveLeft ) this.SphereCoords.theta -= 1.0 * delta;
-					//if ( moveRight ) this.SphereCoords.theta += 1.0 * delta;
 				}
 				else{
 					// Rotate the character
@@ -227,24 +252,12 @@ class Player{
 					c.z + ((p.z - c.z)*step));// z
 				}
 
-				if ( isOnObject === true ) {
-					if (this.LandedOnPlanet === false) {
-						this.TargetPlanet.addToPivot(controls.getObject());
-					}
-					this.LandedOnPlanet = true;
-					canJump = true;
-				}
-				if(this.LandedOnPlanet === true){
-					//var Translation = new THREE.Vector3();
-					//Translation.setFromSpherical(this.SphereCoords);
-					//controls.getObject().position.set( Translation.x,Translation.y,Translation.z);
-				}
-				if(this.getDistance()>this.TargetPlanet.Radius+10){
+				/*if(this.getDistance()>this.TargetPlanet.Radius+10){
 					this.LandedOnPlanet = false;
 					if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(controls.getObject());
 					isOnObject = false;
 				}
-				if ( this.getDistance()<0 ) {
+				if ( this.getDistance()< this.TargetPlanet.Radius ) {
 					this.LandedOnPlanet = true;
 					// Move character away from planet
 					var c = controls.getObject().position;
@@ -255,7 +268,7 @@ class Player{
 					c.z + ((p.z - c.z)*step));// z
 					velocity.y = 0;
 					canJump = true;
-				}
+				}*/
 				prevTime = time;
 			}
 		}
