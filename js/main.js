@@ -167,7 +167,7 @@ class Player{
 		}
 		this.TravelDistance = 0;
 		this.TargetPlanet = planet;
-		this.quaternion.setFromAxisAngle( this.TargetPlanet, Math.PI/2);// This axis is incorrect. 
+		this.quaternion.setFromAxisAngle( this.TargetPlanet, Math.PI/2);// This axis is incorrect.
 		this.LandedOnPlanet = false;
 		this.DistanceFromPlanet = this.getDistance();
 	}
@@ -230,13 +230,13 @@ class Player{
 					var qw = this.quaternion.w;
 					var radius = this.TargetPlanet.radius;
 
-					controls.getObject().rotation.x = 2 * (qy * qw + qz * qx) * radius;
-					controls.getObject().rotation.y = 2 * (qz * qy - qw * qx) * radius;
-					controls.getObject().rotation.z = ((qz * qz + qw * qw) - (qx * qx + qy * qy)) * radius;
-
-					controls.getObject().position.x = 2 * (qy * qw + qz * qx) * radius;
-					controls.getObject().position.y = 2 * (qz * qy - qw * qx) * radius;
-					controls.getObject().position.z = ((qz * qz + qw * qw) - (qx * qx + qy * qy)) * radius;
+					 controls.getObject().rotation.x = 2 * (qy * qw + qz * qx) * radius;
+					 controls.getObject().rotation.y = 2 * (qz * qy - qw * qx) * radius;
+					 controls.getObject().rotation.z = ((qz * qz + qw * qw) - (qx * qx + qy * qy)) * radius;
+					
+					 controls.getObject().position.x = 2 * (qy * qw + qz * qx) * radius;
+					 controls.getObject().position.y = 2 * (qz * qy - qw * qx) * radius;
+					 controls.getObject().position.z = ((qz * qz + qw * qw) - (qx * qx + qy * qy)) * radius;
 
 				}
 				else{
@@ -314,7 +314,7 @@ class Planet{
 		WorldObjects.push(this.planet);
 
 		// Stores all the objects added to the planet
-    this.planetObjects = new Array();
+    this.planetObjects = [];
   }
 
 	/**
@@ -327,7 +327,7 @@ class Planet{
 	*/
   addObject(obj, r, theta, phi){
 		var vector = new THREE.Vector3();
-		var sphere = new THREE.Spherical(r,theta,phi)
+		var sphere = new THREE.Spherical(r,theta,phi);
 		vector.setFromSpherical(sphere);
     obj.position.set(this.x + vector.x,this.y + vector.y, this.z+ vector.z);
     this.planetObjects.push({ObjectVar: obj, SphereCoordinate: sphere});
