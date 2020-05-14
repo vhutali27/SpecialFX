@@ -3,7 +3,12 @@
 //////////////////////////////////////////////////
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 2000);
+
+// The objects added to this array should have an animate() function.
+// This function will be called by the render function for each frame.
 var AnimateObject = new Array();
+
+// WorldObjects are the objects that the player can touch.
 var WorldObjects = new Array();
 
 //////////////////////////////////////////////////
@@ -23,6 +28,8 @@ window.addEventListener( 'resize', onWindowResize, false );
 // LIGHTING                                     //
 //////////////////////////////////////////////////
 
+// This was just lighting so we could test the game.
+// It is subject to change as we add more features.
 var ambientLight = new THREE.AmbientLight(0xf1f1f1);
 scene.add(ambientLight);
 
@@ -137,6 +144,11 @@ document.addEventListener( 'keyup', onKeyUp, false );
 
 // Raycasting is used for working out which object the mouse is pointing at
 var raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+
+// controls is the First Person View controls. This shouldn't be the object that
+// is moved or acts as the player. It should be added to the players THREE.Group
+// The player is the one that should be moved so that the game can also work with
+// the Third Person View controls.
 var controls = new THREE.PointerLockControls(camera);
 controls.getObject().position.set(300, 300, 0);
 scene.add(controls.getObject());
@@ -144,19 +156,30 @@ scene.add(controls.getObject());
 class Player{
 	constructor(){
 		// Variables
+		
+		// Target Planet is the planet that the character is traveling towards
+		// or has landed on. If he collides with a different planet on his way to
+		// the planet he wanted to go to then the new planet will be his TargetPlanet.
 		this.TargetPlanet = null;
 		this.LandedOnPlanet = false;
 
 		this.DistanceFromPlanet = 0;
 		this.PlayerHeight = 2;
 		this.TravelDistance = 0;
+		
+		// This is used for rotations. I'm still figuring out how it works but I know that
+		// every object will have to have it since everything in the game is rotating in
+		// one way or another.
 		this.quaternion = new THREE.Quaternion();
 	}
 
+	// Returns the Vector3 component of an object with x,y and z variables.
 	getVector3(xyz){
 		return new THREE.Vector3(xyz.x,xyz.y,xyz.z);
 	}
 
+	// Only takes in the planet class. This is called when the player clicks on
+	// a different planet to travel to it.
 	setTargetPlanet(planet){
 		// Add the characters pivot on the planets pivot
 
@@ -172,6 +195,7 @@ class Player{
 		this.DistanceFromPlanet = this.getDistance();
 	}
 
+	// Returns the distance between the TargetPlanet and the player.
 	getDistance(){
 		if(this.TargetPlanet!== null){
 			return controls.getObject().position.distanceTo(this.TargetPlanet);
@@ -186,6 +210,7 @@ class Player{
 				raycaster.ray.origin.copy( controls.getObject().position );
 				raycaster.ray.origin.y -= 10;
 
+				// This is collision detection. It checks if the player is currently touching anything.
 				var intersections = raycaster.intersectObjects( WorldObjects );
 				var isOnObject = false;
 				if (intersections.length > 0) {
@@ -193,6 +218,7 @@ class Player{
 					isOnObject= true;
 				}
 
+				// A check should be added here to see if what the player is touching is actually a planet.
 				if ( isOnObject === true ) {
 					if (this.LandedOnPlanet === false) {
 						this.TargetPlanet.addToPivot(controls.getObject());
@@ -207,6 +233,8 @@ class Player{
 				// After you land the SphereCoords are still centered at (0,0,0) instead
 				// of the new planet. We need to find a way to center SphereCoords on the new planet
 				if( this.LandedOnPlanet === true){
+					// Controls for when you are on a planet.
+					// If moveLeft, moveRight, moveForward or moveBackward play the walking animation.
 					var size = 0.01;
 					if (moveLeft) { // left
 					    this.quaternion.multiply(new THREE.Quaternion(0, Math.sin(-size), 0, Math.cos(-size)));
@@ -240,6 +268,8 @@ class Player{
 
 				}
 				else{
+					// Controls for when you are floating in space
+					// This is where the animation for flying should be put.
 					// Rotate the character
 
 					// Move character towards planet
@@ -308,13 +338,15 @@ class Planet{
 
     this.planet = new THREE.Mesh(planetGeometry, planetMaterial);
     this.planet.position.set(x, y, z);
-		this.pivot = new THREE.Group();
-		this.planet.add(this.pivot);
+	
+	// pivot is the planets group. It holds all the objects that are affected by the planet's
+	// gravitational field. If you make an object and want to add it to the planet, you have to
+	// add it to the planets pivot. It will move the object with regards to the planets rotation and orbit.
+	this.pivot = new THREE.Group();
+	
+	this.planet.add(this.pivot);
     scene.add(this.planet);
-		WorldObjects.push(this.planet);
-
-		// Stores all the objects added to the planet
-    this.planetObjects = [];
+	WorldObjects.push(this.planet);
   }
 
 	/**
@@ -326,13 +358,12 @@ class Planet{
 		* @param {type} phi Float
 	*/
   addObject(obj, r, theta, phi){
-		var vector = new THREE.Vector3();
-		var sphere = new THREE.Spherical(r,theta,phi);
-		vector.setFromSpherical(sphere);
+	var vector = new THREE.Vector3();
+	var sphere = new THREE.Spherical(r,theta,phi);
+	vector.setFromSpherical(sphere);
     obj.position.set(this.x + vector.x,this.y + vector.y, this.z+ vector.z);
-    this.planetObjects.push({ObjectVar: obj, SphereCoordinate: sphere});
     scene.add(obj);
-		this.addToPivot(obj);
+	this.addToPivot(obj);
   }
 
 	addToPivot(obj){
@@ -348,10 +379,10 @@ class Planet{
   animate(){
     this.planet.rotation.x += this.xRotation;
     this.planet.rotation.y += this.yRotation;
-		for(var i =0; i< this.pivot.length; i++){
-			this.pivot[i].rotation.x += this.xRotation;
-			this.pivot[i].rotation.y += this.yRotation;
-		}
+	for(var i =0; i< this.pivot.length; i++){
+		this.pivot[i].rotation.x += this.xRotation;
+		this.pivot[i].rotation.y += this.yRotation;
+	}
   }
 }
 
@@ -486,7 +517,7 @@ function onWindowResize() {
 // RENDERING                                    //
 //////////////////////////////////////////////////
 
-// Planet Orbit Variables
+// Moon Orbit Variables (These will be changed when I figure out how quaternions work)
 var r = 35;
 var theta = 0;
 var dTheta = 2 * Math.PI / 1000;
