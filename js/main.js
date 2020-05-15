@@ -318,6 +318,7 @@ var controls = new THREE.PointerLockControls(camera,document.body);
 scene.add(controls.getObject());
 
 var mouse = { x: 0, y: 0 };
+var cur;
 function onDocumentMouseDown( event ) 
 {
 	// the following line would stop any other event handler from firing
@@ -326,6 +327,14 @@ function onDocumentMouseDown( event )
 	
 	console.log("Click.");
 	
+	if(cur === Surface1){
+		player.upright(false);
+		player.setTargetPlanet(Surface2);
+	}
+	else{
+		player.upright(true);
+		player.setTargetPlanet(Surface1);
+	}
 	// update the mouse variable
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
@@ -368,11 +377,12 @@ class Player{
 		var material = new Physijs.createMaterial(new THREE.MeshPhongMaterial({color: 0xff00E3, specular: 0xffffff, shininess: 60}),0,0);
 		this.body = new Physijs.CapsuleMesh( geometry, material, 40);
 		this.footRaycaster = new THREE.Raycaster(new THREE.Vector3(0,-5,0), new THREE.Vector3(0,-1,0));
-		this.body.add(this.Group);
-		controls.getObject().add(this.body);
-		this.body.addEventListener( 'collision', this.handleCollision );
+		this.headRaycaster = new THREE.Raycaster(new THREE.Vector3(0,5,0), new THREE.Vector3(0,1,0));
+		this.Group.add(this.body);
+		controls.getObject().add(this.Group);
 		//this.body.position.set(0,150,0);
 		scene.add(this.body);
+		controls.getObject().position.set(0,0,0);
 	}
 
 	// Returns the Vector3 component of an object with x,y and z variables.
@@ -384,7 +394,7 @@ class Player{
 	// a different planet to travel to it.
 	setTargetPlanet(planet){
 		// Add the characters pivot on the planets pivot
-
+		cur = planet;
 		// Check if is already attached to another planet
 		if(this.TargetPlanet!== null){
 			// Character from that planets pivot
@@ -394,8 +404,21 @@ class Player{
 		this.TargetPlanet = planet;
 		this.LandedOnPlanet = false;
 		this.DistanceFromPlanet = this.getDistance();
-		
-		controls.getObject().position.set(planet.x,planet.y+150,planet.z);
+	}
+	
+	upright(bool){
+		if(bool){
+			if(!this.Upright){
+				controls.getObject().rotation.z += Math.PI;
+				this.Upright = true;
+			}
+		}
+		else{
+			if(this.Upright){
+				controls.getObject().rotation.z += Math.PI;
+				this.Upright = false;
+			}
+		}
 	}
 
 	// Returns the distance between the TargetPlanet and the player.
@@ -405,21 +428,21 @@ class Player{
 		}
 		else return 0;
 	}
-	
-	handleCollision( collided_with, linearVelocity, angularVelocity ) {
-		console.log("COLLISION!!!");
-		isOnObject= true;
-	}
 
 	animate(){
 		if ( controlsEnabled ) {
 			var time = performance.now();
 			if(this.TargetPlanet !== null){
-				raycaster.ray.origin.copy( controls.getObject().position );
-				this.footRaycaster.ray.origin.copy(new THREE.Vector3(controls.getObject().position.x,controls.getObject().position.y-5,controls.getObject().position.z));
+				var conPos = controls.getObject().position;
+				raycaster.ray.origin.copy( conPos );
+				this.footRaycaster.ray.origin.copy(new THREE.Vector3(conPos.x,conPos.y-5,conPos.z));
+				this.headRaycaster.ray.origin.copy(new THREE.Vector3(conPos.x,conPos.y+5,conPos.z));
 
 				// This is collision detection. It checks if the player is currently touching anything.
-				var intersections = this.footRaycaster.intersectObjects( WorldObjects );
+				var intersections;
+				if(this.Upright) intersections = this.footRaycaster.intersectObjects( WorldObjects );
+				else intersections = this.headRaycaster.intersectObjects( WorldObjects );
+				
 				var isOnObject = false;
 				if (intersections.length > 0) {
 					var dis = this.getDistance();
@@ -429,11 +452,11 @@ class Player{
 					}
 				}
 				
-				var withinBoundary = true;
-				if((this.TargetPlanet.x-this.TargetPlanet.width/2)<controls.getObject().position.x && (this.TargetPlanet.x+this.TargetPlanet.width/2)>controls.getObject().position.x && (this.TargetPlanet.z-this.TargetPlanet.depth/2)<controls.getObject().position.z && (this.TargetPlanet.z+this.TargetPlanet.depth/2)<controls.getObject().position.z){
-					withinBoundary = false;
-				}
-				console.log(withinBoundary);
+				var leftBound = this.TargetPlanet.x-this.TargetPlanet.width/2;
+				var rightBound = this.TargetPlanet.x+this.TargetPlanet.width/2;
+				var bottomBound = this.TargetPlanet.z-this.TargetPlanet.depth/2;
+				var topBound = this.TargetPlanet.z+this.TargetPlanet.depth/2;
+				var withinBoundary = leftBound<conPos.x && rightBound>conPos.x && bottomBound<conPos.z && topBound>conPos.z;
 				
 				var delta = ( time - prevTime ) / 1000;
 				
@@ -461,20 +484,45 @@ class Player{
 				// After you land the SphereCoords are still centered at (0,0,0) instead
 				// of the new planet. We need to find a way to center SphereCoords on the new planet
 				if( this.LandedOnPlanet === true){
-					controls.moveRight(- velocity.x * delta );
-					controls.moveForward(- velocity.z * delta );
-					controls.getObject().position.y += ( velocity.y * delta ); // new behavior
+					if(this.Upright){
+						controls.moveRight(- velocity.x * delta );
+						controls.moveForward(- velocity.z * delta );
+						controls.getObject().position.y += ( velocity.y * delta ); // new behavior
+					}
+					else{
+						controls.moveRight( velocity.x * delta );
+						controls.moveForward( velocity.z * delta );
+						controls.getObject().position.y -= ( velocity.y * delta ); // new behavior
+					}
 
 					if ( controls.getObject().position.y < this.TargetPlanet.y && this.Upright && withinBoundary) {
 						velocity.y = 0;
+						//console.log("yep");
 						controls.getObject().position.y = this.TargetPlanet.y;
 						canJump = true;
 					}
-					else if ( controls.getObject().position.y > this.TargetPlanet.y && this.Upright === false && withinBoundary) {
+					else if ( controls.getObject().position.y > this.TargetPlanet.y && !this.Upright && withinBoundary) {
 						velocity.y = 0;
-						controls.getObject().position.y = this.TargetPlanet.y;
+						controls.getObject().position.y = this.TargetPlanet.y-2;
 						canJump = true;
 					}
+					
+					if(!withinBoundary){
+						this.LandedOnPlanet = false;
+						if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(controls.getObject());
+						isOnObject = false;
+						canJump = false;
+						this.TargetPlanet = null;
+					}
+					
+					// get distance can never be less than one.
+					/*if ( this.getDistance()< 1 && withinBoundary) {
+						this.LandedOnPlanet = true;
+						velocity.y = 0;
+						controls.getObject().position.y = this.TargetPlanet.y+20;
+						velocity.y = 0;
+						canJump = true;
+					}*/
 				}
 				else{
 					// Controls for when you are floating in space
@@ -484,21 +532,6 @@ class Player{
 					var distance = this.getDistance();
 					var step = 1 - (distance - 1)/distance;
 					applyGravity(controls.getObject(),this.TargetPlanet,step);
-				}
-
-				if(this.getDistance()>10 || !withinBoundary){
-					this.LandedOnPlanet = false;
-					if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(controls.getObject());
-					isOnObject = false;
-					canJump = false;
-				}
-				
-				if ( this.getDistance()< 1 && withinBoundary) {
-					this.LandedOnPlanet = true;
-					velocity.y = 0;
-					controls.getObject().position.y = this.TargetPlanet.y;
-					velocity.y = 0;
-					canJump = true;
 				}
 				prevTime = time;
 			}
@@ -606,7 +639,7 @@ color: 0x72f2f2,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var Surface1 = new BlockPlanet(150, 50, Surface1Material, 0, 0, 0, "Surface1");
+var Surface1 = new BlockPlanet(150, 150, Surface1Material, 0, -50, 0, "Surface1");
 
 var ballMaterial = new THREE.MeshPhongMaterial({
 //map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
@@ -616,9 +649,9 @@ shininess: 2
 });
 AnimateObject.push(Surface1);
 Surface1.addObject(getSquare(ballMaterial, 2),true,0,0,2);
-Surface1.addObject(getSquare(ballMaterial, 2),true,0,50,2);
+Surface1.addObject(getSquare(ballMaterial, 2),true,0,150,2);
 Surface1.addObject(getSquare(ballMaterial, 2),true,150,0,2);
-Surface1.addObject(getSquare(ballMaterial, 2),true,150,50,2);
+Surface1.addObject(getSquare(ballMaterial, 2),true,150,150,2);
 
 
 //earth.addObject(getSquare(earthMaterial, 2),23,1,2);
@@ -630,7 +663,7 @@ color: 0x464742,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var Surface2 = new BlockPlanet(50, 150, Surface2Material, 40, 40, 40, "Surface2");
+var Surface2 = new BlockPlanet(150, 150, Surface2Material, 0, 100, 0, "Surface2");
 AnimateObject.push(Surface2);
 
 //Stars
