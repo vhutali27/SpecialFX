@@ -1,9 +1,154 @@
 //////////////////////////////////////////////////
+// USEFUL INFORMATION							//
+//////////////////////////////////////////////////
+/*
+	Types of meshes
+	
+    Physijs.PlaneMesh - infinite zero-thickness plane
+    Physijs.BoxMesh - matches THREE.CubeGeometry
+    Physijs.SphereMesh - matches THREE.SphereGeometry
+    Physijs.CylinderMesh - matches THREE.CylinderGeometry
+    Physijs.ConeMesh - matches THREE.CylinderGeometry (tapered)
+    Physijs.CapsuleMesh - matches THREE.CylinderGeometry, except has two half spheres at ends
+    Physijs.ConvexMesh - matches any convex geometry you have
+    Physijs.ConcaveMesh - matches any concave geometry you have, i.e. arbitrary mesh
+    Physijs.HeightfieldMesh - matches a regular grid of height values given in the z-coordinates
+    
+    Objects that are always going to be static, simply need to have their mass set to 0.
+    set the third parameter (mass) to zero if you don't want it to be affected by gravity
+    
+    Objects that will sometimes be static, and other times be dynamic, need to have the following applied:
+	//Completely freeze an object
+	object.setAngularFactor = THREE.Vector3(0,0,0);
+	object.setLinearFactor = THREE.Vector3( 0, 0, 0 );
+	
+	//You can also clear any velocities the same way (setting them to a 0 vector3)
+	object.setAngularVelocity
+	object.setLinearVelocity
+	
+	//To reset, simply change the factors back to Vector3(1,1,1);
+	
+	
+	//Collisions
+	
+	mesh.addEventListener( 'collision', function( other_object, relative_velocity, relative_rotation, contact_normal ) {
+    // `this` has collided with `other_object` 
+    // with an impact speed of `relative_velocity` and a rotational force of `relative_rotation` 
+    //and at normal `contact_normal`
+	});
+	
+	// Materials
+	
+	Physijs can give some extra properties to a material, and thus to an object.
+	These attributes are�friction�and�restitution (bounciness). These need to be set in a special Physijs material:
+	
+	//Values between 0.0 and 1.0
+	var friction = .8;
+	var restitution = .3;
+	
+	//Physijs Material - a three material/shader, friction, restitution
+	var material = Physijs.createMaterial(
+		new THREE.MeshBasicMaterial({ color: 0x888888 }),
+		friction,
+		restitution
+	);
+	
+	//Just apply it to the mesh like you always do
+	var mesh = new Physijs.BoxMesh(
+		new THREE.BoxGeometry( 5, 5, 5 ),
+		material
+	);
+	
+	// Because Physijs runs on a different thread than your main application,
+	there is no guarantee that it will be able to iterate the scene every time
+	you call�scene.simulate. Because of this, you may want to attach an event
+	listener to the scene that is triggered whenever the physics simulation has run.
+	
+	scene.addEventListener( 'update', function() {
+    // the scene's physics have finished updating
+	});
+	
+	// Additionally, if your scene is complex or has a lot of objects, the physics
+	simulation can slow down to the point where adding new objects can become a lot
+	of work for the application. To help alleviate some of the pain this may cause,
+	objects have a�ready�event which is triggered after the object has been added to
+	the physics simulation.�
+	
+	var readyHandler = function() {
+    // object has been added to the scene
+	};
+	var mesh = new Physijs.SphereMesh( geometry, material );
+	mesh.addEventListener( 'ready', readyHandler );
+	scene.add( mesh );
+	
+	// Compound Shapes
+	
+	parent.add( child );
+	scene.add( parent );
+	
+	//Remember, add all childs before adding the parent!
+	//And, child's positions are local/relative to the parent
+	
+	// for object constraints visit https://github.com/chandlerprall/Physijs/wiki/Constraints
+	
+	// To move a cube 100 units depending on the rendering speed use
+	theCube.position.x += 100 * timeElapsed;
+	
+	�Create basic tween
+
+	//Set position and target coordinates
+	var position = { x : 0, y: 300 };
+	var target = { x : 400, y: 50 };
+	
+	//Tell it to tween the 'position' parameter
+	//Make the tween last 2 seconds (=2000 milliseconds)
+	var tween = new TWEEN.Tween(position).to(target, 2000);
+	
+	//Now update the 3D mesh accordingly
+	tween.onUpdate(function(){
+		mesh.position.x = position.x;
+		mesh.position.y = position.y;
+	});
+	
+	//But don't forget, to start the tween
+	tween.start();
+	
+	//And also don't forget, to put this into your looping render function
+	tween.update();
+	
+	//Delay the start of the tween
+	tween.delay(500);
+	
+	//Set a different tweening (easing) function
+	tween.easing(TWEEN.Easing.Elastic.InOut);
+	
+	//Create a chain of tweens
+	//For example: this one loops between firstTween and secondTween
+	firstTween.chain(secondTween);
+	secondTween.chain(firstTween);
+	
+	// Easing function can be found here https://sole.github.io/tween.js/examples/03_graphs.html
+*/
+
+//////////////////////////////////////////////////
 // GLOBAL vARIABLES                             //
 //////////////////////////////////////////////////
-var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 2000);
+// Physics libraries that will be used.
+Physijs.scripts.worker = '/js/physijs_worker.js';
+Physijs.scripts.ammo = '/js/ammo.js';
 
+var scene = new Physijs.Scene();
+scene.addEventListener(
+			'update',
+			function() {
+				scene.simulate( undefined, 1 );
+				physics_stats.update();
+			}
+		);
+
+// Loader
+loader = new THREE.TextureLoader();
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 2000);
 // The objects added to this array should have an animate() function.
 // This function will be called by the render function for each frame.
 var AnimateObject = new Array();
@@ -51,7 +196,7 @@ scene.add(spotLight);
 */
 function getSphere( material, size, segments){
 	var geometry = new THREE.SphereGeometry(size, segments, segments);
-	var obj = new THREE.Mesh(geometry, material);
+	var obj = new Physijs.SphereMesh(geometry, material);
 	obj.castShadow = true;
 	return obj;
 }
@@ -64,7 +209,7 @@ function getSphere( material, size, segments){
 */
 function getSquare(material, size){
 	var geometry = new THREE.BoxGeometry(size, size, size);
-	var obj = new THREE.Mesh(geometry, material);
+	var obj = new Physijs.BoxMesh(geometry, material, 5);
 	obj.castShadow = true;
 	return obj;
 }
@@ -75,15 +220,33 @@ function getSquare(material, size){
 
 // Player Controls
 var controlsEnabled = false;
+
 var rightClick = false;
 var leftClick = false;
 var moveForward = false;
 var moveBackward = false;
 var moveLeft = false;
 var moveRight = false;
+
 var canJump = false;
+
+// Controller Movement
+var movementSpeed = 1;
+var sprintSpeed = 2;
+var jumpForce = 2;
+var currentMoveSpeed;
+
+//Gravity
+var hoverGravity;
+var orbitGravity;
+var currentOrbitGravity;
+var gravityLetoff;
+
 var prevTime = performance.now();
 var velocity = new THREE.Vector3();
+var direction = new THREE.Vector3();
+var vertex = new THREE.Vector3();
+var color = new THREE.Color();
 var onKeyDown = function ( event ) {
 	switch ( event.keyCode ) {
 		case 1:
@@ -139,6 +302,8 @@ var onKeyUp = function ( event ) {
 			break;
 	}
 };
+// when the mouse moves, call the given function
+document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 document.addEventListener( 'keydown', onKeyDown, false );
 document.addEventListener( 'keyup', onKeyUp, false );
 
@@ -149,9 +314,40 @@ var raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, 
 // is moved or acts as the player. It should be added to the players THREE.Group
 // The player is the one that should be moved so that the game can also work with
 // the Third Person View controls.
-var controls = new THREE.PointerLockControls(camera);
-controls.getObject().position.set(300, 300, 0);
+var controls = new THREE.PointerLockControls(camera,document.body);
 scene.add(controls.getObject());
+
+var mouse = { x: 0, y: 0 };
+function onDocumentMouseDown( event ) 
+{
+	// the following line would stop any other event handler from firing
+	// (such as the mouse's TrackballControls)
+	// event.preventDefault();
+	
+	console.log("Click.");
+	
+	// update the mouse variable
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+	
+	// find intersections
+	// update the picking ray with the camera and mouse position
+	raycaster.setFromCamera( mouse, camera );
+
+	// create an array containing all objects in the scene with which the ray intersects
+	var intersects = raycaster.intersectObjects( WorldObjects );
+	
+	// if there is one (or more) intersections
+	if ( intersects.length > 0 )
+	{
+		console.log("Hit @ " + toString( intersects[0].point ) );
+		// change the color of the closest face.
+		//intersects[ 0 ].face.color.setRGB( 0.8 * Math.random() + 0.2, 0, 0 ); 
+		//intersects[ 0 ].object.geometry.colorsNeedUpdate = true;
+	}
+
+}
+
 // Class for Player
 class Player{
 	constructor(){
@@ -162,15 +358,21 @@ class Player{
 		// the planet he wanted to go to then the new planet will be his TargetPlanet.
 		this.TargetPlanet = null;
 		this.LandedOnPlanet = false;
-
-		this.DistanceFromPlanet = 0;
-		this.PlayerHeight = 2;
-		this.TravelDistance = 0;
 		
-		// This is used for rotations. I'm still figuring out how it works but I know that
-		// every object will have to have it since everything in the game is rotating in
-		// one way or another.
-		this.quaternion = new THREE.Quaternion();
+		this.DistanceFromPlanet = 0;
+		this.PlayerHeight = 0;
+		this.TravelDistance = 0;
+		this.Upright = true;
+		this.Group = new THREE.Group();
+		var geometry = new THREE.CylinderGeometry( 2.5, 2.5, 10, 32 );
+		var material = new Physijs.createMaterial(new THREE.MeshPhongMaterial({color: 0xff00E3, specular: 0xffffff, shininess: 60}),0,0);
+		this.body = new Physijs.CapsuleMesh( geometry, material, 40);
+		this.footRaycaster = new THREE.Raycaster(new THREE.Vector3(0,-5,0), new THREE.Vector3(0,-1,0));
+		this.body.add(this.Group);
+		controls.getObject().add(this.body);
+		this.body.addEventListener( 'collision', this.handleCollision );
+		//this.body.position.set(0,150,0);
+		scene.add(this.body);
 	}
 
 	// Returns the Vector3 component of an object with x,y and z variables.
@@ -186,165 +388,175 @@ class Player{
 		// Check if is already attached to another planet
 		if(this.TargetPlanet!== null){
 			// Character from that planets pivot
-			this.TargetPlanet.pivot.remove(contorls.getObject());
+			this.TargetPlanet.pivot.remove(controls.getObject());
 		}
 		this.TravelDistance = 0;
 		this.TargetPlanet = planet;
-		this.quaternion.setFromAxisAngle( this.TargetPlanet, Math.PI/2);// This axis is incorrect.
 		this.LandedOnPlanet = false;
 		this.DistanceFromPlanet = this.getDistance();
+		
+		controls.getObject().position.set(planet.x,planet.y+150,planet.z);
 	}
 
 	// Returns the distance between the TargetPlanet and the player.
 	getDistance(){
 		if(this.TargetPlanet!== null){
-			return controls.getObject().position.distanceTo(this.TargetPlanet);
+			return Math.abs(controls.getObject().position.y - this.TargetPlanet.y);
 		}
 		else return 0;
+	}
+	
+	handleCollision( collided_with, linearVelocity, angularVelocity ) {
+		console.log("COLLISION!!!");
+		isOnObject= true;
 	}
 
 	animate(){
 		if ( controlsEnabled ) {
+			var time = performance.now();
 			if(this.TargetPlanet !== null){
-
 				raycaster.ray.origin.copy( controls.getObject().position );
-				raycaster.ray.origin.y -= 10;
+				this.footRaycaster.ray.origin.copy(new THREE.Vector3(controls.getObject().position.x,controls.getObject().position.y-5,controls.getObject().position.z));
 
 				// This is collision detection. It checks if the player is currently touching anything.
-				var intersections = raycaster.intersectObjects( WorldObjects );
+				var intersections = this.footRaycaster.intersectObjects( WorldObjects );
 				var isOnObject = false;
 				if (intersections.length > 0) {
-					var firstObjectIntersected = intersections[0];
-					isOnObject= true;
+					var dis = this.getDistance();
+					if(dis<10){
+						//var firstObjectIntersected = intersections[0];
+						isOnObject= true;
+					}
 				}
+				
+				var withinBoundary = true;
+				if((this.TargetPlanet.x-this.TargetPlanet.width/2)<controls.getObject().position.x && (this.TargetPlanet.x+this.TargetPlanet.width/2)>controls.getObject().position.x && (this.TargetPlanet.z-this.TargetPlanet.depth/2)<controls.getObject().position.z && (this.TargetPlanet.z+this.TargetPlanet.depth/2)<controls.getObject().position.z){
+					withinBoundary = false;
+				}
+				console.log(withinBoundary);
+				
+				var delta = ( time - prevTime ) / 1000;
+				
+				velocity.x -= velocity.x * 10.0 * delta;
+				velocity.z -= velocity.z * 10.0 * delta;
+				velocity.y -= 9.8 * 100.0 * delta;
+				
+				direction.z = Number( moveForward ) - Number( moveBackward );
+				direction.x = Number( moveRight ) - Number( moveLeft );
+				direction.normalize(); // this ensures consistent movements in all directions
+				
+				if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
+				if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
 
 				// A check should be added here to see if what the player is touching is actually a planet.
 				if ( isOnObject === true ) {
 					if (this.LandedOnPlanet === false) {
-						this.TargetPlanet.addToPivot(controls.getObject());
+						//this.TargetPlanet.addToPivot(controls.getObject());
 					}
 					this.LandedOnPlanet = true;
 					canJump = true;
+					velocity.y = Math.max(0, velocity.y);
 				}
-
-				var time = performance.now();
-				var delta = ( time - prevTime ) / 1000;
-
+				
 				// After you land the SphereCoords are still centered at (0,0,0) instead
 				// of the new planet. We need to find a way to center SphereCoords on the new planet
 				if( this.LandedOnPlanet === true){
-					// Controls for when you are on a planet.
-					// If moveLeft, moveRight, moveForward or moveBackward play the walking animation.
-					var size = 0.01;
-					if (moveLeft) { // left
-					    this.quaternion.multiply(new THREE.Quaternion(0, Math.sin(-size), 0, Math.cos(-size)));
+					controls.moveRight(- velocity.x * delta );
+					controls.moveForward(- velocity.z * delta );
+					controls.getObject().position.y += ( velocity.y * delta ); // new behavior
+
+					if ( controls.getObject().position.y < this.TargetPlanet.y && this.Upright && withinBoundary) {
+						velocity.y = 0;
+						controls.getObject().position.y = this.TargetPlanet.y;
+						canJump = true;
 					}
-
-					if (moveRight) { // right
-					    this.quaternion.multiply(new THREE.Quaternion(0, Math.sin(size), 0, Math.cos(size)));
+					else if ( controls.getObject().position.y > this.TargetPlanet.y && this.Upright === false && withinBoundary) {
+						velocity.y = 0;
+						controls.getObject().position.y = this.TargetPlanet.y;
+						canJump = true;
 					}
-
-					if (moveForward) { // up
-					    this.quaternion.multiply(new THREE.Quaternion(Math.sin(-size), 0, 0, Math.cos(-size)));
-					}
-
-					if (moveBackward) { // down
-					    this.quaternion.multiply(new THREE.Quaternion(Math.sin(size), 0, 0, Math.cos(size)));
-					}
-
-					var qx = this.quaternion.x;
-					var qy = this.quaternion.y;
-					var qz = this.quaternion.z;
-					var qw = this.quaternion.w;
-					var radius = this.TargetPlanet.radius;
-
-					 controls.getObject().rotation.x = 2 * (qy * qw + qz * qx) * radius;
-					 controls.getObject().rotation.y = 2 * (qz * qy - qw * qx) * radius;
-					 controls.getObject().rotation.z = ((qz * qz + qw * qw) - (qx * qx + qy * qy)) * radius;
-					
-					 controls.getObject().position.x = 2 * (qy * qw + qz * qx) * radius;
-					 controls.getObject().position.y = 2 * (qz * qy - qw * qx) * radius;
-					 controls.getObject().position.z = ((qz * qz + qw * qw) - (qx * qx + qy * qy)) * radius;
-
 				}
 				else{
 					// Controls for when you are floating in space
 					// This is where the animation for flying should be put.
 					// Rotate the character
-
 					// Move character towards planet
-					var c = controls.getObject().position;
-					var p = this.TargetPlanet;
-					this.TravelDistance+=0.08;
-					var step = (this.TravelDistance/this.DistanceFromPlanet)*(Math.PI/2);
-					controls.getObject().position.set( c.x + ((p.x - c.x)*step),// x
-					c.y + ((p.y - c.y)*step),// y
-					c.z + ((p.z - c.z)*step));// z
+					var distance = this.getDistance();
+					var step = 1 - (distance - 1)/distance;
+					applyGravity(controls.getObject(),this.TargetPlanet,step);
 				}
 
-				/*if(this.getDistance()>this.TargetPlanet.Radius+10){
+				if(this.getDistance()>10 || !withinBoundary){
 					this.LandedOnPlanet = false;
 					if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(controls.getObject());
 					isOnObject = false;
+					canJump = false;
 				}
-				if ( this.getDistance()< this.TargetPlanet.Radius ) {
+				
+				if ( this.getDistance()< 1 && withinBoundary) {
 					this.LandedOnPlanet = true;
-					// Move character away from planet
-					var c = controls.getObject().position;
-					var p = this.TargetPlanet;
-					var step = (1-1/this.TargetPlanet.Radius)*(Math.PI/2);
-					controls.getObject().position.set( c.x + ((p.x - c.x)*step),// x
-					c.y + ((p.y - c.y)*step),// y
-					c.z + ((p.z - c.z)*step));// z
+					velocity.y = 0;
+					controls.getObject().position.y = this.TargetPlanet.y;
 					velocity.y = 0;
 					canJump = true;
-				}*/
+				}
 				prevTime = time;
 			}
 		}
+		
 	}
 }
+/* This function applies gravity between an object and a planet
+ * It takes in the object and the planet it should gravitate towards.
+ * The ratio is a value from zero to one. zero being the initial distance
+ * from when the player was assigned to the planet and one being the player being
+ * at the center of the planet.
+ * 
+ * @param {type} object Mesh
+ * @param {type} planet PlanetClass
+ * @param {type} ratio  Float
+ *
+ **/
+function applyGravity(object,planet,ratio){
+	// Move character towards planet
+	var c = object.position;
+	var p = planet;
+	var step = ratio*(Math.PI/2);
+	object.position.set( c.x + ((p.x - c.x)*step),// x
+	c.y + ((p.y - c.y)*step),// y
+	c.z + ((p.z - c.z)*step));// z
+}
 
-// Class for planets
-class Planet{
+// Class for Planes
+class BlockPlanet{
 
   /**
     * constructor
-    * @param {type} radius Float
-    * @param {type} widthSegments integer
-    * @param {type}  heightSegments integer
+    * @param {type} width Float
+    * @param {type}  depth Float
     * @param {type} planetMaterial Material
 
     for Position
     * @param {type} x Float
     * @param {type} y Float
     * @param {type} z Float
-
-		for rotation
-		* @param {type} theta Float
-		* @param {type} phi Float
   */
-  constructor(radius, width, height, planetMaterial, x, y, z, xRotation, yRotation){
-    var planetGeometry = new THREE.SphereGeometry(radius, width, height);
-
-    this.radius = radius;
+  constructor( width, depth, planetMaterial, x, y, z, name){
+    var planetGeometry = new THREE.BoxGeometry( width, 2, depth );
     this.width = width;
-    this.height = height;
+    this.depth = depth;
     this.x = x;
     this.y = y;
     this.z = z;
-		this.xRotation = xRotation;
-		this.yRotation = yRotation;
-
-    this.planet = new THREE.Mesh(planetGeometry, planetMaterial);
-    this.planet.position.set(x, y, z);
+    this.planet = new Physijs.BoxMesh(planetGeometry, planetMaterial);
 	
 	// pivot is the planets group. It holds all the objects that are affected by the planet's
 	// gravitational field. If you make an object and want to add it to the planet, you have to
 	// add it to the planets pivot. It will move the object with regards to the planets rotation and orbit.
 	this.pivot = new THREE.Group();
-	
 	this.planet.add(this.pivot);
+	this.planet.position.set(x, y, z);
+	this.planet.name = name;
     scene.add(this.planet);
 	WorldObjects.push(this.planet);
   }
@@ -352,16 +564,16 @@ class Planet{
 	/**
 		* Attaches an object to the planet. This object will then experience
 		* the gravitational forces of the planets
-		* @param {type} obj Mesh
-		* @param {type} r Float
-		* @param {type} theta Float
-		* @param {type} phi Float
+		* @param {type} obj Three Mesh object
+		* @param {type} onTop boolean
+		* @param {type} x Float //Coordinates of object
+		* @param {type} y Float
+		* @param {type} height Float
 	*/
-  addObject(obj, r, theta, phi){
-	var vector = new THREE.Vector3();
-	var sphere = new THREE.Spherical(r,theta,phi);
-	vector.setFromSpherical(sphere);
-    obj.position.set(this.x + vector.x,this.y + vector.y, this.z+ vector.z);
+  addObject( obj, onTop, x, z, height){
+	if(onTop === true){height=1 + height;}
+	else {height=-1 - height;}
+	obj.position.set(this.x+x - this.width/2,this.y + height,this.z+z - this.depth/2);
     scene.add(obj);
 	this.addToPivot(obj);
   }
@@ -370,19 +582,16 @@ class Planet{
 		this.pivot.add(obj);
 	}
 
-	// We are going to need to use polar coordinates
 	/**
 		* Function to rotate the planet
 		* @param {type} xRotation Float
 		* @param {type} yRotation Float
  	*/
   animate(){
-    this.planet.rotation.x += this.xRotation;
-    this.planet.rotation.y += this.yRotation;
-	for(var i =0; i< this.pivot.length; i++){
-		this.pivot[i].rotation.x += this.xRotation;
-		this.pivot[i].rotation.y += this.yRotation;
-	}
+	// When you change the rotation or position of a physi object
+	// you need to declare the change with mesh.__dirtyPosition = true;
+	// mesh.__dirtyRotation = true;
+	
   }
 }
 
@@ -390,14 +599,14 @@ class Planet{
 // IN GAME OBJECT CREATION                      //
 //////////////////////////////////////////////////
 
-// Earth
-var earthMaterial = new THREE.MeshPhongMaterial({
-map: new THREE.ImageUtils.loadTexture("images/planet_2.jpg"),
+// Surface1
+var Surface1Material = new THREE.MeshPhongMaterial({
+map: loader.load("images/planet_2.jpg"),
 color: 0x72f2f2,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var earth = new Planet(20, 50, 50, earthMaterial, 0, 0, 0, 0.01, 0);
+var Surface1 = new BlockPlanet(150, 50, Surface1Material, 0, 0, 0, "Surface1");
 
 var ballMaterial = new THREE.MeshPhongMaterial({
 //map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
@@ -405,50 +614,39 @@ color: 0xf2f2f2,
 specular: 0xbbbbbb,
 shininess: 2
 });
-AnimateObject.push(earth);
-for(var i=0; i<6; i+=0.5){
-	earth.addObject(getSquare(ballMaterial, 2),22,i,0);
-}
+AnimateObject.push(Surface1);
+Surface1.addObject(getSquare(ballMaterial, 2),true,0,0,2);
+Surface1.addObject(getSquare(ballMaterial, 2),true,0,50,2);
+Surface1.addObject(getSquare(ballMaterial, 2),true,150,0,2);
+Surface1.addObject(getSquare(ballMaterial, 2),true,150,50,2);
 
 
 //earth.addObject(getSquare(earthMaterial, 2),23,1,2);
 
 // Mars
-var marsMaterial = new THREE.MeshPhongMaterial({
-map: new THREE.ImageUtils.loadTexture("images/planet_1.jpg"),
+var Surface2Material = new THREE.MeshPhongMaterial({
+map: loader.load("images/planet_1.jpg"),
 color: 0x464742,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var mars = new Planet(20, 50, 50, marsMaterial, 40, 40, 40, 0.02, 0);
-AnimateObject.push(mars);
-//mars.addObject(getSquare(earthMaterial, 2, 48),22,0,0);
-//mars.addObject(getSquare(ballMaterial, 2, 48),22,2,0);
+var Surface2 = new BlockPlanet(50, 150, Surface2Material, 40, 40, 40, "Surface2");
+AnimateObject.push(Surface2);
 
 //Stars
 var starGeometry = new THREE.SphereGeometry(1000, 50, 500);
 var starMaterial = new THREE.MeshPhongMaterial({
-map: new THREE.ImageUtils.loadTexture("/images/galaxy_starfield.png"),
+map: loader.load("/images/galaxy_starfield.png"),
 side: THREE.DoubleSide,
 shininess: 0
 });
 var starField = new THREE.Mesh(starGeometry, starMaterial);
 scene.add(starField);
 
-//Moon
-var moonGeometry = new THREE.SphereGeometry(3.5, 50,50);
-var moonMaterial = new THREE.MeshPhongMaterial({
-map: THREE.ImageUtils.loadTexture("/images/sky-with-stars-illustration-957061.jpg")
-});
-var moon = new THREE.Mesh(moonGeometry, moonMaterial);
-moon.position.set(45,20,0);
-scene.add(moon);
-WorldObjects.push(moon);
-
 // Initialize player
 var player = new Player();
 AnimateObject.push(player);
-player.setTargetPlanet(earth);
+player.setTargetPlanet(Surface1);
 
 
 //////////////////////////////////////////////////
@@ -517,19 +715,19 @@ function onWindowResize() {
 // RENDERING                                    //
 //////////////////////////////////////////////////
 
-// Moon Orbit Variables (These will be changed when I figure out how quaternions work)
-var r = 35;
-var theta = 0;
-var dTheta = 2 * Math.PI / 1000;
+//Create clock, set autostart to true
+var clock = new THREE.Clock(true);
 
 var render = function() {
-  AnimateObject.forEach(function(object){object.animate();});
-  //Moon orbit
-  theta += dTheta;
-  moon.position.set( r * Math.cos(theta), 0, r * Math.sin(theta));
+	//Get the seconds elapsed since last getDelta call
+	//var timeElapsed = clock.getDelta();
+	//Or get the amount of time elapsed since start of the clock/program
+	//var timeElapsed = clock.getTimeElapsed();
 
-  renderer.render(scene, camera);
+  AnimateObject.forEach(function(object){object.animate();});
   requestAnimationFrame(render);
+  renderer.render(scene, camera);
+  
 };
 
 //////////////////////////////////////////////////
