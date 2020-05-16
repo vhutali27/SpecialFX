@@ -227,6 +227,7 @@ var moveForward = false;
 var moveBackward = false;
 var moveLeft = false;
 var moveRight = false;
+var changePlanet = false;
 
 var canJump = false;
 
@@ -249,12 +250,6 @@ var vertex = new THREE.Vector3();
 var color = new THREE.Color();
 var onKeyDown = function ( event ) {
 	switch ( event.keyCode ) {
-		case 1:
-			leftClick = true;
-			break;
-		case 3:
-			rightClick = true;
-			break;
 		case 38: // up
 		case 87: // w
 			moveForward = true;
@@ -273,17 +268,18 @@ var onKeyDown = function ( event ) {
 		case 32: // space
 			if ( canJump === true ) velocity.y += 350;
 			canJump = false;
+			// If in space it should boost
+			break;
+		case 69:// E
+			changePlanet = true;
+			break;
+		case 81://Q
+			// Drop Resources
 			break;
 	}
 };
 var onKeyUp = function ( event ) {
 	switch( event.keyCode ) {
-		case 1:
-			leftClick = false;
-			break;
-		case 3:
-			rightClick = false;
-			break;
 		case 38: // up
 		case 87: // w
 			moveForward = false;
@@ -299,6 +295,15 @@ var onKeyUp = function ( event ) {
 		case 39: // right
 		case 68: // d
 			moveRight = false;
+			break;
+		case 32:
+			// Stop boost in space
+			break;
+		case 69:// E
+			changePlanet = false;
+			break;
+		case 81://Q
+			// Drop resources
 			break;
 	}
 };
@@ -324,24 +329,33 @@ function onDocumentMouseDown( event )
 	// the following line would stop any other event handler from firing
 	// (such as the mouse's TrackballControls)
 	// event.preventDefault();
-	
-	console.log("Click.");
-	
-	if(cur === Surface1){
-		player.upright(false);
-		player.setTargetPlanet(Surface2);
+	switch ( event.button ) {
+		case 0: // left
+			// Shoot bullets
+			console.log("Left Click.");
+			leftClick = true;
+			break;
+		case 1: // middle
+			console.log("Middle Click.");
+			break;
+		case 2: // right
+			// Change ammo type
+			console.log("Right Click.");
+			rightClick = true;
+			break;
 	}
-	else{
-		player.upright(true);
-		player.setTargetPlanet(Surface1);
-	}
+	
+    event.preventDefault();
+	
 	// update the mouse variable
-	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+	//mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	//mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+	mouse.x = event.clientX - window.innerWidth/2;
+    mouse.y = event.clientY - window.innerHeight/2;
 	
 	// find intersections
 	// update the picking ray with the camera and mouse position
-	raycaster.setFromCamera( mouse, camera );
+	raycaster.setFromCamera( mouse, controls.getObject());
 
 	// create an array containing all objects in the scene with which the ray intersects
 	var intersects = raycaster.intersectObjects( WorldObjects );
@@ -367,12 +381,10 @@ class Player{
 		// the planet he wanted to go to then the new planet will be his TargetPlanet.
 		this.TargetPlanet = null;
 		this.LandedOnPlanet = false;
-		
-		this.DistanceFromPlanet = 0;
-		this.PlayerHeight = 0;
-		this.TravelDistance = 0;
+		this.Height = 5;
 		this.Upright = true;
 		this.Group = new THREE.Group();
+		
 		var geometry = new THREE.CylinderGeometry( 2.5, 2.5, 10, 32 );
 		var material = new Physijs.createMaterial(new THREE.MeshPhongMaterial({color: 0xff00E3, specular: 0xffffff, shininess: 60}),0,0);
 		this.body = new Physijs.CapsuleMesh( geometry, material, 40);
@@ -393,17 +405,13 @@ class Player{
 	// Only takes in the planet class. This is called when the player clicks on
 	// a different planet to travel to it.
 	setTargetPlanet(planet){
-		// Add the characters pivot on the planets pivot
-		cur = planet;
 		// Check if is already attached to another planet
 		if(this.TargetPlanet!== null){
 			// Character from that planets pivot
 			this.TargetPlanet.pivot.remove(controls.getObject());
 		}
-		this.TravelDistance = 0;
 		this.TargetPlanet = planet;
 		this.LandedOnPlanet = false;
-		this.DistanceFromPlanet = this.getDistance();
 	}
 	
 	upright(bool){
@@ -411,12 +419,14 @@ class Player{
 			if(!this.Upright){
 				controls.getObject().rotation.z += Math.PI;
 				this.Upright = true;
+				controls.facingUp(true);
 			}
 		}
 		else{
 			if(this.Upright){
 				controls.getObject().rotation.z += Math.PI;
 				this.Upright = false;
+				controls.facingUp(false);
 			}
 		}
 	}
@@ -427,6 +437,17 @@ class Player{
 			return Math.abs(controls.getObject().position.y - this.TargetPlanet.y);
 		}
 		else return 0;
+	}
+	
+	switchPlanet(){
+		if(this.TargetPlanet === Surface1){
+			player.upright(false);
+			player.setTargetPlanet(Surface2);
+		}
+		else{
+			player.upright(true);
+			player.setTargetPlanet(Surface1);
+		}
 	}
 
 	animate(){
@@ -440,6 +461,7 @@ class Player{
 
 				// This is collision detection. It checks if the player is currently touching anything.
 				var intersections;
+				// The raycasters don't rotate with the player. So we need to switch based on the orientation.
 				if(this.Upright) intersections = this.footRaycaster.intersectObjects( WorldObjects );
 				else intersections = this.headRaycaster.intersectObjects( WorldObjects );
 				
@@ -450,6 +472,17 @@ class Player{
 						//var firstObjectIntersected = intersections[0];
 						isOnObject= true;
 					}
+				}
+				
+				if( this.getDistance()> 1+this.Height ) canJump = false;
+				
+				// Change Planet Button
+				// Add a timer after you find that it is true. So that it doesn't change a million times in a second.
+				if(leftClick && ( !canJump || !withinBoundary )){
+					this.switchPlanet();
+					isOnObject = false;
+					this.LandedOnPlanet = false;
+					canJump = false;
 				}
 				
 				var leftBound = this.TargetPlanet.x-this.TargetPlanet.width/2;
@@ -474,7 +507,7 @@ class Player{
 				// A check should be added here to see if what the player is touching is actually a planet.
 				if ( isOnObject === true ) {
 					if (this.LandedOnPlanet === false) {
-						//this.TargetPlanet.addToPivot(controls.getObject());
+						this.TargetPlanet.addToPivot(controls.getObject());
 					}
 					this.LandedOnPlanet = true;
 					canJump = true;
@@ -484,28 +517,10 @@ class Player{
 				// After you land the SphereCoords are still centered at (0,0,0) instead
 				// of the new planet. We need to find a way to center SphereCoords on the new planet
 				if( this.LandedOnPlanet === true){
-					if(this.Upright){
-						controls.moveRight(- velocity.x * delta );
-						controls.moveForward(- velocity.z * delta );
-						controls.getObject().position.y += ( velocity.y * delta ); // new behavior
-					}
-					else{
-						controls.moveRight( velocity.x * delta );
-						controls.moveForward( velocity.z * delta );
-						controls.getObject().position.y -= ( velocity.y * delta ); // new behavior
-					}
-
-					if ( controls.getObject().position.y < this.TargetPlanet.y && this.Upright && withinBoundary) {
-						velocity.y = 0;
-						//console.log("yep");
-						controls.getObject().position.y = this.TargetPlanet.y;
-						canJump = true;
-					}
-					else if ( controls.getObject().position.y > this.TargetPlanet.y && !this.Upright && withinBoundary) {
-						velocity.y = 0;
-						controls.getObject().position.y = this.TargetPlanet.y-2;
-						canJump = true;
-					}
+					controls.moveRight(- velocity.x * delta );
+					controls.moveForward(- velocity.z * delta );
+					controls.moveUp( velocity.y * delta );
+					
 					
 					if(!withinBoundary){
 						this.LandedOnPlanet = false;
@@ -516,13 +531,22 @@ class Player{
 					}
 					
 					// get distance can never be less than one.
-					/*if ( this.getDistance()< 1 && withinBoundary) {
-						this.LandedOnPlanet = true;
-						velocity.y = 0;
-						controls.getObject().position.y = this.TargetPlanet.y+20;
-						velocity.y = 0;
-						canJump = true;
-					}*/
+					if (withinBoundary) {
+						if(this.Upright){
+							if(controls.getObject().position.y<this.TargetPlanet.y+1){
+								controls.getObject().position.y = this.TargetPlanet.y+1+ this.Height;
+								velocity.y = 0;
+								canJump = true;
+							}
+						}
+						else{
+							if(controls.getObject().position.y>this.TargetPlanet.y-1){
+								controls.getObject().position.y = this.TargetPlanet.y-1 - this.Height;
+								velocity.y = 0;
+								canJump = true;
+							}
+						}
+					}
 				}
 				else{
 					// Controls for when you are floating in space
@@ -533,6 +557,10 @@ class Player{
 					var step = 1 - (distance - 1)/distance;
 					applyGravity(controls.getObject(),this.TargetPlanet,step);
 				}
+				
+				// Change click after click events have been processed.
+				leftClick = false;
+				rightClick = false;
 				prevTime = time;
 			}
 		}

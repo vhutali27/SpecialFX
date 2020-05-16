@@ -20,6 +20,7 @@ THREE.PointerLockControls = function ( camera, domElement ) {
 	//
 
 	var scope = this;
+	var isFacingDown = false;
 
 	var changeEvent = { type: 'change' };
 	var lockEvent = { type: 'lock' };
@@ -31,12 +32,18 @@ THREE.PointerLockControls = function ( camera, domElement ) {
 
 	var vec = new THREE.Vector3();
 
+
 	function onMouseMove( event ) {
 
 		if ( scope.isLocked === false ) return;
 
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+		
+		if(isFacingDown){
+			movementX*=-1;
+			movementY*=-1;
+		}
 
 		euler.setFromQuaternion( camera.quaternion );
 
@@ -102,6 +109,10 @@ THREE.PointerLockControls = function ( camera, domElement ) {
 		return camera;
 
 	};
+	
+	this.facingUp = function (value) { // Changes character orientation
+		isFacingDown = !value;	
+	};
 
 	this.getDirection = function () {
 
@@ -116,7 +127,7 @@ THREE.PointerLockControls = function ( camera, domElement ) {
 	}();
 
 	this.moveForward = function ( distance ) {
-
+		if(isFacingDown) distance *= -1;
 		// move forward parallel to the xz-plane
 		// assumes camera.up is y-up
 
@@ -127,9 +138,16 @@ THREE.PointerLockControls = function ( camera, domElement ) {
 		camera.position.addScaledVector( vec, distance );
 
 	};
+	
+	this.moveUp = function ( distance ){
+		if(isFacingDown) distance *= -1;
+		
+		// move on the y-axis
+		camera.position.y += distance;
+	};
 
 	this.moveRight = function ( distance ) {
-
+		
 		vec.setFromMatrixColumn( camera.matrix, 0 );
 
 		camera.position.addScaledVector( vec, distance );
