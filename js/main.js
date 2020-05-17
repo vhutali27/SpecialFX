@@ -278,6 +278,7 @@ var onKeyDown = function ( event ) {
 			break;
 	}
 };
+
 var onKeyUp = function ( event ) {
 	switch( event.keyCode ) {
 		case 38: // up
@@ -315,13 +316,6 @@ document.addEventListener( 'keyup', onKeyUp, false );
 // Raycasting is used for working out which object the mouse is pointing at
 var raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
 
-// controls is the First Person View controls. This shouldn't be the object that
-// is moved or acts as the player. It should be added to the players THREE.Group
-// The player is the one that should be moved so that the game can also work with
-// the Third Person View controls.
-var controls = new THREE.PointerLockControls(camera,document.body);
-scene.add(controls.getObject());
-
 var mouse = { x: 0, y: 0 };
 function onDocumentMouseDown( event ) 
 {
@@ -354,19 +348,19 @@ function onDocumentMouseDown( event )
 	
 	// find intersections
 	// update the picking ray with the camera and mouse position
-	raycaster.setFromCamera( mouse, controls.getObject());
+	//raycaster.setFromCamera( mouse, controls.getObject());
 
 	// create an array containing all objects in the scene with which the ray intersects
-	var intersects = raycaster.intersectObjects( WorldObjects );
+	//var intersects = raycaster.intersectObjects( WorldObjects );
 	
 	// if there is one (or more) intersections
-	if ( intersects.length > 0 )
-	{
-		console.log("Hit @ " + toString( intersects[0].point ) );
+	//if ( intersects.length > 0 )
+	//{
+	//	console.log("Hit @ " + toString( intersects[0].point ) );
 		// change the color of the closest face.
 		//intersects[ 0 ].face.color.setRGB( 0.8 * Math.random() + 0.2, 0, 0 ); 
 		//intersects[ 0 ].object.geometry.colorsNeedUpdate = true;
-	}
+	//}
 
 }
 
@@ -384,16 +378,23 @@ class Player{
 		this.Upright = true;
 		this.Group = new THREE.Group();
 		
+		// controls is the First Person View controls. This shouldn't be the object that
+		// is moved or acts as the player. It should be added to the players THREE.Group
+		// The player is the one that should be moved so that the game can also work with
+		// the Third Person View controls.
+		this.controls = new THREE.PointerLockControls(camera,document.body,this.Group);
+		
 		var geometry = new THREE.CylinderGeometry( 2.5, 2.5, 10, 32 );
 		var material = new Physijs.createMaterial(new THREE.MeshPhongMaterial({color: 0xff00E3, specular: 0xffffff, shininess: 60}),0,0);
 		this.body = new Physijs.CapsuleMesh( geometry, material, 40);
 		this.footRaycaster = new THREE.Raycaster(new THREE.Vector3(0,-5,0), new THREE.Vector3(0,-1,0));
 		this.headRaycaster = new THREE.Raycaster(new THREE.Vector3(0,5,0), new THREE.Vector3(0,1,0));
 		this.Group.add(this.body);
-		controls.getObject().add(this.Group);
-		//this.body.position.set(0,150,0);
-		scene.add(this.body);
-		controls.getObject().position.set(0,0,0);
+		this.Group.add(this.controls.getObject());
+		scene.add(this.Group);
+		this.Group.position.set(0,0,0);
+		
+		// Position the components of the character here
 	}
 
 	// Returns the Vector3 component of an object with x,y and z variables.
@@ -407,7 +408,7 @@ class Player{
 		// Check if is already attached to another planet
 		if(this.TargetPlanet!== null){
 			// Character from that planets pivot
-			this.TargetPlanet.pivot.remove(controls.getObject());
+			this.TargetPlanet.pivot.remove(this.Group);
 		}
 		this.TargetPlanet = planet;
 		this.LandedOnPlanet = false;
@@ -416,16 +417,18 @@ class Player{
 	upright(bool){
 		if(bool){
 			if(!this.Upright){
-				controls.getObject().rotation.z += Math.PI;
+				//this.Group.rotation.z += Math.PI;
+				//controls.getObject().rotation.z += Math.PI;
 				this.Upright = true;
-				controls.facingUp(true);
+				this.controls.facingUp(true);
 			}
 		}
 		else{
 			if(this.Upright){
-				controls.getObject().rotation.z += Math.PI;
+				//this.Group.rotation.z += Math.PI;
+				//controls.getObject().rotation.z += Math.PI;
 				this.Upright = false;
-				controls.facingUp(false);
+				this.controls.facingUp(false);
 			}
 		}
 	}
@@ -433,7 +436,7 @@ class Player{
 	// Returns the distance between the TargetPlanet and the player.
 	getDistance(){
 		if(this.TargetPlanet!== null){
-			return Math.abs(controls.getObject().position.y - this.TargetPlanet.y);
+			return Math.abs(this.Group.position.y - this.TargetPlanet.y);
 		}
 		else return 0;
 	}
@@ -453,8 +456,10 @@ class Player{
 		if ( controlsEnabled ) {
 			var time = performance.now();
 			if(this.TargetPlanet !== null){
-				var conPos = controls.getObject().position;
+				var conPos = this.Group.position;
 				raycaster.ray.origin.copy( conPos );
+				this.footRaycaster.ray.origin.copy( conPos );
+				this.headRaycaster.ray.origin.copy( conPos );
 				this.footRaycaster.ray.origin.copy(new THREE.Vector3(conPos.x,conPos.y-5,conPos.z));
 				this.headRaycaster.ray.origin.copy(new THREE.Vector3(conPos.x,conPos.y+5,conPos.z));
 
@@ -508,7 +513,7 @@ class Player{
 				// A check should be added here to see if what the player is touching is actually a planet.
 				if ( isOnObject === true ) {
 					if (this.LandedOnPlanet === false) {
-						//this.TargetPlanet.addToPivot(controls.getObject());
+						//this.TargetPlanet.addToPivot(this.Group);
 					}
 					this.LandedOnPlanet = true;
 					canJump = true;
@@ -518,14 +523,14 @@ class Player{
 				// After you land the SphereCoords are still centered at (0,0,0) instead
 				// of the new planet. We need to find a way to center SphereCoords on the new planet
 				if( this.LandedOnPlanet === true){
-					controls.moveRight(- velocity.x * delta );
-					controls.moveForward(- velocity.z * delta );
-					controls.moveUp( velocity.y * delta );
+					this.controls.moveRight(- velocity.x * delta );
+					this.controls.moveForward(- velocity.z * delta );
+					this.controls.moveUp( velocity.y * delta );
 					
 					
 					if(!withinBoundary){
 						this.LandedOnPlanet = false;
-						if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(controls.getObject());
+						if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(this.Group);
 						isOnObject = false;
 						canJump = false;
 						this.TargetPlanet = null;
@@ -534,15 +539,15 @@ class Player{
 					// get distance can never be less than one.
 					if (withinBoundary) {
 						if(this.Upright){
-							if(controls.getObject().position.y<this.TargetPlanet.y+1){
-								controls.getObject().position.y = this.TargetPlanet.y+1+ this.Height;
+							if(this.Group.position.y<this.TargetPlanet.y+1){
+								this.Group.position.y = this.TargetPlanet.y+1+ this.Height;
 								velocity.y = 0;
 								canJump = true;
 							}
 						}
 						else{
-							if(controls.getObject().position.y>this.TargetPlanet.y-1){
-								controls.getObject().position.y = this.TargetPlanet.y-1 - this.Height;
+							if(this.Group.position.y>this.TargetPlanet.y-1){
+								this.Group.position.y = this.TargetPlanet.y-1 - this.Height;
 								velocity.y = 0;
 								canJump = true;
 							}
@@ -556,7 +561,7 @@ class Player{
 					// Move character towards planet
 					var distance = this.getDistance();
 					var step = 1 - (distance - 1)/distance;
-					applyGravity(controls.getObject(),this.TargetPlanet,step);
+					applyGravity(this.Group,this.TargetPlanet,step);
 				}
 				
 				// Change click after click events have been processed.
@@ -616,10 +621,11 @@ class BlockPlanet{
 	// gravitational field. If you make an object and want to add it to the planet, you have to
 	// add it to the planets pivot. It will move the object with regards to the planets rotation and orbit.
 	this.pivot = new THREE.Group();
-	this.planet.position.set(x, y, z);
-	this.planet.add(this.pivot);
+	this.pivot.position.set(x, y, z);
+	this.pivot.add(this.planet);
+	this.planet.position.set(x, 0, z);
 	this.planet.name = name;
-    scene.add(this.planet);
+    scene.add(this.pivot);
 	WorldObjects.push(this.planet);
   }
 
@@ -635,13 +641,17 @@ class BlockPlanet{
   addObject( obj, onTop, x, z, height){
 	if(onTop === true){height=1 + height;}
 	else {height=-1 - height;}
-	obj.position.set(this.x+x - this.width/2,this.y + height,this.z+z - this.depth/2);
-    scene.add(obj);
-	//this.addToPivot(obj);
+	obj.position.set(this.x+x - this.width/2, height,this.z+z - this.depth/2);
+	this.addToPivot(obj);
+	
+    //scene.add(obj);
+	//
   }
 
 	addToPivot(obj){
+		var coords = {x:obj.position.x, y:obj.position.y, z: obj.position.z};
 		this.pivot.add(obj);
+		obj.position.set(coords.x,coords.y,coords.z);
 	}
 
 	/**
@@ -724,10 +734,11 @@ if ( havePointerLock ) {
 	var pointerlockchange = function ( event ) {
 		if ( document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element ) {
 			controlsEnabled = true;
-			controls.enabled = true;
+			player.controls.enabled = true;
 			blocker.style.display = 'none';
-		} else {
-			controls.enabled = false;
+		}
+		else {
+			player.controls.enabled = false;
 			blocker.style.display = '-webkit-box';
 			blocker.style.display = '-moz-box';
 			blocker.style.display = 'box';
