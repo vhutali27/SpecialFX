@@ -616,8 +616,8 @@ class BlockPlanet{
 	// gravitational field. If you make an object and want to add it to the planet, you have to
 	// add it to the planets pivot. It will move the object with regards to the planets rotation and orbit.
 	this.pivot = new THREE.Group();
-	this.planet.add(this.pivot);
 	this.planet.position.set(x, y, z);
+	this.planet.add(this.pivot);
 	this.planet.name = name;
     scene.add(this.planet);
 	WorldObjects.push(this.planet);
@@ -637,7 +637,7 @@ class BlockPlanet{
 	else {height=-1 - height;}
 	obj.position.set(this.x+x - this.width/2,this.y + height,this.z+z - this.depth/2);
     scene.add(obj);
-	this.addToPivot(obj);
+	//this.addToPivot(obj);
   }
 
 	addToPivot(obj){
