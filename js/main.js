@@ -323,7 +323,6 @@ var controls = new THREE.PointerLockControls(camera,document.body);
 scene.add(controls.getObject());
 
 var mouse = { x: 0, y: 0 };
-var cur;
 function onDocumentMouseDown( event ) 
 {
 	// the following line would stop any other event handler from firing
@@ -474,7 +473,15 @@ class Player{
 					}
 				}
 				
-				if( this.getDistance()> 1+this.Height ) canJump = false;
+				if( this.getDistance()> 5+this.Height ) canJump = false;
+				
+				
+				
+				var leftBound = this.TargetPlanet.x-this.TargetPlanet.width/2;
+				var rightBound = this.TargetPlanet.x+this.TargetPlanet.width/2;
+				var bottomBound = this.TargetPlanet.z-this.TargetPlanet.depth/2;
+				var topBound = this.TargetPlanet.z+this.TargetPlanet.depth/2;
+				var withinBoundary = leftBound<conPos.x && rightBound>conPos.x && bottomBound<conPos.z && topBound>conPos.z;
 				
 				// Change Planet Button
 				// Add a timer after you find that it is true. So that it doesn't change a million times in a second.
@@ -484,12 +491,6 @@ class Player{
 					this.LandedOnPlanet = false;
 					canJump = false;
 				}
-				
-				var leftBound = this.TargetPlanet.x-this.TargetPlanet.width/2;
-				var rightBound = this.TargetPlanet.x+this.TargetPlanet.width/2;
-				var bottomBound = this.TargetPlanet.z-this.TargetPlanet.depth/2;
-				var topBound = this.TargetPlanet.z+this.TargetPlanet.depth/2;
-				var withinBoundary = leftBound<conPos.x && rightBound>conPos.x && bottomBound<conPos.z && topBound>conPos.z;
 				
 				var delta = ( time - prevTime ) / 1000;
 				
@@ -507,7 +508,7 @@ class Player{
 				// A check should be added here to see if what the player is touching is actually a planet.
 				if ( isOnObject === true ) {
 					if (this.LandedOnPlanet === false) {
-						this.TargetPlanet.addToPivot(controls.getObject());
+						//this.TargetPlanet.addToPivot(controls.getObject());
 					}
 					this.LandedOnPlanet = true;
 					canJump = true;
@@ -662,7 +663,7 @@ class BlockPlanet{
 
 // Surface1
 var Surface1Material = new THREE.MeshPhongMaterial({
-map: loader.load("images/planet_2.jpg"),
+map: loader.load("images/Bark.jpg"),
 color: 0x72f2f2,
 specular: 0xbbbbbb,
 shininess: 2
@@ -686,7 +687,7 @@ Surface1.addObject(getSquare(ballMaterial, 2),true,150,150,2);
 
 // Mars
 var Surface2Material = new THREE.MeshPhongMaterial({
-map: loader.load("images/planet_1.jpg"),
+map: loader.load("images/Hazard.jpg"),
 color: 0x464742,
 specular: 0xbbbbbb,
 shininess: 2
