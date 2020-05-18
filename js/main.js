@@ -137,6 +137,10 @@
 Physijs.scripts.worker = '/js/physijs_worker.js';
 Physijs.scripts.ammo = '/js/ammo.js';
 
+// Instantiate a loader
+var loader = new THREE.GLTFLoader();
+loaderAnim = document.getElementById('js-loader');
+
 var scene = new Physijs.Scene();
 scene.addEventListener(
 			'update',
@@ -643,9 +647,86 @@ class BlockPlanet{
 	else {height=-1 - height;}
 	obj.position.set(this.x+x - this.width/2, height,this.z+z - this.depth/2);
 	this.addToPivot(obj);
+  }
+  
+  //loader.load(
+  //        MODEL_PATH,
+  //        function (gltf) {
+  //          model = gltf.scene;
+  //          let fileAnimations = gltf.animations;
+  //    
+  //          model.traverse(o => {
+  //    
+  //            if (o.isMesh) {
+  //              o.castShadow = true;
+  //              o.receiveShadow = true;
+  //              //o.material = stacy_mtl;
+  //            }
+  //            // Reference the neck and waist bones
+  //            if (o.isBone && o.name === 'mixamorigNeck') {
+  //              neck = o;
+  //            }
+  //            if (o.isBone && o.name === 'mixamorigSpine') {
+  //              waist = o;
+  //            }
+  //          });
+  //    
+  //          model.scale.set(7, 7, 7);
+  //          model.position.y = -11;
+  //          model.position.x = 5;
+  //    
+  //          scene.add(model);
+  //    
+  //          loaderAnim.remove();
+  //        },
+  //        undefined, // We don't need this function
+  //        function (error) {
+  //          console.error(error);
+  //        });
+  
+  addCanister(onTop,x,z,height){
+	// Load a glTF resource
+	loader.load(
+		// resource URL
+		'models/character.glb',
+		// called when the resource is loaded
+		function ( gltf ) {
+			if(onTop === true){height=1 + height;}
+			else {height=-1 - height;}
+			//scene.add( gltf.scene );
+			canister = gltf.scene;
+			
+			canister.traverse(o => {
+      
+              if (o.isMesh) {
+                o.castShadow = true;
+                o.receiveShadow = true;
+                //o.material = stacy_mtl;
+              }
+              // Reference the neck and waist bones
+              if (o.isBone && o.name === 'mixamorigNeck') {
+                neck = o;
+              }
+              if (o.isBone && o.name === 'mixamorigSpine') {
+                waist = o;
+              }
+            });
+			
+			canister.position.set(this.x+x - this.width/2, height,this.z+z - this.depth/2);
+			this.addToPivot(canister);
+			/*gltf.animations; // Array<THREE.AnimationClip>
+			gltf.scene; // THREE.Group
+			gltf.scenes; // Array<THREE.Group>
+			gltf.cameras; // Array<THREE.Camera>
+			gltf.asset; // Object*/
+			
+			loaderAnim.remove();
 	
-    //scene.add(obj);
-	//
+		},
+		undefined, // We don't need this function
+          function (error) {
+            console.error(error);
+          });
   }
 
 	addToPivot(obj){
@@ -668,6 +749,15 @@ class BlockPlanet{
 }
 
 //////////////////////////////////////////////////
+// LOADING MODELS                               //
+//////////////////////////////////////////////////
+
+
+
+
+	
+
+//////////////////////////////////////////////////
 // IN GAME OBJECT CREATION                      //
 //////////////////////////////////////////////////
 
@@ -687,10 +777,10 @@ specular: 0xbbbbbb,
 shininess: 2
 });
 AnimateObject.push(Surface1);
-Surface1.addObject(getSquare(ballMaterial, 2),true,0,0,2);
-Surface1.addObject(getSquare(ballMaterial, 2),true,0,150,2);
-Surface1.addObject(getSquare(ballMaterial, 2),true,150,0,2);
-Surface1.addObject(getSquare(ballMaterial, 2),true,150,150,2);
+Surface1.addCanister(true,0,0,2);
+Surface1.addCanister(true,0,150,2);
+Surface1.addCanister(true,150,0,2);
+Surface1.addCanister(true,150,150,2);
 
 
 //earth.addObject(getSquare(earthMaterial, 2),23,1,2);
