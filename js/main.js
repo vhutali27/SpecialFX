@@ -138,7 +138,9 @@ Physijs.scripts.worker = '/js/physijs_worker.js';
 Physijs.scripts.ammo = '/js/ammo.js';
 
 // Instantiate a loader
-var loader = new THREE.GLTFLoader();
+var loaderGLTF = new THREE.GLTFLoader();
+var loaderOBJ = new THREE.OBJLoader();
+var loaderMTL = new THREE.MTLLoader();
 loaderAnim = document.getElementById('js-loader');
 
 var scene = new Physijs.Scene();
@@ -495,6 +497,7 @@ class Player{
 				// Change Planet Button
 				// Add a timer after you find that it is true. So that it doesn't change a million times in a second.
 				if(leftClick && ( !canJump || !withinBoundary )){
+					if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(this.Group);
 					this.switchPlanet();
 					isOnObject = false;
 					this.LandedOnPlanet = false;
@@ -517,7 +520,9 @@ class Player{
 				// A check should be added here to see if what the player is touching is actually a planet.
 				if ( isOnObject === true ) {
 					if (this.LandedOnPlanet === false) {
-						//this.TargetPlanet.addToPivot(this.Group);
+						var playx = -this.TargetPlanet.x+ this.Group.position.x + this.TargetPlanet.width/2;
+						var playz = -this.TargetPlanet.z+ this.Group.position.z + this.TargetPlanet.depth/2;
+						//this.TargetPlanet.addObject( this.Group, this.Upright, playx, playz, this.Height);
 					}
 					this.LandedOnPlanet = true;
 					canJump = true;
@@ -649,78 +654,66 @@ class BlockPlanet{
 	this.addToPivot(obj);
   }
   
-  //loader.load(
-  //        MODEL_PATH,
-  //        function (gltf) {
-  //          model = gltf.scene;
-  //          let fileAnimations = gltf.animations;
-  //    
-  //          model.traverse(o => {
-  //    
-  //            if (o.isMesh) {
-  //              o.castShadow = true;
-  //              o.receiveShadow = true;
-  //              //o.material = stacy_mtl;
-  //            }
-  //            // Reference the neck and waist bones
-  //            if (o.isBone && o.name === 'mixamorigNeck') {
-  //              neck = o;
-  //            }
-  //            if (o.isBone && o.name === 'mixamorigSpine') {
-  //              waist = o;
-  //            }
-  //          });
-  //    
-  //          model.scale.set(7, 7, 7);
-  //          model.position.y = -11;
-  //          model.position.x = 5;
-  //    
-  //          scene.add(model);
-  //    
-  //          loaderAnim.remove();
-  //        },
-  //        undefined, // We don't need this function
-  //        function (error) {
-  //          console.error(error);
-  //        });
+  addObjObject(path, materialPath, onTop, x, z, height, planet){
+	// Loads the material
+	loaderMTL.load(materialPath, function ( materials ) {
+		materials.preload();
+		loaderOBJ.setMaterials(materials);
+		loaderOBJ.load(
+			path,
+			function (object) {
+				if(onTop === true){height=1 + height;}
+				else {height=-1 - height; object.rotation.z+=Math.PI;}
+				object.scale.set(0.15,0.15,0.15);
+				object.position.set(planet.x+x - planet.width/2, height,planet.z+z - planet.depth/2);
+				
+				
+				
+				planet.addToPivot(object);
+				},
+				undefined, // We don't need this function
+				function (error) {
+				  console.error(error);
+			});
+	});
+  }
   
-  addCanister(onTop,x,z,height){
+  addCanister(onTop,x,z,height,planet){
 	// Load a glTF resource
-	loader.load(
+	loaderGLTF.load(
 		// resource URL
 		'models/character.glb',
 		// called when the resource is loaded
 		function ( gltf ) {
-			if(onTop === true){height=1 + height;}
-			else {height=-1 - height;}
 			//scene.add( gltf.scene );
-			canister = gltf.scene;
-			
-			canister.traverse(o => {
-      
-              if (o.isMesh) {
-                o.castShadow = true;
-                o.receiveShadow = true;
-                //o.material = stacy_mtl;
-              }
-              // Reference the neck and waist bones
-              if (o.isBone && o.name === 'mixamorigNeck') {
-                neck = o;
-              }
-              if (o.isBone && o.name === 'mixamorigSpine') {
-                waist = o;
-              }
-            });
-			
-			canister.position.set(this.x+x - this.width/2, height,this.z+z - this.depth/2);
-			this.addToPivot(canister);
+			var canister = gltf.scene;
+			if(onTop === true){height=1 + height;}
+			else {height=-1 - height; canister.rotation.z+=Math.PI;}
+//			canister.traverse(o => {
+//      
+//              if (o.isMesh) {
+//                o.castShadow = true;
+//                o.receiveShadow = true;
+//                //o.material = stacy_mtl;
+//              }
+//              // Reference the neck and waist bones
+//              if (o.isBone && o.name === 'mixamorigNeck') {
+//                neck = o;
+//              }
+//              if (o.isBone && o.name === 'mixamorigSpine') {
+//                waist = o;
+//              }
+//            });
+			canister.scale.set(10,10,10);
+			canister.position.set(planet.x+x - planet.width/2, height,planet.z+z - planet.depth/2);
+			planet.addToPivot(canister);
 			/*gltf.animations; // Array<THREE.AnimationClip>
 			gltf.scene; // THREE.Group
 			gltf.scenes; // Array<THREE.Group>
 			gltf.cameras; // Array<THREE.Camera>
 			gltf.asset; // Object*/
 			
-			loaderAnim.remove();
+			//loaderAnim.remove();
 	
 		},
 		undefined, // We don't need this function
@@ -777,10 +770,10 @@ specular: 0xbbbbbb,
 shininess: 2
 });
 AnimateObject.push(Surface1);
-Surface1.addCanister(true,0,0,2);
-Surface1.addCanister(true,0,150,2);
-Surface1.addCanister(true,150,0,2);
-Surface1.addCanister(true,150,150,2);
+Surface1.addCanister(true,0,0,2,Surface1);
+Surface1.addCanister(true,0,150,2,Surface1);
+Surface1.addCanister(true,150,0,2,Surface1);
+Surface1.addCanister(true,150,150,2,Surface1);
 
 
 //earth.addObject(getSquare(earthMaterial, 2),23,1,2);
@@ -794,6 +787,8 @@ shininess: 2
 });
 var Surface2 = new BlockPlanet(150, 150, Surface2Material, 0, 100, 0, "Surface2");
 AnimateObject.push(Surface2);
+Surface1.addObjObject("models/bucket/bucket.obj","models/bucket/bucket.mtl", true, 75, 75, 2, Surface1);
+Surface2.addObjObject("models/birch/birch.obj","models/birch/birch.mtl", false, 75, 75, 0, Surface2);
 
 //Stars
 var starGeometry = new THREE.SphereGeometry(1000, 50, 500);
