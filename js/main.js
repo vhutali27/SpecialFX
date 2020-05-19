@@ -139,9 +139,13 @@ Physijs.scripts.ammo = '/js/ammo.js';
 
 // Instantiate a loader
 var loaderGLTF = new THREE.GLTFLoader();
-var loaderOBJ = new THREE.OBJLoader();
+//var loaderOBJ = new THREE.OBJLoader();
 var loaderMTL = new THREE.MTLLoader();
-loaderAnim = document.getElementById('js-loader');
+var mixer;											//THREE.js animations mixer
+var loaderAnim = document.getElementById('js-loader');
+
+//Create clock, set autostart to true
+var clock = new THREE.Clock(true);
 
 var scene = new Physijs.Scene();
 scene.addEventListener(
@@ -153,7 +157,7 @@ scene.addEventListener(
 		);
 
 // Loader
-loader = new THREE.TextureLoader();
+var loader = new THREE.TextureLoader();
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 2000);
 // The objects added to this array should have an animate() function.
 // This function will be called by the render function for each frame.
@@ -347,26 +351,22 @@ function onDocumentMouseDown( event )
     event.preventDefault();
 	
 	// update the mouse variable
-	//mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	//mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-	mouse.x = event.clientX - window.innerWidth/2;
-    mouse.y = event.clientY - window.innerHeight/2;
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 	
 	// find intersections
 	// update the picking ray with the camera and mouse position
-	//raycaster.setFromCamera( mouse, controls.getObject());
+	raycaster.setFromCamera( mouse, camera);
 
 	// create an array containing all objects in the scene with which the ray intersects
-	//var intersects = raycaster.intersectObjects( WorldObjects );
+	var intersects = raycaster.intersectObjects( scene.children, true );
 	
 	// if there is one (or more) intersections
-	//if ( intersects.length > 0 )
-	//{
-	//	console.log("Hit @ " + toString( intersects[0].point ) );
-		// change the color of the closest face.
-		//intersects[ 0 ].face.color.setRGB( 0.8 * Math.random() + 0.2, 0, 0 ); 
-		//intersects[ 0 ].object.geometry.colorsNeedUpdate = true;
-	//}
+	if ( intersects[0] )
+	{
+		var object = intersects[0].object;
+		console.log("Hit @ " + toString( intersects[0].name ) );
+	}
 
 }
 
@@ -390,36 +390,84 @@ class Player{
 		// the Third Person View controls.
 		this.controls = new THREE.PointerLockControls(camera,document.body,this.Group);
 		var g = this.controls.getObject();
+		var group= this.Group;
 		
 		// Loads the character's gun
 		loaderMTL.load("models/Gun/gun.mtl", function ( materials ) {
-		materials.preload();
-		loaderOBJ.setMaterials(materials);
-		loaderOBJ.load(
-			"models/Gun/gun.obj",
-			function (object) {
-				//object.rotation.x += Math.PI/4;
-				object.rotation.y += Math.PI/2;
-				//object.rotation.z += Math.PI/4;
-				object.scale.set(5,5,5);
-				object.position.set(3, -3,-6);
-				g.add(object);
-				},
-				undefined, // We don't need this function
-				function (error) {
-				  console.error(error);
+			materials.preload();
+			var loaderOBJ = new THREE.OBJLoader();
+			loaderOBJ.setMaterials(materials);
+			loaderOBJ.load(
+				"models/Gun/gun.obj",
+				function (object) {
+					//object.rotation.x += Math.PI/4;
+					object.rotation.y += Math.PI/2;
+					//object.rotation.z += Math.PI/4;
+					object.scale.set(5,5,5);
+					object.position.set(3, -3,-6);
+					g.add(object);
+					},
+					undefined, // We don't need this function
+					function (error) {
+					  console.error(error);
 			});
 		});
 		
-		var geometry = new THREE.CylinderGeometry( 2.5, 2.5, 10, 32 );
-		var material = new Physijs.createMaterial(new THREE.MeshPhongMaterial({color: 0xff00E3, specular: 0xffffff, shininess: 60}),0,0);
-		this.body = new Physijs.CapsuleMesh( geometry, material, 40);
+		// Loads the Characters model
+		// Load a glTF resource
+			loaderGLTF.load(
+				// resource URL
+				'models/character.glb',
+				// called when the resource is loaded
+				function ( gltf ) {
+					//Characters model
+					var model = gltf.scene;								//Our character
+					var neck;											//Reference to the neck bone
+					var waist;											//Reference to waist bone
+					var possibleAnims;									//Animations found in file
+					var idle;											//Idle, the default state
+					var currentlyAnimating = false;						//Used to check if neck is in use
+					var loaderAnim = document.getElementById('js-loader');
+					//Character's animations
+					let fileAnimations = gltf.animations;
+					model.traverse(o => {
+		      
+		              if (o.isMesh) {
+		                o.castShadow = true;
+		                o.receiveShadow = true;
+		                //o.material = stacy_mtl;
+		              }
+		              // Reference the neck and waist bones
+		              if (o.isBone && o.name === 'mixamorigNeck') {
+		                neck = o;
+		              }
+		              if (o.isBone && o.name === 'mixamorigSpine') {
+		                waist = o;
+		              }
+		            });
+					model.scale.set(7,7,7);
+					model.rotation.y += Math.PI;
+					model.position.set( 0, -5, -20);
+					group.add(model);
+					
+					loaderAnim.remove();
+					mixer = new THREE.AnimationMixer(model);
+					let idleAnim = THREE.AnimationClip.findByName(fileAnimations, 'idle');
+					idle = mixer.clipAction(idleAnim);
+					idle.play();
+			
+				},
+				undefined, // We don't need this function
+				  function (error) {
+					console.error(error);
+				}
+			);
+
 		this.footRaycaster = new THREE.Raycaster(new THREE.Vector3(0,-5,0), new THREE.Vector3(0,-1,0));
 		this.headRaycaster = new THREE.Raycaster(new THREE.Vector3(0,5,0), new THREE.Vector3(0,1,0));
-		this.Group.add(this.body);
 		this.Group.add(this.controls.getObject());
 		scene.add(this.Group);
-		this.Group.position.set(0,0,0);
+		this.Group.position.set(0,0,-110);
 		
 		// Position the components of the character here
 	}
@@ -680,21 +728,19 @@ class BlockPlanet{
 	this.addToPivot(obj);
   }
   
-  addObjObject(path, materialPath, onTop, x, z, height, planet){
+  addObjObject(path, materialPath, onTop, x, z, height, scale, planet){
 	// Loads the material
 	loaderMTL.load(materialPath, function ( materials ) {
 		materials.preload();
+		var loaderOBJ = new THREE.OBJLoader();
 		loaderOBJ.setMaterials(materials);
 		loaderOBJ.load(
 			path,
 			function (object) {
 				if(onTop === true){height=1 + height;}
 				else {height=-1 - height; object.rotation.z+=Math.PI;}
-				object.scale.set(0.15,0.15,0.15);
+				object.scale.set(scale.x,scale.y,scale.z);
 				object.position.set(planet.x+x - planet.width/2, height,planet.z+z - planet.depth/2);
-				
-				
-				
 				planet.addToPivot(object);
 				},
 				undefined, // We don't need this function
@@ -796,11 +842,11 @@ specular: 0xbbbbbb,
 shininess: 2
 });
 AnimateObject.push(Surface1);
-Surface1.addCanister(true,0,0,2,Surface1);
+/*Surface1.addCanister(true,0,0,2,Surface1);
 Surface1.addCanister(true,0,150,2,Surface1);
 Surface1.addCanister(true,150,0,2,Surface1);
-Surface1.addCanister(true,150,150,2,Surface1);
-Surface1.addObjObject("models/bucket/bucket.obj","models/bucket/bucket.mtl", true, 75, 75, 2, Surface1);
+Surface1.addCanister(true,150,150,2,Surface1);*/
+Surface1.addObjObject("models/bucket/bucket.obj","models/bucket/bucket.mtl", true, 75, 75, 2, {x:0.15,y:0.15,z:0.15}, Surface1);
 
 //earth.addObject(getSquare(earthMaterial, 2),23,1,2);
 
@@ -813,8 +859,8 @@ shininess: 2
 });
 var Surface2 = new BlockPlanet(150, 1500, grassMaterial, 0, 100, 0, "Surface2");
 AnimateObject.push(Surface2);
-Surface2.addObjObject("models/steel_fence/fance.obj","models/steel_fence/fance.mtl",false,0,0,0,Surface2);
-Surface2.addObjObject("models/birch/birch.obj","models/birch/birch.mtl", false, 75, 75, 0, Surface2);
+Surface2.addObjObject("models/steel_fence/fance.obj","models/steel_fence/fance.mtl",false,0,0,0, {x:5,y:5,z:5},Surface2);
+Surface2.addObjObject("models/birch/birch.obj","models/birch/birch.mtl", false, 75, 75, 0, {x:0.15,y:0.15,z:0.15},Surface2);
 
 //Stars
 var starGeometry = new THREE.SphereGeometry(1000, 50, 500);
@@ -899,14 +945,16 @@ function onWindowResize() {
 // RENDERING                                    //
 //////////////////////////////////////////////////
 
-//Create clock, set autostart to true
-var clock = new THREE.Clock(true);
-
 var render = function() {
 	//Get the seconds elapsed since last getDelta call
 	//var timeElapsed = clock.getDelta();
 	//Or get the amount of time elapsed since start of the clock/program
 	//var timeElapsed = clock.getTimeElapsed();
+	
+	// Animation Mixer for character
+	if (mixer) {
+		mixer.update(clock.getDelta());
+	}
 
   AnimateObject.forEach(function(object){object.animate();});
   requestAnimationFrame(render);
