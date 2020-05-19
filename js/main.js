@@ -389,6 +389,27 @@ class Player{
 		// The player is the one that should be moved so that the game can also work with
 		// the Third Person View controls.
 		this.controls = new THREE.PointerLockControls(camera,document.body,this.Group);
+		var g = this.controls.getObject();
+		
+		// Loads the character's gun
+		loaderMTL.load("models/Gun/gun.mtl", function ( materials ) {
+		materials.preload();
+		loaderOBJ.setMaterials(materials);
+		loaderOBJ.load(
+			"models/Gun/gun.obj",
+			function (object) {
+				//object.rotation.x += Math.PI/4;
+				object.rotation.y += Math.PI/2;
+				//object.rotation.z += Math.PI/4;
+				object.scale.set(5,5,5);
+				object.position.set(3, -3,-6);
+				g.add(object);
+				},
+				undefined, // We don't need this function
+				function (error) {
+				  console.error(error);
+			});
+		});
 		
 		var geometry = new THREE.CylinderGeometry( 2.5, 2.5, 10, 32 );
 		var material = new Physijs.createMaterial(new THREE.MeshPhongMaterial({color: 0xff00E3, specular: 0xffffff, shininess: 60}),0,0);
@@ -536,7 +557,6 @@ class Player{
 					this.controls.moveForward(- velocity.z * delta );
 					this.controls.moveUp( velocity.y * delta );
 					
-					
 					if(!withinBoundary){
 						this.LandedOnPlanet = false;
 						if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(this.Group);
@@ -570,7 +590,7 @@ class Player{
 					// Move character towards planet
 					var distance = this.getDistance();
 					var step = 1 - (distance - 1)/distance;
-					applyGravity(this.Group,this.TargetPlanet,step);
+					applyGravity(this.Group,{x:this.Group.position.x,y:this.TargetPlanet.y,z:this.Group.position.z},step);
 				}
 				
 				// Change click after click events have been processed.
@@ -579,9 +599,15 @@ class Player{
 				prevTime = time;
 			}
 		}
-		
 	}
 }
+
+// Bullet Class
+//class Bullet{
+//	constructor(){
+//		
+//	}
+//}
 /* This function applies gravity between an object and a planet
  * It takes in the object and the planet it should gravitate towards.
  * The ratio is a value from zero to one. zero being the initial distance
@@ -597,7 +623,7 @@ function applyGravity(object,planet,ratio){
 	// Move character towards planet
 	var c = object.position;
 	var p = planet;
-	var step = ratio*(Math.PI/2);
+	var step = ratio*(Math.PI/2)+0.05;
 	object.position.set( c.x + ((p.x - c.x)*step),// x
 	c.y + ((p.y - c.y)*step),// y
 	c.z + ((p.z - c.z)*step));// z
@@ -755,13 +781,13 @@ class BlockPlanet{
 //////////////////////////////////////////////////
 
 // Surface1
-var Surface1Material = new THREE.MeshPhongMaterial({
-map: loader.load("images/Bark.jpg"),
+var woodenFloorMaterial = new THREE.MeshPhongMaterial({
+map: loader.load("images/woodenFloor.jpg"),
 color: 0x72f2f2,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var Surface1 = new BlockPlanet(150, 150, Surface1Material, 0, -50, 0, "Surface1");
+var Surface1 = new BlockPlanet(150, 1500, woodenFloorMaterial, 0, -50, 0, "Surface1");
 
 var ballMaterial = new THREE.MeshPhongMaterial({
 //map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
@@ -774,20 +800,20 @@ Surface1.addCanister(true,0,0,2,Surface1);
 Surface1.addCanister(true,0,150,2,Surface1);
 Surface1.addCanister(true,150,0,2,Surface1);
 Surface1.addCanister(true,150,150,2,Surface1);
-
+Surface1.addObjObject("models/bucket/bucket.obj","models/bucket/bucket.mtl", true, 75, 75, 2, Surface1);
 
 //earth.addObject(getSquare(earthMaterial, 2),23,1,2);
 
 // Mars
-var Surface2Material = new THREE.MeshPhongMaterial({
-map: loader.load("images/Hazard.jpg"),
+var grassMaterial = new THREE.MeshPhongMaterial({
+map: loader.load("images/grass.jpg"),
 color: 0x464742,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var Surface2 = new BlockPlanet(150, 150, Surface2Material, 0, 100, 0, "Surface2");
+var Surface2 = new BlockPlanet(150, 1500, grassMaterial, 0, 100, 0, "Surface2");
 AnimateObject.push(Surface2);
-Surface1.addObjObject("models/bucket/bucket.obj","models/bucket/bucket.mtl", true, 75, 75, 2, Surface1);
+Surface2.addObjObject("models/steel_fence/fance.obj","models/steel_fence/fance.mtl",false,0,0,0,Surface2);
 Surface2.addObjObject("models/birch/birch.obj","models/birch/birch.mtl", false, 75, 75, 0, Surface2);
 
 //Stars
