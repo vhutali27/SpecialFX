@@ -3,7 +3,7 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-THREE.PointerLockControls = function ( camera, domElement, character ) {
+THREE.PointerLockControls = function ( camera, domElement, character, pivot ) {
 
 	if ( domElement === undefined ) {
 
@@ -166,6 +166,7 @@ THREE.PointerLockControls = function ( camera, domElement, character ) {
 	
 	this.setOrbitPoint = function ( value ) {
 		orbitPoint = value;
+		pivot.position.set(value);
 	};
 	
 	this.ControllerMovement = function(){
@@ -202,25 +203,10 @@ THREE.PointerLockControls = function ( camera, domElement, character ) {
 	};
 	var OrbitQua = new THREE.Quaternion();
 	this.OrbitalPull = function()
-	{
-		// Inward Rotation To Core
-		var targetDir = this.character.up.clone().sub(orbitPoint).normalize();
-		var delta = 1- clock.getDelta();
-		
+	{	
 		// Normal Spherical Movement Applies
-		if( isGrounded ){
-			
-			//this.character.quaternion = (OrbitQua.setFromUnitVectors(this.character.up, targetDir).multiply(this.character.quaternion));
-
-			if(orbitPoint.distanceTo(this.character.position) > (1.5) && !Jumping)
-			{
-				this.character.up.y -= hoverGravity*delta;
-			}
-		}
-		
-		//Move towards new planet
-		else
-		{
+		if( !isGrounded ){
+			pivot.remove(character);
 			this.character.position.x += -targetDir.x*delta*orbitGravity;
 			this.character.position.y += -targetDir.y*delta*orbitGravity;
 			this.character.position.z += -targetDir.z*delta*orbitGravity;
@@ -228,7 +214,6 @@ THREE.PointerLockControls = function ( camera, domElement, character ) {
 	};
 	
 	this.feetToGround = function() {
-		var targetDir = this.character.up.clone().sub(orbitPoint).normalize();
 		var distanceToSurface = orbitPoint.distanceTo(this.character.position) - radius;
 		var delta = 1- clock.getDelta();
 		
@@ -236,9 +221,25 @@ THREE.PointerLockControls = function ( camera, domElement, character ) {
 		{
 			//THREE.Quaternion.slerp(this.character.quaternion, OrbitQua.setFromUnitVectors(this.character.up, targetDir).multiply( this.character.quaternion ), this.character.quaternion , delta);
 		}
-		else if (distanceToSurface < 2 )
+		else if (distanceToSurface < 2 && !isGrounded)
 		{
 			isGrounded = true;
+			
+			character.rotation.set(
+				0,
+				character.rotation.y,
+				0);
+			
+			pivot.rotation.set(
+				0,
+				character.rotation.y,
+				0);
+			
+			character.position.set(pivot.position.x,pivot.position.y + radius, pivot.position.z);
+			
+			pivot.add(character);
+			
+			
 		}
 	};
 	

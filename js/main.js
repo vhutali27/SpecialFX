@@ -383,12 +383,13 @@ class Player{
 		this.LandedOnPlanet = false;
 		this.Height = 5;
 		this.Group = new THREE.Group();
+		this.PlanetOrigin = new THREE.Group();
 		
 		// controls is the First Person View controls. This shouldn't be the object that
 		// is moved or acts as the player. It should be added to the players THREE.Group
 		// The player is the one that should be moved so that the game can also work with
 		// the Third Person View controls.
-		this.controls = new THREE.PointerLockControls(camera,document.body,this.Group);
+		this.controls = new THREE.PointerLockControls(camera,document.body, this.Group, this.PlanetOrigin);
 		
 		var geometry = new THREE.CylinderGeometry( 2.5, 2.5, 10, 32 );
 		var material = new Physijs.createMaterial(new THREE.MeshPhongMaterial({color: 0xff00E3, specular: 0xffffff, shininess: 60}),0,0);
@@ -399,6 +400,7 @@ class Player{
 		this.Group.add(this.controls.getObject());
 		scene.add(this.Group);
 		this.Group.position.set(0,0,0);
+		this.PlanetOrigin.position.set(0,0,0);
 		
 		// Position the components of the character here
 	}
@@ -414,7 +416,7 @@ class Player{
 		// Check if is already attached to another planet
 		if(this.TargetPlanet!== null){
 			// Character from that planets pivot
-			this.TargetPlanet.pivot.remove(this.Group);
+			this.TargetPlanet.pivot.remove(this.PlanetOrigin);
 		}
 		this.TargetPlanet = planet;
 		this.LandedOnPlanet = false;
