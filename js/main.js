@@ -858,6 +858,110 @@ class BlockPlanet{
 
 
 
+//////////////////////////////////////////////////
+//RANDOM DUMMY OBJECTS                          //
+//////////////////////////////////////////////////
+var maxCollectable = 100; // cap on resources allowed in scene
+var maxAmmo = 100;		//cap on ammo allowed in scene
+var objectnum = 1; 			//total number of distinct items that can be generated
+
+//adding a torus
+// var torusGeometry = new THREE.TorusGeometry(20, 1, 3, 3);
+// var phongMaterial = new THREE.MeshPhongMaterial({color: 0xDAA520, emmission: 0.25});
+// var torus = new THREE.Mesh(torusGeometry, phongMaterial);
+// torus.castShadow =true;
+// torus.position.set(45,20,0);
+// scene.add(torus);
+// WorldObjects.push(torus);
+
+//torus light
+// var dLight = new THREE.DirectionalLight(0xFF00FF,1);
+// dLight.castShadow = true;
+// dLight.shadow.bias = -0.04;
+// dLight.shadow.mapSize.width = 1;
+// dLight.shadow.mapSize.height = 1;
+// var lx = torus.position.x +2;
+// var ly = torus.position.y;
+// var lz = torus.position.z -2;
+// dLight.position.set(lx,ly,lz).normalize();
+// dLight.target = torus;
+// //scene.add(dLight);
+
+// //light flare function
+// function flare()
+//         {
+//             if (lx < torus.position.x + 50){
+//                 lx -=-0.5;
+//                 dLight.position.set(lx,ly,lz).normalize();
+//                 scene.add(dLight);
+//             }else{
+//                 lx = torus.position.x -50;
+//                 dLight.position.set(lx,ly,lz).normalize();
+//                 scene.add(dLight);  
+//             }
+//         }
+
+function torus(x,y,z){
+	var torusGeometry = new THREE.TorusGeometry(4, 1, 60, 60);
+	var phongMaterial = new THREE.MeshPhongMaterial({color: 0xDAA520});
+	var torus = new THREE.Mesh(torusGeometry, phongMaterial);
+	torus.castShadow =true;
+	torus.position.set(x+1,y,z+1);
+	scene.add(torus);
+	WorldObjects.push(torus);
+	}
+
+//randomise function
+var maxX = 80;
+var maxY = 87;
+var maxZ = 500;
+function randomPlace(){
+	 var num = Math.round(Math.random()* (3-1)+1);
+	 var posx = Math.round(Math.random()* (maxX-(-maxX))+(-maxX)); 
+	 var posy = maxY;//Math.round(Math.random()* (20+20)-20); 
+	 var posz = Math.round(Math.random()* (maxZ-(-maxZ))+(-maxZ)); 
+
+	// //substitute shapes in switch with ammo/collectable models
+	if (maxCollectable > 0){
+		switch (num){
+			case 1:{ 
+				var torusGeometry = new THREE.TorusGeometry(0.25, 1, 60, 60);
+				var phongMaterial = new THREE.MeshPhongMaterial({color: 0xDAA520});
+				var torus = new THREE.Mesh(torusGeometry, phongMaterial);
+				torus.castShadow =true;
+				torus.position.set(posx,posy,posz);
+				scene.add(torus);
+				WorldObjects.push(torus);
+				maxCollectable -= 5;
+
+			
+				break;
+			}
+			case 2:{
+				var torusGeometry = new THREE.TorusGeometry(0.25, 1, 60, 60);
+				var phongMaterial = new THREE.MeshPhongMaterial({color: 0x0088dd});
+				var torus = new THREE.Mesh(torusGeometry, phongMaterial);
+				torus.castShadow =true;
+				torus.position.set(posx,posy,posz);
+				scene.add(torus);
+				WorldObjects.push(torus);
+				maxCollectable -= 5;
+				break;
+			}
+			default:{
+				var torusGeometry = new THREE.TorusGeometry(0.25, 1, 60, 60);
+				var phongMaterial = new THREE.MeshPhongMaterial({color: 0xffffff});
+				var torus = new THREE.Mesh(torusGeometry, phongMaterial);
+				torus.castShadow =true;
+				torus.position.set(posx,posy,posz);
+				scene.add(torus);
+				WorldObjects.push(torus);
+				maxCollectable -= 5;
+				break;
+			}
+		}
+	}
+}
 
 	
 
@@ -983,13 +1087,25 @@ function onWindowResize() {
 //////////////////////////////////////////////////
 // RENDERING                                    //
 //////////////////////////////////////////////////
-
+var interval = 0;
 var render = function() {
 	//Get the seconds elapsed since last getDelta call
 	//var timeElapsed = clock.getDelta();
 	//Or get the amount of time elapsed since start of the clock/program
 	//var timeElapsed = clock.getTimeElapsed();
+
+	//light fluctuation for models
+	//flare();
+
+	//places new object in time intervals
+	var timeElapsed = Math.round(clock.getElapsedTime());
+	console.log(timeElapsed);
+	if (timeElapsed % 10 == 0 && timeElapsed != interval){
+		randomPlace();
+		interval = timeElapsed; //This deals with multiple items being dropped at the same second due to rounding
+	 }
 	
+	//randomPlace();
 	// Animation Mixer for character
 	if (mixer) {
 		mixer.update(clock.getDelta());
