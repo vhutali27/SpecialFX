@@ -827,13 +827,13 @@ var maxAmmo = 100;		//cap on ammo allowed in scene
 var objectnum = 1; 			//total number of distinct items that can be generated
 
 //adding a torus
-var torusGeometry = new THREE.TorusGeometry(20, 1, 3, 3);
-var phongMaterial = new THREE.MeshPhongMaterial({color: 0xDAA520, emmission: 0.25});
-var torus = new THREE.Mesh(torusGeometry, phongMaterial);
-torus.castShadow =true;
-torus.position.set(45,20,0);
-scene.add(torus);
-WorldObjects.push(torus);
+// var torusGeometry = new THREE.TorusGeometry(20, 1, 3, 3);
+// var phongMaterial = new THREE.MeshPhongMaterial({color: 0xDAA520, emmission: 0.25});
+// var torus = new THREE.Mesh(torusGeometry, phongMaterial);
+// torus.castShadow =true;
+// torus.position.set(45,20,0);
+// scene.add(torus);
+// WorldObjects.push(torus);
 
 //torus light
 var dLight = new THREE.DirectionalLight(0xFF00FF,1);
@@ -872,11 +872,14 @@ function torus(x,y,z){
 	}
 
 //randomise function
+var maxX = 80;
+var maxY = 87;
+var maxZ = 500;
 function randomPlace(){
 	 var num = Math.round(Math.random()* (3-1)+1);
-	 var posx = Math.round(Math.random()* (100+100)-100); //100
-	 var posy = 87;//Math.round(Math.random()* (20+20)-20); //97
-	 var posz = Math.round(Math.random()* (500+500)-500); //500
+	 var posx = Math.round(Math.random()* (maxX-(-maxX))+(-maxX)); //100
+	 var posy = maxY;//Math.round(Math.random()* (20+20)-20); //97
+	 var posz = Math.round(Math.random()* (maxZ-(-maxZ))+(-maxZ)); //500
 
 	// //substitute shapes in switch with ammo/collectable models
 	if (maxCollectable > 0){
