@@ -874,12 +874,12 @@ function torus(x,y,z){
 
 //randomise function
 var maxX = 80;
-var maxY = 87;
+var maxY = 50;
 var maxZ = 500;
 function randomPlace(){
 	 var num = Math.round(Math.random()* (3-1)+1);
 	 var posx = Math.round(Math.random()* (maxX-(-maxX))+(-maxX)); 
-	 var posy = maxY;//Math.round(Math.random()* (20+20)-20); 
+	 var posy = Math.round(Math.random()* (87-50)+50); 
 	 var posz = Math.round(Math.random()* (maxZ-(-maxZ))+(-maxZ)); 
 
 	// //substitute shapes in switch with ammo/collectable models
@@ -1060,7 +1060,7 @@ var render = function() {
 
 	//places new object in time intervals
 	var timeElapsed = Math.round(clock.getElapsedTime());
-	console.log(timeElapsed);
+	//console.log(timeElapsed);
 	if (timeElapsed % 10 == 0 && timeElapsed != interval){
 		randomPlace();
 		interval = timeElapsed; //This deals with multiple items being dropped at the same second due to rounding
