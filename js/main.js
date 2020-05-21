@@ -438,7 +438,6 @@ class Player{
 					model.rotation.y += Math.PI;
 					model.position.set( 0, -5, -0);
 					group.add(model);
-					
 					loaderAnim.remove();
 					mixer = new THREE.AnimationMixer(model);
 					let idleAnim = THREE.AnimationClip.findByName(fileAnimations, 'idle');
