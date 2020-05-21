@@ -836,37 +836,38 @@ var objectnum = 1; 			//total number of distinct items that can be generated
 // WorldObjects.push(torus);
 
 //torus light
-var dLight = new THREE.DirectionalLight(0xFF00FF,1);
-dLight.castShadow = true;
-dLight.shadow.bias = -0.04;
-dLight.shadow.mapSize.width = 1;
-dLight.shadow.mapSize.height = 1;
-var lx = torus.position.x +2;
-var ly = torus.position.y;
-var lz = torus.position.z -2;
-dLight.position.set(lx,ly,lz).normalize();
-dLight.target = torus;
-//scene.add(dLight);
+// var dLight = new THREE.DirectionalLight(0xFF00FF,1);
+// dLight.castShadow = true;
+// dLight.shadow.bias = -0.04;
+// dLight.shadow.mapSize.width = 1;
+// dLight.shadow.mapSize.height = 1;
+// var lx = torus.position.x +2;
+// var ly = torus.position.y;
+// var lz = torus.position.z -2;
+// dLight.position.set(lx,ly,lz).normalize();
+// dLight.target = torus;
+// //scene.add(dLight);
 
-//light flare function
-function flare()
-        {
-            if (lx < torus.position.x + 50){
-                lx -=-0.5;
-                dLight.position.set(lx,ly,lz).normalize();
-                scene.add(dLight);
-            }else{
-                lx = torus.position.x -50;
-                dLight.position.set(lx,ly,lz).normalize();
-                scene.add(dLight);  
-            }
-        }
+// //light flare function
+// function flare()
+//         {
+//             if (lx < torus.position.x + 50){
+//                 lx -=-0.5;
+//                 dLight.position.set(lx,ly,lz).normalize();
+//                 scene.add(dLight);
+//             }else{
+//                 lx = torus.position.x -50;
+//                 dLight.position.set(lx,ly,lz).normalize();
+//                 scene.add(dLight);  
+//             }
+//         }
+
 function torus(x,y,z){
 	var torusGeometry = new THREE.TorusGeometry(4, 1, 60, 60);
 	var phongMaterial = new THREE.MeshPhongMaterial({color: 0xDAA520});
 	var torus = new THREE.Mesh(torusGeometry, phongMaterial);
 	torus.castShadow =true;
-	torus.position.set(x,y,z);
+	torus.position.set(x+1,y,z+1);
 	scene.add(torus);
 	WorldObjects.push(torus);
 	}
@@ -894,7 +895,7 @@ function randomPlace(){
 				WorldObjects.push(torus);
 				maxCollectable -= 5;
 
-			//	addCanister(true,posx,posz,posy,Surface1);
+			
 				break;
 			}
 			case 2:{
