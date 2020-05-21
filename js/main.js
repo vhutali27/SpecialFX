@@ -148,6 +148,9 @@ var loaderAnim = document.getElementById('js-loader');
 var clock = new THREE.Clock(true);
 
 var scene;
+var player;
+var Surface1;
+var Surface2;
 
 // Loader
 var loader = new THREE.TextureLoader();
@@ -306,15 +309,15 @@ function onDocumentMouseDown( event )
 	switch ( event.button ) {
 		case 0:// Left Click
 			// Shoot bullets
-			console.log("Left Click.");
+			//console.log("Left Click.");
 			leftClick = true;
 			break;
 		case 1: // middle
-			console.log("Middle Click.");
+			//console.log("Middle Click.");
 			break;
 		case 2: // right
 			// Change ammo type
-			console.log("Right Click.");
+			//console.log("Right Click.");
 			rightClick = true;
 			break;
 	}
@@ -433,7 +436,7 @@ class Player{
 		            });
 					model.scale.set(7,7,7);
 					model.rotation.y += Math.PI;
-					model.position.set( 0, -5, -20);
+					model.position.set( 0, -5, -0);
 					group.add(model);
 					
 					loaderAnim.remove();
@@ -504,12 +507,12 @@ class Player{
 	
 	switchPlanet(){
 		if(this.TargetPlanet === Surface1){
-			player.upright(false);
-			player.setTargetPlanet(Surface2);
+			this.upright(false);
+			this.setTargetPlanet(Surface2);
 		}
 		else{
-			player.upright(true);
-			player.setTargetPlanet(Surface1);
+			this.upright(true);
+			this.setTargetPlanet(Surface1);
 		}
 	}
 
@@ -644,7 +647,7 @@ class Player{
 									this.Group.position.y,
 									this.Group.position.z+3
 				);
-				console.log(this.Group.rotation.y);
+				//console.log(this.Group.rotation.y);
 				bullet.velocity = new THREE.Vector3(
 						-Math.sin(this.Group.rotation.y),
 						0,
@@ -1012,7 +1015,7 @@ scene.addEventListener(
 			}
 		);
 
-		//////////////////////////////////////////////////
+//////////////////////////////////////////////////
 // Renderer                                     //
 //////////////////////////////////////////////////
 
@@ -1050,7 +1053,7 @@ color: 0x72f2f2,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var Surface1 = new BlockPlanet(150, 1500, woodenFloorMaterial, 0, -50, 0, "Surface1");
+Surface1 = new BlockPlanet(150, 1500, woodenFloorMaterial, 0, -50, 0, "Surface1");
 
 var ballMaterial = new THREE.MeshPhongMaterial({
 //map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
@@ -1074,7 +1077,7 @@ color: 0x464742,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var Surface2 = new BlockPlanet(150, 1500, grassMaterial, 0, 100, 0, "Surface2");
+Surface2 = new BlockPlanet(150, 1500, grassMaterial, 0, 100, 0, "Surface2");
 AnimateObject.push(Surface2);
 Surface2.addObjObject("models/steel_fence/fance.obj","models/steel_fence/fance.mtl",false,0,0,0, {x:5,y:5,z:5},Surface2);
 Surface2.addObjObject("models/birch/birch.obj","models/birch/birch.mtl", false, 75, 75, 0, {x:0.15,y:0.15,z:0.15},Surface2);
