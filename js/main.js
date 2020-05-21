@@ -878,9 +878,9 @@ var maxY = 87;
 var maxZ = 500;
 function randomPlace(){
 	 var num = Math.round(Math.random()* (3-1)+1);
-	 var posx = Math.round(Math.random()* (maxX-(-maxX))+(-maxX)); //100
-	 var posy = maxY;//Math.round(Math.random()* (20+20)-20); //97
-	 var posz = Math.round(Math.random()* (maxZ-(-maxZ))+(-maxZ)); //500
+	 var posx = Math.round(Math.random()* (maxX-(-maxX))+(-maxX)); 
+	 var posy = maxY;//Math.round(Math.random()* (20+20)-20); 
+	 var posz = Math.round(Math.random()* (maxZ-(-maxZ))+(-maxZ)); 
 
 	// //substitute shapes in switch with ammo/collectable models
 	if (maxCollectable > 0){
@@ -1083,18 +1083,3 @@ var render = function() {
 //////////////////////////////////////////////////
 
 render();
-//Start countdown timer which has been set to 2 minutes.this timer will start as soon as you click the start button as soon as countdown timerfinishes it will end scene by giving out Game Over! alert. Edit by Phediso
-
-
- i = 60;
-
-        function onTimer() {
-            document.getElementById('mycounter').innerHTML = i;
-            i--;
-            if (i < 0) {
-                alert('Game Over');
-            } else {
-                setTimeout(onTimer, 2000)
-            }
-        }
-        onTimer();
