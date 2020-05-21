@@ -419,13 +419,15 @@ class Player{
 			this.TargetPlanet.pivot.remove(this.PlanetOrigin);
 		}
 		this.TargetPlanet = planet;
+		this.controls.setRadius(planet.radius);
 		this.LandedOnPlanet = false;
+		this.controls.setOrbitPoint(new THREE.Vector3(planet.x,planet.y,planet.z));
 	}
 
 	// Returns the distance between the TargetPlanet and the player.
 	getDistance(){
 		if(this.TargetPlanet!== null){
-			return this.Group.position.distanceTo(this.TargetPlanet);
+			return this.Group.position.distanceTo(this.TargetPlanet) - this.TargetPlanet.radius;
 		}
 		else return 0;
 	}
@@ -433,13 +435,9 @@ class Player{
 	switchPlanet(){
 		if(this.TargetPlanet === Surface1){
 			player.setTargetPlanet(Surface2);
-			this.controls.radius = (Surface2.radius);
-			this.controls.setOrbitPoint(new THREE.Vector3(Surface2.x,Surface2.y,Surface2.z));
 		}
 		else{
 			player.setTargetPlanet(Surface1);
-			this.controls.radius = (Surface1.radius);
-			this.controls.setOrbitPoint(new THREE.Vector3(Surface1.x,Surface1.y,Surface1.z));
 
 		}
 	}
@@ -463,13 +461,15 @@ class Player{
 				var isOnObject = false;
 				var dis = this.getDistance();
 				if (intersections.length > 0) {
-					if(dis<10){
+					if(dis<2){
 						//var firstObjectIntersected = intersections[0];
 						isOnObject= true;
-						//this.controls.isGrounded = true;
+						this.controls.isGrounded = true;
+						canJump = true;
+						velocity.y = Math.max(0, velocity.y);
 					}
+					
 				}
-				
 				if( this.getDistance()> 5+this.Height ) canJump = false;
 				
 				// Change Planet Button
@@ -481,23 +481,13 @@ class Player{
 					this.LandedOnPlanet = false;
 					canJump = false;
 				}
-				/*
+				
 				var delta = ( time - prevTime ) / 1000;
 				
 				direction.z = Number( moveForward ) - Number( moveBackward );
 				direction.x = Number( moveRight ) - Number( moveLeft );
 				direction.normalize(); // this ensures consistent movements in all directions
-
-				// A check should be added here to see if what the player is touching is actually a planet.
-				if ( isOnObject === true ) {
-					if (this.LandedOnPlanet === false) {
-						//this.TargetPlanet.addToPivot(this.Group);
-					}
-					this.LandedOnPlanet = true;
-					canJump = true;
-					velocity.y = Math.max(0, velocity.y);
-				}
-				*/
+				
 				// After you land the SphereCoords are still centered at (0,0,0) instead
 				// of the new planet. We need to find a way to center SphereCoords on the new planet
 				if( this.LandedOnPlanet === true){
@@ -523,26 +513,37 @@ class Player{
 					// This is where the animation for flying should be put.
 					// Rotate the character
 					// Move character towards planet
-					/*var distance = this.getDistance();
+					var distance = this.getDistance();
 					var step = 1 - (distance - 1)/distance;
-					//applyGravity(this.Group,this.TargetPlanet,step);
-					if(distance < this.TargetPlanet.radius + this.Height){
-						//this.LandedOnPlanet = true;
-						//this.controls.isGrounded = true;
-					}*/
+					applyGravity(this.Group,this.TargetPlanet,step);
+					if(distance < 0){
+						this.LandedOnPlanet = true;
+					//	this.Group.rotation.set(
+					//			0,
+					//			this.Group.rotation.y,
+					//			0);
+					//		
+					//		this.PlanetOrigin.rotation.set(
+					//			0,
+					//			this.Group.rotation.y,
+					//			0);
+					//		this.PlanetOrigin.add(this.Group);
+					//		this.Group.position.set(this.PlanetOrigin.position.x.x,this.PlanetOrigin.position.x.y + radius, this.PlanetOrigin.position.x.z);
+					//		this.Group.position.set(0,0,0);
+					//}
 				}
 				direction.z = Number( moveForward ) - Number( moveBackward );
 				direction.x = Number( moveRight ) - Number( moveLeft );
 				direction.normalize(); // this ensures consistent movements in all directions
-				this.controls.UpdateDirection(direction.x,direction.z);
-				this.controls.Sprinting = sprinting;
-				this.controls.Jumping = canJump;
+				//this.controls.UpdateDirection(direction.x,direction.z);
+				//this.controls.Sprinting = sprinting;
+				//this.controls.Jumping = canJump;
 				// Change click after click events have been processed.
 				leftClick = false;
 				rightClick = false;
 				prevTime = time;
 			}
-			this.controls.Update();
+			//this.controls.Update();
 		}
 		
 	}
@@ -597,7 +598,7 @@ class Planet{
 	this.pivot = new THREE.Group();
 	this.pivot.position.set(x, y, z);
 	this.pivot.add(this.planet);
-	this.planet.position.set(x, 0, z);
+	this.planet.position.set(0, 0, 0);
 	this.planet.name = name;
     scene.add(this.pivot);
 	WorldObjects.push(this.planet);
@@ -695,7 +696,6 @@ scene.add(starField);
 var player = new Player();
 AnimateObject.push(player);
 player.setTargetPlanet(Surface2);
-player.controls.setRadius(Surface2.radius);
 
 
 //////////////////////////////////////////////////

@@ -47,7 +47,7 @@ THREE.PointerLockControls = function ( camera, domElement, character, pivot ) {
 	var gravityLetoff = 0.0001;
 	
 	// Orbit Planet
-	var orbitPoint;
+	var orbitPoint = new THREE.Vector3();
 	
 	var clock = new THREE.Clock(true);
 	var radius;
@@ -74,17 +74,17 @@ THREE.PointerLockControls = function ( camera, domElement, character, pivot ) {
 		movementX*=xRotation;
 
 		euler.setFromQuaternion( camera.quaternion );
-		charEuler.setFromQuaternion( character.quaternion );
+		charEuler.setFromQuaternion( pivot.quaternion );
 		
 
-		//euler.y -= movementX * 0.002;
+		if(!isGrounded) euler.y -= movementX * 0.002;
 		euler.x -= movementY * 0.002;
 		charEuler.y -= movementX * 0.002;
 
 		euler.x = Math.max( - PI_2, Math.min( PI_2, euler.x ) );
 
 		camera.quaternion.setFromEuler( euler );
-		character.quaternion.setFromEuler( charEuler );
+		pivot.quaternion.setFromEuler( charEuler );
 
 		scope.dispatchEvent( changeEvent );
 
@@ -165,7 +165,9 @@ THREE.PointerLockControls = function ( camera, domElement, character, pivot ) {
 	};
 	
 	this.setOrbitPoint = function ( value ) {
-		orbitPoint = value;
+		orbitPoint.x=value.x;
+		orbitPoint.y=value.y;
+		orbitPoint.z=value.z;
 		pivot.position.set(value);
 	};
 	
@@ -185,31 +187,18 @@ THREE.PointerLockControls = function ( camera, domElement, character, pivot ) {
 			if(Jumping){
 				addJumpForce = jumpForce;
 			}
-			var delta = 1- clock.getDelta();
-			// move forward parallel to the xz-plane
-			// assumes camera.up is y-up
-			vec.setFromMatrixPosition( this.character.matrix);
-			vec.crossVectors( this.character.up, vec );
-			this.character.position.addScaledVector( vec, dirZ*currentMoveSpeed*delta );
-			
-			// Flat Direction
-			this.character.up.reflect(this.character.up.sub(orbitPoint).normalize());
-			//var moveDir = new THREE.Vector3(dirX*currentMoveSpeed*delta, addJumpForce*delta, dirZ*currentMoveSpeed*delta);
-			
-			// Translate
-			//this.character.position.add( moveDir.multiplyScalar(currentMoveSpeed) );
-			//this.character.rotation.x += 2*Math.PI*((dirZ*currentMoveSpeed*delta)/(2*Math.PI*radius));
 		}
 	};
-	var OrbitQua = new THREE.Quaternion();
+
+	
 	this.OrbitalPull = function()
 	{	
 		// Normal Spherical Movement Applies
 		if( !isGrounded ){
-			pivot.remove(character);
-			this.character.position.x += -targetDir.x*delta*orbitGravity;
-			this.character.position.y += -targetDir.y*delta*orbitGravity;
-			this.character.position.z += -targetDir.z*delta*orbitGravity;
+			//yes
+		}
+		else{
+			//pivot.rotation.z += 0.1;	
 		}
 	};
 	
@@ -219,27 +208,12 @@ THREE.PointerLockControls = function ( camera, domElement, character, pivot ) {
 		
 		if(distanceToSurface > 2 && distanceToSurface < 150)
 		{
+			//pivot.up.y -= delta;
 			//THREE.Quaternion.slerp(this.character.quaternion, OrbitQua.setFromUnitVectors(this.character.up, targetDir).multiply( this.character.quaternion ), this.character.quaternion , delta);
 		}
 		else if (distanceToSurface < 2 && !isGrounded)
 		{
-			isGrounded = true;
-			
-			character.rotation.set(
-				0,
-				character.rotation.y,
-				0);
-			
-			pivot.rotation.set(
-				0,
-				character.rotation.y,
-				0);
-			
-			character.position.set(pivot.position.x,pivot.position.y + radius, pivot.position.z);
-			
-			pivot.add(character);
-			
-			
+				
 		}
 	};
 	
@@ -252,32 +226,35 @@ THREE.PointerLockControls = function ( camera, domElement, character, pivot ) {
 	
 	// End of New Controls
 
-	/*this.moveForward = function ( distance ) {
+	this.moveForward = function ( distance ) {
 		// move forward parallel to the xz-plane
 		// assumes camera.up is y-up
+		
+		pivot.rotation.x += distance;
 
-		vec.setFromMatrixColumn( this.character.matrix, 0 );
-
-		vec.crossVectors( this.character.up, vec );
-
-		this.character.position.addScaledVector( vec, distance );
+		//vec.setFromMatrixColumn( this.character.matrix, 0 );
+		//
+		//vec.crossVectors( this.character.up, vec );
+		//
+		//this.character.position.addScaledVector( vec, distance );
 
 	};
 	
 	this.moveUp = function ( distance ){
 		
 		// move on the y-axis
-		this.character.position.y += distance;
+		this.character.up.y += distance;
 	};
 
 	this.moveRight = function ( distance ) {
-		if( distance < 0) step*=-1;
-		
-		vec.setFromMatrixColumn( this.character.matrix, 0 );
+		pivot.rotation.z += distance;
+		//if( distance < 0) step*=-1;
+		//
+		//vec.setFromMatrixColumn( this.character.matrix, 0 );
+		//
+		//this.character.position.addScaledVector( vec, distance );	
 
-		this.character.position.addScaledVector( vec, distance );	
-
-	};*/
+	};
 
 	this.lock = function () {
 
