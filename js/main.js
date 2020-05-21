@@ -319,12 +319,16 @@ var onKeyUp = function ( event ) {
 	}
 };
 // when the mouse moves, call the given function
+document.addEventListener( 'mouseup', onDocumentMouseUp, false );
 document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 document.addEventListener( 'keydown', onKeyDown, false );
 document.addEventListener( 'keyup', onKeyUp, false );
 
 // Raycasting is used for working out which object the mouse is pointing at
 var raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+
+// Bullets Array
+var Bullets = [];
 
 var mouse = { x: 0, y: 0 };
 function onDocumentMouseDown( event ) 
@@ -333,7 +337,7 @@ function onDocumentMouseDown( event )
 	// (such as the mouse's TrackballControls)
 	// event.preventDefault();
 	switch ( event.button ) {
-		case 0: // left
+		case 0:// Left Click
 			// Shoot bullets
 			console.log("Left Click.");
 			leftClick = true;
@@ -368,6 +372,21 @@ function onDocumentMouseDown( event )
 		console.log("Hit @ " + toString( intersects[0].name ) );
 	}
 
+}
+
+function onDocumentMouseUp( event ){
+	switch ( event.button ) {
+		case 0:// Left Click
+			// Shoot bullets
+			leftClick = false;
+			break;
+		case 1: // middle
+			break;
+		case 2: // right
+			// Change ammo type
+			rightClick = false;
+			break;
+	}
 }
 
 // Class for Player
@@ -565,7 +584,7 @@ class Player{
 				
 				// Change Planet Button
 				// Add a timer after you find that it is true. So that it doesn't change a million times in a second.
-				if(leftClick && ( !canJump || !withinBoundary )){
+				if(changePlanet && ( !canJump || !withinBoundary )){
 					if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(this.Group);
 					this.switchPlanet();
 					isOnObject = false;
@@ -642,20 +661,40 @@ class Player{
 				}
 				
 				// Change click after click events have been processed.
-				leftClick = false;
 				rightClick = false;
 				prevTime = time;
+			}
+			
+			// Shooting Bullets
+			if(leftClick){
+				var bullet = new THREE.Mesh(
+					new THREE.SphereGeometry(0.2,4,4),
+					new THREE.MeshBasicMaterial({color:0xffffff})
+				);
+				
+				bullet.rotation.set(0,this.Group.rotation.y,0);
+				bullet.position.set(this.Group.position.x-1,
+									this.Group.position.y,
+									this.Group.position.z+3
+				);
+				console.log(this.Group.rotation.y);
+				bullet.velocity = new THREE.Vector3(
+						-Math.sin(this.Group.rotation.y),
+						0,
+						Math.cos(this.Group.rotation.y));
+				Bullets.push(bullet);
+				
+				bullet.alive = true;
+				setTimeout(function(){
+					bullet.alive = false;
+					scene.remove(bullet);
+				},5000);
+				scene.add(bullet);
 			}
 		}
 	}
 }
 
-// Bullet Class
-//class Bullet{
-//	constructor(){
-//		
-//	}
-//}
 /* This function applies gravity between an object and a planet
  * It takes in the object and the planet it should gravitate towards.
  * The ratio is a value from zero to one. zero being the initial distance
@@ -926,60 +965,7 @@ function randomPlace(){
 
 	
 
-//////////////////////////////////////////////////
-// IN GAME OBJECT CREATION                      //
-//////////////////////////////////////////////////
 
-// Surface1
-var woodenFloorMaterial = new THREE.MeshPhongMaterial({
-map: loader.load("images/woodenFloor.jpg"),
-color: 0x72f2f2,
-specular: 0xbbbbbb,
-shininess: 2
-});
-var Surface1 = new BlockPlanet(150, 1500, woodenFloorMaterial, 0, -50, 0, "Surface1");
-
-var ballMaterial = new THREE.MeshPhongMaterial({
-//map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
-color: 0xf2f2f2,
-specular: 0xbbbbbb,
-shininess: 2
-});
-AnimateObject.push(Surface1);
-/*Surface1.addCanister(true,0,0,2,Surface1);
-Surface1.addCanister(true,0,150,2,Surface1);
-Surface1.addCanister(true,150,0,2,Surface1);
-Surface1.addCanister(true,150,150,2,Surface1);*/
-Surface1.addObjObject("models/bucket/bucket.obj","models/bucket/bucket.mtl", true, 75, 75, 2, {x:0.15,y:0.15,z:0.15}, Surface1);
-
-//earth.addObject(getSquare(earthMaterial, 2),23,1,2);
-
-// Mars
-var grassMaterial = new THREE.MeshPhongMaterial({
-map: loader.load("images/grass.jpg"),
-color: 0x464742,
-specular: 0xbbbbbb,
-shininess: 2
-});
-var Surface2 = new BlockPlanet(150, 1500, grassMaterial, 0, 100, 0, "Surface2");
-AnimateObject.push(Surface2);
-Surface2.addObjObject("models/steel_fence/fance.obj","models/steel_fence/fance.mtl",false,0,0,0, {x:5,y:5,z:5},Surface2);
-Surface2.addObjObject("models/birch/birch.obj","models/birch/birch.mtl", false, 75, 75, 0, {x:0.15,y:0.15,z:0.15},Surface2);
-
-//Stars
-var starGeometry = new THREE.SphereGeometry(1000, 50, 500);
-var starMaterial = new THREE.MeshPhongMaterial({
-map: loader.load("/images/galaxy_starfield.png"),
-side: THREE.DoubleSide,
-shininess: 0
-});
-var starField = new THREE.Mesh(starGeometry, starMaterial);
-scene.add(starField);
-
-// Initialize player
-var player = new Player();
-AnimateObject.push(player);
-player.setTargetPlanet(Surface1);
 
 
 //////////////////////////////////////////////////
@@ -1045,6 +1031,64 @@ function onWindowResize() {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
+
+
+function startGame(){
+	//////////////////////////////////////////////////
+// IN GAME OBJECT CREATION                      //
+//////////////////////////////////////////////////
+
+// Surface1
+var woodenFloorMaterial = new THREE.MeshPhongMaterial({
+//map: loader.load("images/woodenFloor.jpg"),
+color: 0x72f2f2,
+specular: 0xbbbbbb,
+shininess: 2
+});
+var Surface1 = new BlockPlanet(150, 1500, woodenFloorMaterial, 0, -50, 0, "Surface1");
+
+var ballMaterial = new THREE.MeshPhongMaterial({
+//map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
+color: 0xf2f2f2,
+specular: 0xbbbbbb,
+shininess: 2
+});
+AnimateObject.push(Surface1);
+/*Surface1.addCanister(true,0,0,2,Surface1);
+Surface1.addCanister(true,0,150,2,Surface1);
+Surface1.addCanister(true,150,0,2,Surface1);
+Surface1.addCanister(true,150,150,2,Surface1);*/
+Surface1.addObjObject("models/bucket/bucket.obj","models/bucket/bucket.mtl", true, 75, 75, 2, {x:0.15,y:0.15,z:0.15}, Surface1);
+
+//earth.addObject(getSquare(earthMaterial, 2),23,1,2);
+
+// Mars
+var grassMaterial = new THREE.MeshPhongMaterial({
+//map: loader.load("images/grass.jpg"),
+color: 0x464742,
+specular: 0xbbbbbb,
+shininess: 2
+});
+var Surface2 = new BlockPlanet(150, 1500, grassMaterial, 0, 100, 0, "Surface2");
+AnimateObject.push(Surface2);
+Surface2.addObjObject("models/steel_fence/fance.obj","models/steel_fence/fance.mtl",false,0,0,0, {x:5,y:5,z:5},Surface2);
+Surface2.addObjObject("models/birch/birch.obj","models/birch/birch.mtl", false, 75, 75, 0, {x:0.15,y:0.15,z:0.15},Surface2);
+
+//Stars
+var starGeometry = new THREE.SphereGeometry(1000, 50, 500);
+var starMaterial = new THREE.MeshPhongMaterial({
+map: loader.load("/images/galaxy_starfield.png"),
+side: THREE.DoubleSide,
+shininess: 0
+});
+var starField = new THREE.Mesh(starGeometry, starMaterial);
+scene.add(starField);
+
+// Initialize player
+var player = new Player();
+AnimateObject.push(player);
+player.setTargetPlanet(Surface1);
+
 //////////////////////////////////////////////////
 // RENDERING                                    //
 //////////////////////////////////////////////////
@@ -1076,6 +1120,15 @@ var render = function() {
   requestAnimationFrame(render);
   renderer.render(scene, camera);
   
+  for(var index = 0; index<Bullets.length; index++){
+	if(Bullets[index] === undefined) continue;
+	if(Bullets[index].alive == false ){
+		Bullets.splice( index, 1);
+		continue;
+	}
+	Bullets[index].position.add(Bullets[index].velocity);
+  }
+  
 };
 
 //////////////////////////////////////////////////
@@ -1083,3 +1136,5 @@ var render = function() {
 //////////////////////////////////////////////////
 
 render();
+	
+}
