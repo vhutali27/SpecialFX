@@ -147,14 +147,7 @@ var loaderAnim = document.getElementById('js-loader');
 //Create clock, set autostart to true
 var clock = new THREE.Clock(true);
 
-var scene = new Physijs.Scene();
-scene.addEventListener(
-			'update',
-			function() {
-				scene.simulate( undefined, 1 );
-				physics_stats.update();
-			}
-		);
+var scene;
 
 // Loader
 var loader = new THREE.TextureLoader();
@@ -165,32 +158,6 @@ var AnimateObject = new Array();
 
 // WorldObjects are the objects that the player can touch.
 var WorldObjects = new Array();
-
-//////////////////////////////////////////////////
-// Renderer                                     //
-//////////////////////////////////////////////////
-
-renderer = new THREE.WebGLRenderer({antialias: true});
-renderer.setClearColor( 0xffffff );
-renderer.setPixelRatio( window.devicePixelRatio );
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-window.addEventListener( 'resize', onWindowResize, false );
-
-
-//////////////////////////////////////////////////
-// LIGHTING                                     //
-//////////////////////////////////////////////////
-
-// This was just lighting so we could test the game.
-// It is subject to change as we add more features.
-var ambientLight = new THREE.AmbientLight(0xf1f1f1);
-scene.add(ambientLight);
-
-var spotLight = new THREE.DirectionalLight(0xffffff);
-spotLight.position.set(60,60,60);
-scene.add(spotLight);
 
 //////////////////////////////////////////////////
 // CREATING THE WORLD                           //
@@ -1021,6 +988,7 @@ if ( havePointerLock ) {
 		} else {
 			element.requestPointerLock();
 		}
+		startGame();
 	}, false );
 } else {
 	instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API';
@@ -1034,7 +1002,44 @@ function onWindowResize() {
 
 
 function startGame(){
-	//////////////////////////////////////////////////
+	
+scene = new Physijs.Scene();
+scene.addEventListener(
+			'update',
+			function() {
+				scene.simulate( undefined, 1 );
+				physics_stats.update();
+			}
+		);
+
+		//////////////////////////////////////////////////
+// Renderer                                     //
+//////////////////////////////////////////////////
+
+renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setClearColor( 0xffffff );
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+window.addEventListener( 'resize', onWindowResize, false );
+
+
+//////////////////////////////////////////////////
+// LIGHTING                                     //
+//////////////////////////////////////////////////
+
+// This was just lighting so we could test the game.
+// It is subject to change as we add more features.
+var ambientLight = new THREE.AmbientLight(0xf1f1f1);
+scene.add(ambientLight);
+
+var spotLight = new THREE.DirectionalLight(0xffffff);
+spotLight.position.set(60,60,60);
+scene.add(spotLight);
+		
+		
+//////////////////////////////////////////////////
 // IN GAME OBJECT CREATION                      //
 //////////////////////////////////////////////////
 

@@ -73,7 +73,7 @@
         function countdown() {
             var seconds = 60;
             function tick(){
-                var counter = document.getElementById("counter");
+                var counter = document.getElementById("mycounter");
                 seconds--;
                 counter.innerHTML = "0:" + (seconds < 0 ? "0" : "") + String(seconds);
                 if (seconds > 0) {
@@ -85,7 +85,6 @@
             tick();
         }
         countdown();
-        GameLoop();
     </script>
 </body>
 </html
