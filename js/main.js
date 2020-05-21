@@ -1083,3 +1083,18 @@ var render = function() {
 //////////////////////////////////////////////////
 
 render();
+//Start countdown timer which has been set to 2 minutes.this timer will start as soon as you click the start button as soon as countdown timerfinishes it will end scene by giving out Game Over! alert. Edit by Phediso
+
+
+ i = 60;
+
+        function onTimer() {
+            document.getElementById('mycounter').innerHTML = i;
+            i--;
+            if (i < 0) {
+                alert('Game Over');
+            } else {
+                setTimeout(onTimer, 2000)
+            }
+        }
+        onTimer();

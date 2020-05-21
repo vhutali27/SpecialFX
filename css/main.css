@@ -79,3 +79,15 @@ body {
   }
 }
 
+//For start button.Edited by Phediso
+ button {
+            font-size: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px;
+            position: absolute;
+            display: block;
+            z-index: 99;
+            left: 50%;
+            top: 75%
+        }
