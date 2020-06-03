@@ -3,7 +3,6 @@
 //////////////////////////////////////////////////
 /*
 	Types of meshes
-
     Physijs.PlaneMesh - infinite zero-thickness plane
     Physijs.BoxMesh - matches THREE.CubeGeometry
     Physijs.SphereMesh - matches THREE.SphereGeometry
@@ -13,120 +12,89 @@
     Physijs.ConvexMesh - matches any convex geometry you have
     Physijs.ConcaveMesh - matches any concave geometry you have, i.e. arbitrary mesh
     Physijs.HeightfieldMesh - matches a regular grid of height values given in the z-coordinates
-
     Objects that are always going to be static, simply need to have their mass set to 0.
     set the third parameter (mass) to zero if you don't want it to be affected by gravity
-
     Objects that will sometimes be static, and other times be dynamic, need to have the following applied:
 	//Completely freeze an object
 	object.setAngularFactor = THREE.Vector3(0,0,0);
 	object.setLinearFactor = THREE.Vector3( 0, 0, 0 );
-
 	//You can also clear any velocities the same way (setting them to a 0 vector3)
 	object.setAngularVelocity
 	object.setLinearVelocity
-
 	//To reset, simply change the factors back to Vector3(1,1,1);
-
-
 	//Collisions
-
 	mesh.addEventListener( 'collision', function( other_object, relative_velocity, relative_rotation, contact_normal ) {
     // `this` has collided with `other_object`
     // with an impact speed of `relative_velocity` and a rotational force of `relative_rotation`
     //and at normal `contact_normal`
 	});
-
 	// Materials
-
 	Physijs can give some extra properties to a material, and thus to an object.
 	These attributes are�friction�and�restitution (bounciness). These need to be set in a special Physijs material:
-
 	//Values between 0.0 and 1.0
 	var friction = .8;
 	var restitution = .3;
-
 	//Physijs Material - a three material/shader, friction, restitution
 	var material = Physijs.createMaterial(
 		new THREE.MeshBasicMaterial({ color: 0x888888 }),
 		friction,
 		restitution
 	);
-
 	//Just apply it to the mesh like you always do
 	var mesh = new Physijs.BoxMesh(
 		new THREE.BoxGeometry( 5, 5, 5 ),
 		material
 	);
-
 	// Because Physijs runs on a different thread than your main application,
 	there is no guarantee that it will be able to iterate the scene every time
 	you call�scene.simulate. Because of this, you may want to attach an event
 	listener to the scene that is triggered whenever the physics simulation has run.
-
 	scene.addEventListener( 'update', function() {
     // the scene's physics have finished updating
 	});
-
 	// Additionally, if your scene is complex or has a lot of objects, the physics
 	simulation can slow down to the point where adding new objects can become a lot
 	of work for the application. To help alleviate some of the pain this may cause,
 	objects have a�ready�event which is triggered after the object has been added to
 	the physics simulation.�
-
 	var readyHandler = function() {
     // object has been added to the scene
 	};
 	var mesh = new Physijs.SphereMesh( geometry, material );
 	mesh.addEventListener( 'ready', readyHandler );
 	scene.add( mesh );
-
 	// Compound Shapes
-
 	parent.add( child );
 	scene.add( parent );
-
 	//Remember, add all childs before adding the parent!
 	//And, child's positions are local/relative to the parent
-
 	// for object constraints visit https://github.com/chandlerprall/Physijs/wiki/Constraints
-
 	// To move a cube 100 units depending on the rendering speed use
 	theCube.position.x += 100 * timeElapsed;
-
 	�Create basic tween
-
 	//Set position and target coordinates
 	var position = { x : 0, y: 300 };
 	var target = { x : 400, y: 50 };
-
 	//Tell it to tween the 'position' parameter
 	//Make the tween last 2 seconds (=2000 milliseconds)
 	var tween = new TWEEN.Tween(position).to(target, 2000);
-
 	//Now update the 3D mesh accordingly
 	tween.onUpdate(function(){
 		mesh.position.x = position.x;
 		mesh.position.y = position.y;
 	});
-
 	//But don't forget, to start the tween
 	tween.start();
-
 	//And also don't forget, to put this into your looping render function
 	tween.update();
-
 	//Delay the start of the tween
 	tween.delay(500);
-
 	//Set a different tweening (easing) function
 	tween.easing(TWEEN.Easing.Elastic.InOut);
-
 	//Create a chain of tweens
 	//For example: this one loops between firstTween and secondTween
 	firstTween.chain(secondTween);
 	secondTween.chain(firstTween);
-
 	// Easing function can be found here https://sole.github.io/tween.js/examples/03_graphs.html
 */
 
@@ -153,9 +121,6 @@ mainHeight = window.innerHeight;
 
 
 var scene;
-var player;
-var Surface1;
-var Surface2;
 
 // Loader
 var loader = new THREE.TextureLoader();
@@ -316,15 +281,15 @@ function onDocumentMouseDown( event )
 	switch ( event.button ) {
 		case 0:// Left Click
 			// Shoot bullets
-			//console.log("Left Click.");
+			console.log("Left Click.");
 			leftClick = true;
 			break;
 		case 1: // middle
-			//console.log("Middle Click.");
+			console.log("Middle Click.");
 			break;
 		case 2: // right
 			// Change ammo type
-			//console.log("Right Click.");
+			console.log("Right Click.");
 			rightClick = true;
 			break;
 	}
@@ -443,12 +408,9 @@ class Player{
 		            });
 					model.scale.set(7,7,7);
 					model.rotation.y += Math.PI;
-					model.position.set( 0, -5, -0);
+					model.position.set( 0, -5, -20);
 					group.add(model);
-<<<<<<< HEAD
-=======
 
->>>>>>> 773c772fed840670884e894a8fb07499f42fcf09
 					loaderAnim.remove();
 					mixer = new THREE.AnimationMixer(model);
 					let idleAnim = THREE.AnimationClip.findByName(fileAnimations, 'idle');
@@ -517,12 +479,12 @@ class Player{
 
 	switchPlanet(){
 		if(this.TargetPlanet === Surface1){
-			this.upright(false);
-			this.setTargetPlanet(Surface2);
+			player.upright(false);
+			player.setTargetPlanet(Surface2);
 		}
 		else{
-			this.upright(true);
-			this.setTargetPlanet(Surface1);
+			player.upright(true);
+			player.setTargetPlanet(Surface1);
 		}
 	}
 
@@ -657,7 +619,7 @@ class Player{
 									this.Group.position.y,
 									this.Group.position.z+3
 				);
-				//console.log(this.Group.rotation.y);
+				console.log(this.Group.rotation.y);
 				bullet.velocity = new THREE.Vector3(
 						-Math.sin(this.Group.rotation.y),
 						0,
@@ -708,7 +670,6 @@ class BlockPlanet{
     * @param {type} width Float
     * @param {type}  depth Float
     * @param {type} planetMaterial Material
-
     for Position
     * @param {type} x Float
     * @param {type} y Float
@@ -1032,10 +993,7 @@ scene.addEventListener(
 			}
 		);
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 773c772fed840670884e894a8fb07499f42fcf09
 //////////////////////////////////////////////////
 // Renderer                                     //
 //////////////////////////////////////////////////
@@ -1074,7 +1032,7 @@ color: 0x72f2f2,
 specular: 0xbbbbbb,
 shininess: 2
 });
-Surface1 = new BlockPlanet(150, 1500, woodenFloorMaterial, 0, -50, 0, "Surface1");
+var Surface1 = new BlockPlanet(150, 1500, woodenFloorMaterial, 0, -50, 0, "Surface1");
 
 var ballMaterial = new THREE.MeshPhongMaterial({
 //map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
@@ -1098,7 +1056,7 @@ color: 0x464742,
 specular: 0xbbbbbb,
 shininess: 2
 });
-Surface2 = new BlockPlanet(150, 1500, grassMaterial, 0, 100, 0, "Surface2");
+var Surface2 = new BlockPlanet(150, 1500, grassMaterial, 0, 100, 0, "Surface2");
 AnimateObject.push(Surface2);
 Surface2.addObjObject("models/steel_fence/fance.obj","models/steel_fence/fance.mtl",false,0,0,0, {x:5,y:5,z:5},Surface2);
 Surface2.addObjObject("models/birch/birch.obj","models/birch/birch.mtl", false, 75, 75, 0, {x:0.15,y:0.15,z:0.15},Surface2);
