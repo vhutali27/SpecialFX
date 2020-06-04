@@ -1,0 +1,100 @@
+//////////////////////////////////////////////////
+// USEFUL INFORMATION							//
+//////////////////////////////////////////////////
+/*
+	Types of meshes
+    Physijs.PlaneMesh - infinite zero-thickness plane
+    Physijs.BoxMesh - matches THREE.CubeGeometry
+    Physijs.SphereMesh - matches THREE.SphereGeometry
+    Physijs.CylinderMesh - matches THREE.CylinderGeometry
+    Physijs.ConeMesh - matches THREE.CylinderGeometry (tapered)
+    Physijs.CapsuleMesh - matches THREE.CylinderGeometry, except has two half spheres at ends
+    Physijs.ConvexMesh - matches any convex geometry you have
+    Physijs.ConcaveMesh - matches any concave geometry you have, i.e. arbitrary mesh
+    Physijs.HeightfieldMesh - matches a regular grid of height values given in the z-coordinates
+    Objects that are always going to be static, simply need to have their mass set to 0.
+    set the third parameter (mass) to zero if you don't want it to be affected by gravity
+    Objects that will sometimes be static, and other times be dynamic, need to have the following applied:
+	//Completely freeze an object
+	object.setAngularFactor = THREE.Vector3(0,0,0);
+	object.setLinearFactor = THREE.Vector3( 0, 0, 0 );
+	//You can also clear any velocities the same way (setting them to a 0 vector3)
+	object.setAngularVelocity
+	object.setLinearVelocity
+	//To reset, simply change the factors back to Vector3(1,1,1);
+	//Collisions
+	mesh.addEventListener( 'collision', function( other_object, relative_velocity, relative_rotation, contact_normal ) {
+    // `this` has collided with `other_object`
+    // with an impact speed of `relative_velocity` and a rotational force of `relative_rotation`
+    //and at normal `contact_normal`
+	});
+	// Materials
+	Physijs can give some extra properties to a material, and thus to an object.
+	These attributes are�friction�and�restitution (bounciness). These need to be set in a special Physijs material:
+	//Values between 0.0 and 1.0
+	var friction = .8;
+	var restitution = .3;
+	//Physijs Material - a three material/shader, friction, restitution
+	var material = Physijs.createMaterial(
+		new THREE.MeshBasicMaterial({ color: 0x888888 }),
+		friction,
+		restitution
+	);
+	//Just apply it to the mesh like you always do
+	var mesh = new Physijs.BoxMesh(
+		new THREE.BoxGeometry( 5, 5, 5 ),
+		material
+	);
+	// Because Physijs runs on a different thread than your main application,
+	there is no guarantee that it will be able to iterate the scene every time
+	you call�scene.simulate. Because of this, you may want to attach an event
+	listener to the scene that is triggered whenever the physics simulation has run.
+	scene.addEventListener( 'update', function() {
+    // the scene's physics have finished updating
+	});
+	// Additionally, if your scene is complex or has a lot of objects, the physics
+	simulation can slow down to the point where adding new objects can become a lot
+	of work for the application. To help alleviate some of the pain this may cause,
+	objects have a�ready�event which is triggered after the object has been added to
+	the physics simulation.�
+	var readyHandler = function() {
+    // object has been added to the scene
+	};
+	var mesh = new Physijs.SphereMesh( geometry, material );
+	mesh.addEventListener( 'ready', readyHandler );
+	scene.add( mesh );
+	// Compound Shapes
+	parent.add( child );
+	scene.add( parent );
+	//Remember, add all childs before adding the parent!
+	//And, child's positions are local/relative to the parent
+	// for object constraints visit https://github.com/chandlerprall/Physijs/wiki/Constraints
+	// To move a cube 100 units depending on the rendering speed use
+	theCube.position.x += 100 * timeElapsed;
+	�Create basic tween
+	//Set position and target coordinates
+	var position = { x : 0, y: 300 };
+	var target = { x : 400, y: 50 };
+	//Tell it to tween the 'position' parameter
+	//Make the tween last 2 seconds (=2000 milliseconds)
+	var tween = new TWEEN.Tween(position).to(target, 2000);
+	//Now update the 3D mesh accordingly
+	tween.onUpdate(function(){
+		mesh.position.x = position.x;
+		mesh.position.y = position.y;
+	});
+	//But don't forget, to start the tween
+	tween.start();
+	//And also don't forget, to put this into your looping render function
+	tween.update();
+	//Delay the start of the tween
+	tween.delay(500);
+	//Set a different tweening (easing) function
+	tween.easing(TWEEN.Easing.Elastic.InOut);
+	//Create a chain of tweens
+	//For example: this one loops between firstTween and secondTween
+	firstTween.chain(secondTween);
+	secondTween.chain(firstTween);
+	// Easing function can be found here https://sole.github.io/tween.js/examples/03_graphs.html
+*/
+
