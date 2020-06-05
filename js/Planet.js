@@ -28,8 +28,10 @@ class BlockPlanet{
 	this.pivot.add(this.planet);
 	this.planet.position.set(x, 0, z);
 	this.planet.name = name;
-    this.scene.add(this.pivot);
+  this.pivot.name = name;
+  this.scene.add(this.pivot);
 	WorldObjects.push(this.planet);
+  PlanetClasses.push(this);
   }
 
 	/**

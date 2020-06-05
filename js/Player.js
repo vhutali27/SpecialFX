@@ -12,6 +12,7 @@ var moveBackward = false;
 var moveLeft = false;
 var moveRight = false;
 var changePlanet = false;
+var canChangePlanet = true;
 
 var canJump = false;
 
@@ -63,6 +64,10 @@ var onKeyDown = function ( event ) {
 	}
 };
 
+async function ChangeWorld() {
+	
+}
+
 var onKeyUp = function ( event ) {
 	switch( event.keyCode ) {
 		case 38: // up
@@ -99,8 +104,8 @@ document.addEventListener( 'keydown', onKeyDown, false );
 document.addEventListener( 'keyup', onKeyUp, false );
 
 // Raycasting is used for working out which object the mouse is pointing at
-var raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
-
+var MouseRaycaster = new THREE.Raycaster();
+var mouse = new THREE.Vector2();
 // Bullets Array
 var Bullets = [];
 
@@ -127,24 +132,6 @@ function onDocumentMouseDown( event )
 	}
 
     event.preventDefault();
-
-	// update the mouse variable
-	mouse.x = ( event.clientX / mainWidth ) * 2 - 1;
-	mouse.y = - ( event.clientY / mainHeight ) * 2 + 1;
-
-	// find intersections
-	// update the picking ray with the camera and mouse position
-	raycaster.setFromCamera( mouse, camera);
-
-	// create an array containing all objects in the scene with which the ray intersects
-	var intersects = raycaster.intersectObjects( scene.children, true );
-
-	// if there is one (or more) intersections
-	if ( intersects[0] )
-	{
-		var object = intersects[0].object;
-		console.log("Hit @ " + toString( intersects[0].name ) );
-	}
 
 }
 
@@ -274,10 +261,7 @@ class Player{
 	// a different planet to travel to it.
 	setTargetPlanet(planet){
 		// Check if is already attached to another planet
-		if(this.TargetPlanet!== null){
-			// Character from that planets pivot
-			this.TargetPlanet.pivot.remove(this.Group);
-		}
+		if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(this.Group);
 		this.TargetPlanet = planet;
 		this.LandedOnPlanet = false;
 	}
@@ -309,15 +293,12 @@ class Player{
 		else return 0;
 	}
 
-	switchPlanet(){
-		if(this.TargetPlanet === Surface1){
-			this.upright(false);
-			this.setTargetPlanet(Surface2);
-		}
-		else{
-			this.upright(true);
-			this.setTargetPlanet(Surface1);
-		}
+	switchPlanet(destinationPlanet){
+			var above = false;
+			if(destinationPlanet.y < this.Group.position.y) above = true;
+			if(above && !this.Upright) this.upright(true);
+			else if(!above && this.Upright) this.upright(false);
+			this.setTargetPlanet(destinationPlanet);
 	}
 
 	animate(){
@@ -325,7 +306,7 @@ class Player{
 			var time = performance.now();
 			if(this.TargetPlanet !== null){
 				var conPos = this.Group.position;
-				raycaster.ray.origin.copy( conPos );
+				MouseRaycaster.ray.origin.copy( conPos );
 				this.footRaycaster.ray.origin.copy( conPos );
 				this.headRaycaster.ray.origin.copy( conPos );
 				this.footRaycaster.ray.origin.copy(new THREE.Vector3(conPos.x,conPos.y-5,conPos.z));
@@ -359,11 +340,32 @@ class Player{
 				// Change Planet Button
 				// Add a timer after you find that it is true. So that it doesn't change a million times in a second.
 				if(changePlanet && ( !canJump || !withinBoundary )){
-					if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(this.Group);
-					this.switchPlanet();
-					isOnObject = false;
-					this.LandedOnPlanet = false;
-					canJump = false;
+					// Check to see if player is pointing at a planet
+					// update the mouse variable
+					mouse.x = camera.position.x;
+					mouse.y = camera.position.y;
+				
+					// find intersections
+					MouseRaycaster.setFromCamera( mouse, camera);
+					var intersects = MouseRaycaster.intersectObjects( WorldObjects );
+				
+					// if there is one (or more) intersections
+					if ( intersects.length > 0 && canChangePlanet)
+					{
+						var PlanetName = intersects[0].object.name;
+						var PlanetClass = null;
+						PlanetClasses.forEach(function(planetObject){
+							if(PlanetName === planetObject.planet.name){
+								PlanetClass = planetObject;
+							}
+						});
+						this.switchPlanet(PlanetClass);
+						canChangePlanet = false;
+						setTimeout(function(){canChangePlanet = true;},1000);
+						isOnObject = false;
+						this.LandedOnPlanet = false;
+						canJump = false;
+					}
 				}
 
 				var delta = ( time - prevTime ) / 1000;

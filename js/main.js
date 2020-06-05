@@ -17,22 +17,33 @@ var loaderAnim = document.getElementById('js-loader');
 //Create clock, set autostart to true
 var clock = new THREE.Clock(true);
 
+
+//////////////////////////////////////////////////
+// Renderer                                     //
+//////////////////////////////////////////////////
+var renderer = new THREE.WebGLRenderer();	
+renderer.setClearColor( 0xffffff );
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+	
+window.addEventListener( 'resize', onWindowResize, false );
+
+
 // Camera and scene variables
-mainWidth = window.innerWidth;
-mainHeight = window.innerHeight;
-
-
 var scene = new Physijs.Scene();
 
 // Loader
 var loader = new THREE.TextureLoader();
-var camera = new THREE.PerspectiveCamera( 75, mainWidth / mainHeight, 1, 2000);
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 2000);
 // The objects added to this array should have an animate() function.
 // This function will be called by the render function for each frame.
 var AnimateObject = new Array();
 
 // WorldObjects are the objects that the player can touch.
 var WorldObjects = new Array();
+// Planet Classes
+var PlanetClasses = new Array();
 
 LoadLevel1(scene);
 
@@ -103,12 +114,9 @@ if ( havePointerLock ) {
 	instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API';
 }
 function onWindowResize() {
-	mainWidth = window.innerWidth;
-	mainHeight = mainHeight;
-
-	camera.aspect = mainWidth / mainHeight;
+	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
-	renderer.setSize( mainWidth, mainHeight );
+	renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
 
@@ -123,17 +131,7 @@ function startGame(){
 			);
 	
 	
-	//////////////////////////////////////////////////
-	// Renderer                                     //
-	//////////////////////////////////////////////////
 	
-	renderer = new THREE.WebGLRenderer({antialias: true});
-	renderer.setClearColor( 0xffffff );
-	renderer.setPixelRatio( window.devicePixelRatio );
-	renderer.setSize(mainWidth, mainHeight);
-	document.body.appendChild(renderer.domElement);
-	
-	window.addEventListener( 'resize', onWindowResize, false );
 	
 	//////////////////////////////////////////////////
 	// RENDERING                                    //
