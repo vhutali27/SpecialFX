@@ -194,6 +194,8 @@ THREE.PointerLockControls = function ( camera, domElement, character, pivot ) {
 			if(Jumping){
 				addJumpForce = jumpForce;
 			}
+			
+			
 		}
 	};
 
@@ -222,6 +224,59 @@ THREE.PointerLockControls = function ( camera, domElement, character, pivot ) {
 		{
 				
 		}
+		
+		var playerPosition = new THREE.Vector3(character.position.x, character.position.y, character.position.z);
+		var poleDirection = new THREE.Vector3(1,0,0);
+		var localUp = playerPosition.clone().normalize();
+
+		/*if(this.left){
+			cameraReferenceOrientationObj.rotation.y = 0.05;
+			this.left = false;
+		}
+		else if(this.right){
+			cameraReferenceOrientationObj.rotation.y = -0.05;
+			this.right = false;
+		}*/
+		
+		var referenceForward = new THREE.Vector3(0, 0, 1);
+		referenceForward.applyQuaternion(cameraReferenceOrientationObj.quaternion);
+
+		var correctionAngle = Math.atan2(referenceForward.x, referenceForward.z);
+		var cameraPoru = new THREE.Vector3(0,-1,0);
+
+		cameraReferenceOrientationObj.quaternion.setFromAxisAngle(cameraPoru,correctionAngle);
+		poleDir.applyAxisAngle(localUp,correctionAngle).normalize();
+
+		cameraReferenceOrientationObj.quaternion.copy(cameraReferenceOrientation);
+
+		var cross = new THREE.Vector3();
+		cross.crossVectors(poleDir,localUp);
+
+		var dot = localUp.dot(poleDir);
+		poleDir.subVectors(poleDir , localUp.clone().multiplyScalar(dot));
+
+		var cameraTransform = new THREE.Matrix4();
+		cameraTransform.set(	poleDir.x,localUp.x,cross.x,cameraPosition.x,
+					poleDir.y,localUp.y,cross.y,cameraPosition.y,
+					poleDir.z,localUp.z,cross.z,cameraPosition.z,
+					0,0,0,1);
+		
+		character.matrixAutoUpdate = false;
+		
+		var cameraPlace = new THREE.Matrix4();
+		cameraPlace.makeTranslation ( 0, 2 * 0.8, 0 * 0.8);
+
+		var cameraRot = new THREE.Matrix4();
+		cameraRot.makeRotationX(-0.32 - (playerPosition.length()/1200));
+
+		var oneTwo = new THREE.Matrix4();
+		oneTwo.multiplyMatrices(cameraTransform , cameraPlace);
+
+		var oneTwoThree = new THREE.Matrix4();
+		oneTwoThree.multiplyMatrices(oneTwo, cameraRot);
+
+		character.matrix = oneTwoThree;
+		
 	};
 	
 	this.Update = function(){
