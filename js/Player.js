@@ -163,6 +163,7 @@ class Player{
 		this.Height = 5;
 		this.Upright = true;
 		this.Group = new THREE.Group();
+		this.LandingPoint = new THREE.Vector3(0,0,0);
 
 		// controls is the First Person View controls. This shouldn't be the object that
 		// is moved or acts as the player. It should be added to the players THREE.Group
@@ -263,6 +264,7 @@ class Player{
 		// Check if is already attached to another planet
 		if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(this.Group);
 		this.TargetPlanet = planet;
+		this.LandingPoint.set(planet.x,planet.y,planet.z);
 		this.LandedOnPlanet = false;
 	}
 
@@ -288,17 +290,28 @@ class Player{
 	// Returns the distance between the TargetPlanet and the player.
 	getDistance(){
 		if(this.TargetPlanet!== null){
-			return Math.abs(this.Group.position.y - this.TargetPlanet.y);
+			return Math.abs(this.Group.position.y - this.LandingPoint.y);
 		}
 		else return 0;
 	}
+	
+	getIntersects(objects){
+		// update the mouse variable
+					mouse.x = camera.position.x;
+					mouse.y = camera.position.y;
+				
+					// find intersections
+					MouseRaycaster.setFromCamera( mouse, camera);
+					return MouseRaycaster.intersectObjects( objects );
+	}
 
-	switchPlanet(destinationPlanet){
+	switchPlanet(destinationPlanet, coords){
 			var above = false;
 			if(destinationPlanet.y < this.Group.position.y) above = true;
 			if(above && !this.Upright) this.upright(true);
 			else if(!above && this.Upright) this.upright(false);
 			this.setTargetPlanet(destinationPlanet);
+			this.LandingPoint.set(coords.x,coords.y,coords.z);
 	}
 
 	animate(){
@@ -340,14 +353,7 @@ class Player{
 				// Change Planet Button
 				// Add a timer after you find that it is true. So that it doesn't change a million times in a second.
 				if(changePlanet && ( !canJump || !withinBoundary )){
-					// Check to see if player is pointing at a planet
-					// update the mouse variable
-					mouse.x = camera.position.x;
-					mouse.y = camera.position.y;
-				
-					// find intersections
-					MouseRaycaster.setFromCamera( mouse, camera);
-					var intersects = MouseRaycaster.intersectObjects( WorldObjects );
+					var intersects = this.getIntersects( WorldObjects );
 				
 					// if there is one (or more) intersections
 					if ( intersects.length > 0 && canChangePlanet)
@@ -359,7 +365,7 @@ class Player{
 								PlanetClass = planetObject;
 							}
 						});
-						this.switchPlanet(PlanetClass);
+						this.switchPlanet(PlanetClass, intersects[0].point);
 						canChangePlanet = false;
 						setTimeout(function(){canChangePlanet = true;},1000);
 						isOnObject = false;
@@ -433,7 +439,7 @@ class Player{
 					// Move character towards planet
 					var distance = this.getDistance();
 					var step = 1 - (distance - 1)/distance;
-					applyGravity(this.Group,{x:this.Group.position.x,y:this.TargetPlanet.y,z:this.Group.position.z},step);
+					applyGravity(this.Group,this.LandingPoint,step);
 				}
 
 				// Change click after click events have been processed.
@@ -443,29 +449,18 @@ class Player{
 
 			// Shooting Bullets
 			if(leftClick){
-				var bullet = new THREE.Mesh(
-					new THREE.SphereGeometry(0.2,4,4),
-					new THREE.MeshBasicMaterial({color:0xffffff})
-				);
-
-				bullet.rotation.set(0,this.Group.rotation.y,0);
-				bullet.position.set(this.Group.position.x-1,
-									this.Group.position.y,
-									this.Group.position.z+3
-				);
-				console.log(this.Group.rotation.y);
-				bullet.velocity = new THREE.Vector3(
-						-Math.sin(this.Group.rotation.y),
-						0,
-						Math.cos(this.Group.rotation.y));
-				Bullets.push(bullet);
-
-				bullet.alive = true;
-				setTimeout(function(){
-					bullet.alive = false;
-					scene.remove(bullet);
-				},5000);
-				scene.add(bullet);
+				var endposition = new THREE.Vector3();
+				var bulletIntersects = this.getIntersects(scene.children);
+				
+				if( bulletIntersects.length >0 ){
+					endposition = bulletIntersects[0].point;
+				}
+				
+				AnimateObject.push(new normalBullet(
+											  {x:this.Group.position.x-1,
+											  y:this.Group.position.y,
+											  z:this.Group.position.z+3},
+											  endposition));// GetFromCameraRaycast		
 			}
 		}
 	}

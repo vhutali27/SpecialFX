@@ -164,14 +164,6 @@ function startGame(){
 		requestAnimationFrame(render);
 		renderer.render(scene, camera);
 	
-		for(var index = 0; index<Bullets.length; index++){
-			if(Bullets[index] === undefined) continue;
-			if(Bullets[index].alive == false ){
-				Bullets.splice( index, 1);
-				continue;
-			}
-			Bullets[index].position.add(Bullets[index].velocity);
-		}
 	};
 	
 	//////////////////////////////////////////////////
