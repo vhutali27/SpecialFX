@@ -346,28 +346,8 @@ function onDocumentMouseDown( event )
 	}
 	
     event.preventDefault();
-	
-	// update the mouse variable
-	//mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	//mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 	mouse.x = event.clientX - window.innerWidth/2;
     mouse.y = event.clientY - window.innerHeight/2;
-	
-	// find intersections
-	// update the picking ray with the camera and mouse position
-	//raycaster.setFromCamera( mouse, controls.getObject());
-
-	// create an array containing all objects in the scene with which the ray intersects
-	//var intersects = raycaster.intersectObjects( WorldObjects );
-	
-	// if there is one (or more) intersections
-	//if ( intersects.length > 0 )
-	//{
-	//	console.log("Hit @ " + toString( intersects[0].point ) );
-		// change the color of the closest face.
-		//intersects[ 0 ].face.color.setRGB( 0.8 * Math.random() + 0.2, 0, 0 ); 
-		//intersects[ 0 ].object.geometry.colorsNeedUpdate = true;
-	//}
 
 }
 
@@ -399,7 +379,7 @@ class Player{
 		this.Group.add(this.body);
 		this.Group.add(this.controls.getObject());
 		scene.add(this.Group);
-		this.Group.position.set(0,0,0);
+		this.Group.position.set(0,780,0);
 		this.PlanetOrigin.position.set(0,0,0);
 		
 		// Position the components of the character here
@@ -491,14 +471,61 @@ class Player{
 				// After you land the SphereCoords are still centered at (0,0,0) instead
 				// of the new planet. We need to find a way to center SphereCoords on the new planet
 				if( this.LandedOnPlanet === true){
+					/*var playerPosition = new THREE.Vector3(this.Group.position.x, this.Group.position.y, this.Group.position.z);
+					var poleDirection = new THREE.Vector3(1,0,0);
+					var localUp = playerPosition.clone().normalize();
+
+					/*if(this.left){
+						cameraReferenceOrientationObj.rotation.y = 0.05;
+						this.left = false;
+					}
+					else if(this.right){
+						cameraReferenceOrientationObj.rotation.y = -0.05;
+						this.right = false;
+					}*/
 					
-					//this.controls.moveRight(- velocity.x * delta , dis);
-					//this.controls.moveForward(- velocity.z * delta );
-					//this.controls.moveUp( velocity.y * delta );
+					/*var referenceForward = new THREE.Vector3(0, 0, 1);
+					referenceForward.applyQuaternion(cameraReferenceOrientationObj.quaternion);
+			
+					var correctionAngle = Math.atan2(referenceForward.x, referenceForward.z);
+					var cameraPoru = new THREE.Vector3(0,-1,0);
+			
+					cameraReferenceOrientationObj.quaternion.setFromAxisAngle(cameraPoru,correctionAngle);
+					poleDir.applyAxisAngle(localUp,correctionAngle).normalize();
+			
+					cameraReferenceOrientationObj.quaternion.copy(cameraReferenceOrientation);
+			
+					var cross = new THREE.Vector3();
+					cross.crossVectors(poleDir,localUp);
+			
+					var dot = localUp.dot(poleDir);
+					poleDir.subVectors(poleDir , localUp.clone().multiplyScalar(dot));
+			
+					var cameraTransform = new THREE.Matrix4();
+					cameraTransform.set(	poleDir.x,localUp.x,cross.x,cameraPosition.x,
+								poleDir.y,localUp.y,cross.y,cameraPosition.y,
+								poleDir.z,localUp.z,cross.z,cameraPosition.z,
+								0,0,0,1);
+					
+					this.Group.matrixAutoUpdate = false;
+					
+					var cameraPlace = new THREE.Matrix4();
+					cameraPlace.makeTranslation ( 0, this.Height * 0.8, 0 * 0.8);
+			
+					var cameraRot = new THREE.Matrix4();
+					cameraRot.makeRotationX(-0.32 - (playerPosition.length()/1200));
+			
+					var oneTwo = new THREE.Matrix4();
+					oneTwo.multiplyMatrices(cameraTransform , cameraPlace);
+			
+					var oneTwoThree = new THREE.Matrix4();
+					oneTwoThree.multiplyMatrices(oneTwo, cameraRot);
+			
+					this.Group.matrix = oneTwoThree;*/
+					
 					var temp = new THREE.Vector3(this.TargetPlanet.pivot.x ,this.TargetPlanet.pivot.y, this.TargetPlanet.pivot.z);
-					//this.Group.quaternion.multiply(this.Group.quaternion.setFromUnitVectors(temp.normalize(),this.Group.position.normalize()));
-					//// get distance can never be less than one.
-					if(this.getDistance()< this.TargetPlanet.radius + this.Height){
+					
+					if(this.getDistance()< this.TargetPlanet.radius){
 						/*var SphereCoords = new THREE.Spherical().setFromVector3(this.Group.position);
 						SphereCoords.radius = this.TargetPlanet.radius + this.Height;
 						var vec = new THREE.Vector3().setFromSpherical(SphereCoords);
@@ -516,7 +543,7 @@ class Player{
 					var distance = this.getDistance();
 					var step = 1 - (distance - 1)/distance;
 					applyGravity(this.Group,this.TargetPlanet,step);
-					if(distance < 0){
+					if(distance < this.TargetPlanet.radius/6){
 						this.LandedOnPlanet = true;
 					//	this.Group.rotation.set(
 					//			0,
@@ -530,7 +557,7 @@ class Player{
 					//		this.PlanetOrigin.add(this.Group);
 					//		this.Group.position.set(this.PlanetOrigin.position.x.x,this.PlanetOrigin.position.x.y + radius, this.PlanetOrigin.position.x.z);
 					//		this.Group.position.set(0,0,0);
-					//}
+					}
 				}
 				direction.z = Number( moveForward ) - Number( moveBackward );
 				direction.x = Number( moveRight ) - Number( moveLeft );
@@ -655,7 +682,7 @@ color: 0x72f2f2,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var Surface1 = new Planet( 80, 38, 38, Surface1Material, -300, -200, 0, "Surface1");
+var Surface1 = new Planet( 80, 38, 38, Surface1Material, -500, -400, 0, "Surface1");
 
 var ballMaterial = new THREE.MeshPhongMaterial({
 //map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
@@ -679,7 +706,7 @@ color: 0x464742,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var Surface2 = new Planet( 80, 38, 38, Surface2Material, 0, 200, 300, "Surface2");
+var Surface2 = new Planet( 400, 38, 38, Surface2Material, 0, 0, 0, "Surface2");
 AnimateObject.push(Surface2);
 
 //Stars
@@ -695,7 +722,7 @@ scene.add(starField);
 // Initialize player
 var player = new Player();
 AnimateObject.push(player);
-player.setTargetPlanet(Surface2);
+player.setTargetPlanet(Surface1);
 
 
 //////////////////////////////////////////////////

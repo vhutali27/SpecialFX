@@ -2,6 +2,7 @@
  * @author mrdoob / http://mrdoob.com/
  * @author Mugen87 / https://github.com/Mugen87
  */
+const CANNON = require('cannon.min.js');
 
 THREE.PointerLockControls = function ( camera, domElement, character, pivot ) {
 
@@ -39,6 +40,12 @@ THREE.PointerLockControls = function ( camera, domElement, character, pivot ) {
 	var Jumping = false;
 	var dirX;
 	var dirZ;
+	
+	// New Vars
+	var playerRotation = new THREE.Quaternion();
+	var cameraReferenceOrientation = new THREE.Quaternion();
+	var cameraReferenceOrientationObj = new THREE.Object3D();
+	var poleDir = new THREE.Vector3(1,0,0);
 	
 	// Gravity
 	var hoverGravity = 1;
