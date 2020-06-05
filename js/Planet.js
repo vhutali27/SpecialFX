@@ -49,8 +49,34 @@ class BlockPlanet{
 	obj.position.set(this.x+x - this.width/2, height,this.z+z - this.depth/2);
 	this.addToPivot(obj);
   }
+  
+  addFBXObject(objectPath,onTop,x,z,height,planet){
+    var path = objectPath.path;
+    loader.load( path, function ( object ) {
 
-  addObjObject(path, materialPath, onTop, x, z, height, scale, planet){
+					object.traverse( function ( child ) {
+
+						if ( child.isMesh ) {
+
+							child.castShadow = true;
+							child.receiveShadow = true;
+
+						}
+
+					} );
+
+					if(onTop === true){height=1 + height;}
+          else {height=-1 - height; object.rotation.z+=Math.PI;}
+          object.scale.set(objectPath.x,objectPath.y,objectPath.z);
+          object.position.set(planet.x+x - planet.width/2, height,planet.z+z - planet.depth/2);
+          planet.addToPivot(object);
+
+				} );
+  }
+
+  addObjObject(objectPath, onTop, x, z, height, planet){
+  var path = objectPath.path;
+  var materialPath = objectPath.materialPath;
 	// Loads the material
 	loaderMTL.load(materialPath, function ( materials ) {
 		materials.preload();
@@ -61,7 +87,7 @@ class BlockPlanet{
 			function (object) {
 				if(onTop === true){height=1 + height;}
 				else {height=-1 - height; object.rotation.z+=Math.PI;}
-				object.scale.set(scale.x,scale.y,scale.z);
+				object.scale.set(objectPath.x,objectPath.y,objectPath.z);
 				object.position.set(planet.x+x - planet.width/2, height,planet.z+z - planet.depth/2);
 				planet.addToPivot(object);
 				},

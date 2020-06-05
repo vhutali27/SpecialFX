@@ -19,13 +19,7 @@ function LoadLevel1(scene){
     shininess: 2
     });
     AnimateObject.push(Surface1);
-    /*Surface1.addCanister(true,0,0,2,Surface1);
-    Surface1.addCanister(true,0,150,2,Surface1);
-    Surface1.addCanister(true,150,0,2,Surface1);
-    Surface1.addCanister(true,150,150,2,Surface1);*/
-    Surface1.addObjObject("models/bucket/bucket.obj","models/bucket/bucket.mtl", true, 75, 75, 2, {x:0.15,y:0.15,z:0.15}, Surface1);
-    
-    //earth.addObject(getSquare(earthMaterial, 2),23,1,2);
+    Surface1.addObjObject(getCottage(), true, 75, 75, 0, Surface1);
     
     // Mars
     var grassMaterial = new THREE.MeshPhongMaterial({
@@ -36,8 +30,8 @@ function LoadLevel1(scene){
     });
     Surface2 = new BlockPlanet(150, 1500, grassMaterial, 0, 100, 0, "Surface2", scene);
     AnimateObject.push(Surface2);
-    Surface2.addObjObject("models/steel_fence/fance.obj","models/steel_fence/fance.mtl",false,0,0,0, {x:5,y:5,z:5},Surface2);
-    Surface2.addObjObject("models/birch/birch.obj","models/birch/birch.mtl", false, 75, 75, 0, {x:0.15,y:0.15,z:0.15},Surface2);
+    //Surface2.addObjObject("models/steel_fence/fance.obj","models/steel_fence/fance.mtl",false,0,0,0, {x:5,y:5,z:5},Surface2);
+    //Surface2.addObjObject("models/birch/birch.obj","models/birch/birch.mtl", false, 75, 75, 0, {x:0.15,y:0.15,z:0.15},Surface2);
     
     //Stars
     var starGeometry = new THREE.SphereGeometry(1000, 50, 500);

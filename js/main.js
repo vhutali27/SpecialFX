@@ -8,9 +8,12 @@ Physijs.scripts.worker = '/js/physijs_worker.js';
 Physijs.scripts.ammo = '/js/ammo.js';
 
 // Instantiate a loader
+var loaderJson = new THREE.ObjectLoader();
 var loaderGLTF = new THREE.GLTFLoader();
 //var loaderOBJ = new THREE.OBJLoader();
 var loaderMTL = new THREE.MTLLoader();
+var loaderFBX = new THREE.FBXLoader();
+
 var mixer;											//THREE.js animations mixer
 var loaderAnim = document.getElementById('js-loader');
 

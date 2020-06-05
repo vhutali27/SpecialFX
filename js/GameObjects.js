@@ -75,3 +75,87 @@ function getSquare(material, size){
 	obj.castShadow = true;
 	return obj;
 }
+
+function getObj(oPath, oMaterial , xScale, yScale, zScale){
+	return {path: oPath, materialPath: oMaterial,x:xScale,y:yScale,z:zScale};
+}
+
+function getSummerTree(){
+	return getObj("models/Nature/Plants/Tree(Summer)/TreeSummer.obj",
+				  "models/Nature/Plants/Tree(Summer)/TreeSummer.mtl",
+				  8,
+				  8,
+				  8);
+}
+
+function getWinterTree(){
+	return getObj("models/Nature/Plants/Tree(Winter)/TreeWinter.obj",
+				  "models/Nature/Plants/Tree(Winter)/TreeWinter.mtl",
+				  8,
+				  8,
+				  8);
+}
+
+function getFallTree(){
+	return getObj("models/Nature/Plants/Tree(Fall)/TreeFall.obj",
+				  "models/Nature/Plants/Tree(Fall)/TreeFall.mtl",
+				  8,
+				  8,
+				  8);
+}
+
+function getDeadTree(){
+	return getObj("models/Nature/Plants/Tree(Dead)/TreeDead.obj",
+				  "models/Nature/Plants/Tree(Dead)/TreeDead.mtl",
+				  8,
+				  8,
+				  8);
+}
+
+function getCactus(){
+	return getObj("models/Nature/Plants/Cactus/Cactus.obj",
+				  "models/Nature/Plants/Cactus/Cactus.mtl",
+				  8,
+				  8,
+				  8);
+}
+
+function getTent(){
+	return getObj("models/Nature/Props/Tent/Tent.obj",
+				  "models/Nature/Props/Tent/Tent.mtl",
+				  8,
+				  8,
+				  8);
+}
+
+function getBoulderAndSnow(){
+	return getObj("models/Nature/Rocks/Boulder&Snow/Boulders.obj",
+				  "models/Nature/Rocks/Boulder&Snow/Boulders.mtl",
+				  8,
+				  8,
+				  8);
+}
+
+function getPebblesAndSnow(){
+	return getObj("models/Nature/Rocks/Pebbles&Snow/Pebbles.obj",
+				  "models/Nature/Rocks/Pebbles&Snow/Pebbles.mtl",
+				  8,
+				  8,
+				  8);
+}
+
+function getRocksAndSnow(){
+	return getObj("models/Nature/Rocks/Rocks&Snow/Rocks.obj",
+				  "models/Nature/Rocks/Rocks&Snow/Rocks.mtl",
+				  8,
+				  8,
+				  8);
+}
+
+
+function getBucket(){
+	return getObj("models/bucket/bucket.obj", "models/bucket/bucket.mtl",
+				  0.15,
+				  0.15,
+				  0.15);
+}
