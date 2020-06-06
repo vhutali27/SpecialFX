@@ -252,11 +252,20 @@ class Player{
 				}
 			);
 */
+			var grassMaterial = new THREE.MeshPhongMaterial({
+    map: loader.load("images/grass.jpg"),
+    color: 0x464742,
+    specular: 0xbbbbbb,
+    shininess: 2
+    });
 		this.footRaycaster = new THREE.Raycaster(new THREE.Vector3(0,-5,0), new THREE.Vector3(0,-1,0));
 		this.headRaycaster = new THREE.Raycaster(new THREE.Vector3(0,5,0), new THREE.Vector3(0,1,0));
 		this.Group.add(this.controls.getObject());
 		scene.add(this.Group);
-		this.Group.position.set(0,50,-110);
+		this.pla = getSphere(grassMaterial,10,10);
+		this.pla.position.set(0,0,-0);
+		scene.add(this.pla);
+		this.Group.position.set(0,11,-0);
 
 		// Position the components of the character here
 	}
@@ -426,9 +435,9 @@ class Player{
 
 				// After you land the SphereCoords are still centered at (0,0,0) instead
 				// of the new planet. We need to find a way to center SphereCoords on the new planet
+				
 				if( this.LandedOnPlanet === true){
-					this.controls.moveRight(- velocity.x * delta );
-					this.controls.moveForward(- velocity.z * delta );
+					
 					//this.controls.moveUp( velocity.y * delta );
 
 					if(!withinBoundary){
@@ -465,9 +474,11 @@ class Player{
 					if(this.TargetSphere != null) this.LandingPoint.set(this.TargetSphere.position.x,
 																		this.TargetSphere.position.y,
 																		this.TargetSphere.position.z);
-					applyGravity(this.Group,this.LandingPoint,step);
+					//applyGravity(this.Group,this.LandingPoint,step);
 				}
-
+				
+				this.controls.moveForward(Number( moveForward ) - Number( moveBackward ));
+				this.controls.moveRight( Number( moveRight ) - Number( moveLeft ));
 				// Change click after click events have been processed.
 				rightClick = false;
 				prevTime = time;

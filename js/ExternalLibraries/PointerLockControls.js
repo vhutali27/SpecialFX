@@ -143,7 +143,7 @@ THREE.PointerLockControls = function ( camera, domElement, character ) {
 
 		vec.crossVectors( this.character.up, vec );
 
-		this.character.position.addScaledVector( vec, distance );
+		this.character.position.addScaledVector( vec, distance*5 );
 
 	};
 	
@@ -158,7 +158,9 @@ THREE.PointerLockControls = function ( camera, domElement, character ) {
 		
 		vec.setFromMatrixColumn( this.character.matrix, 0 );
 
-		this.character.position.addScaledVector( vec, distance );
+		//this.character.position.addScaledVector( vec, distance*5 );
+		
+		this.character.rotation.z += distance/10;
 
 	};
 

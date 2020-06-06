@@ -33,7 +33,7 @@ function LoadLevel1(scene){
     //////////////////////////////////////////////////
     // SURFACES
     //////////////////////////////////////////////////
-    S1 = new BlockPlanet(1000, 1000, woodenFloorMaterial, 0, 0, 0, "Surface1", scene);
+    S1 = new BlockPlanet(1000, 1000, woodenFloorMaterial, 1000, 0, 0, "Surface1", scene);
     AnimateObject.push(S1);
     S2 = new BlockPlanet(1000, 1000, grassMaterial, 0, 1000, 0, "Surface2", scene);
     AnimateObject.push(S2);
