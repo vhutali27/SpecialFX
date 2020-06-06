@@ -115,9 +115,9 @@ function getDeadTree(){
 function getCactus(){
 	return getObj("models/Nature/Plants/Cactus/Cactus.obj",
 				  "models/Nature/Plants/Cactus/Cactus.mtl",
-				  8,
-				  8,
-				  8);
+				  2,
+				  2,
+				  2);
 }
 
 function getTent(){
@@ -151,7 +151,6 @@ function getRocksAndSnow(){
 				  8,
 				  8);
 }
-
 
 function getBucket(){
 	return getObj("models/bucket/bucket.obj", "models/bucket/bucket.mtl",

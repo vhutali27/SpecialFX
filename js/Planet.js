@@ -18,6 +18,16 @@ class BlockPlanet{
     this.x = x;
     this.y = y;
     this.z = z;
+     
+    // Array for movable objects
+    this.movableObjects = new Array();
+    
+    // Planet Orbit Variables
+    this.orbitAroundCenter = false;
+    this.r = this.y;
+    this.theta = 0;
+    this.dTheta = 2 * Math.PI / 1000;
+    
     this.planet = new Physijs.BoxMesh(planetGeometry, planetMaterial);
     this.scene = scene;
 	// pivot is the planets group. It holds all the objects that are affected by the planet's
@@ -71,12 +81,13 @@ class BlockPlanet{
           object.position.set(planet.x+x - planet.width/2, height,planet.z+z - planet.depth/2);
           planet.addToPivot(object);
 
-				} );
+				});
   }
 
-  addObjObject(objectPath, onTop, x, z, height, planet){
+  addObjObject(objectPath, onTop, x, z, height){
   var path = objectPath.path;
   var materialPath = objectPath.materialPath;
+  var planet = this;
 	// Loads the material
 	loaderMTL.load(materialPath, function ( materials ) {
 		materials.preload();
@@ -147,6 +158,22 @@ class BlockPlanet{
 		this.pivot.add(obj);
 		obj.position.set(coords.x,coords.y,coords.z);
 	}
+  
+  centerOrbit(boolVal){
+    this.orbitAroundCenter = boolVal;
+  }
+  
+  // Object that can move with the planet and be removed
+  add(obj){
+    this.movableObjects.push(obj);
+  }
+  
+  remove(obj){
+    var index = this.movableObjects.indexOf(obj);
+    if( index > -1 ){
+        this.movableObjects.splice(index, 1);
+    }
+  }
 
 	/**
 		* Function to rotate the planet
@@ -154,9 +181,20 @@ class BlockPlanet{
 		* @param {type} yRotation Float
  	*/
   animate(){
-	// When you change the rotation or position of a physi object
-	// you need to declare the change with mesh.__dirtyPosition = true;
-	// mesh.__dirtyRotation = true;
+    // When you change the rotation or position of a physi object
+    // you need to declare the change with mesh.__dirtyPosition = true;
+    // mesh.__dirtyRotation = true;
+    
+    if(this.orbitAroundCenter){
+      //Moon orbit
+      this.theta += this.dTheta;
+      var xTrans = this.r * Math.cos(this.theta) - this.pivot.position.x;
+      var yTrans = this.r * Math.sin(this.theta) - this.pivot.position.y;
 
+      this.movableObjects.forEach(function(object){object.position.x += xTrans;object.position.y += yTrans;});
+      
+      this.pivot.position.x += xTrans;
+      this.pivot.position.y += yTrans;
+    }
   }
 }

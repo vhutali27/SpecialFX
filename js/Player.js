@@ -153,6 +153,13 @@ function onDocumentMouseUp( event ){
 // Class for Player
 class Player{
 	constructor(){
+		// Material
+		this.grassMaterial = new THREE.MeshPhongMaterial({
+		map: loader.load("images/grass.jpg"),
+		color: 0x464742,
+		specular: 0xbbbbbb,
+		shininess: 2
+		});
 		// Variables
 
 		// Target Planet is the planet that the character is traveling towards
@@ -164,6 +171,7 @@ class Player{
 		this.Upright = true;
 		this.Group = new THREE.Group();
 		this.LandingPoint = new THREE.Vector3(0,0,0);
+		this.TargetSphere = null;
 
 		// controls is the First Person View controls. This shouldn't be the object that
 		// is moved or acts as the player. It should be added to the players THREE.Group
@@ -196,7 +204,7 @@ class Player{
 
 		// Loads the Characters model
 		// Load a glTF resource
-			loaderGLTF.load(
+			/*loaderGLTF.load(
 				// resource URL
 				'models/character.glb',
 				// called when the resource is loaded
@@ -243,12 +251,12 @@ class Player{
 					console.error(error);
 				}
 			);
-
+*/
 		this.footRaycaster = new THREE.Raycaster(new THREE.Vector3(0,-5,0), new THREE.Vector3(0,-1,0));
 		this.headRaycaster = new THREE.Raycaster(new THREE.Vector3(0,5,0), new THREE.Vector3(0,1,0));
 		this.Group.add(this.controls.getObject());
 		scene.add(this.Group);
-		this.Group.position.set(0,0,-110);
+		this.Group.position.set(0,50,-110);
 
 		// Position the components of the character here
 	}
@@ -262,7 +270,7 @@ class Player{
 	// a different planet to travel to it.
 	setTargetPlanet(planet){
 		// Check if is already attached to another planet
-		if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(this.Group);
+		if(this.TargetPlanet!==null) this.TargetPlanet.remove(this.Group);
 		this.TargetPlanet = planet;
 		this.LandingPoint.set(planet.x,planet.y,planet.z);
 		this.LandedOnPlanet = false;
@@ -307,11 +315,25 @@ class Player{
 
 	switchPlanet(destinationPlanet, coords){
 			var above = false;
-			if(destinationPlanet.y < this.Group.position.y) above = true;
+			if(destinationPlanet.pivot.position.y < this.Group.position.y) above = true;
+			console.log(above + " " + this.Upright);
 			if(above && !this.Upright) this.upright(true);
 			else if(!above && this.Upright) this.upright(false);
+			
+			if(this.TargetSphere!=null){
+						this.TargetPlanet.remove(this.TargetSphere);
+						scene.remove(this.TargetSphere);
+						this.TargetSphere = null;
+			}
+					
 			this.setTargetPlanet(destinationPlanet);
 			this.LandingPoint.set(coords.x,coords.y,coords.z);
+			
+			this.TargetSphere = getSphere(this.grassMaterial,80,10);
+			this.TargetSphere.position.set(coords.x,coords.y,coords.z);
+			this.TargetPlanet.add(this.TargetSphere);
+			scene.add(this.TargetSphere);
+			
 	}
 
 	animate(){
@@ -352,7 +374,7 @@ class Player{
 
 				// Change Planet Button
 				// Add a timer after you find that it is true. So that it doesn't change a million times in a second.
-				if(changePlanet && ( !canJump || !withinBoundary )){
+				if(changePlanet && ( canJump || !withinBoundary )){
 					var intersects = this.getIntersects( WorldObjects );
 				
 					// if there is one (or more) intersections
@@ -390,9 +412,12 @@ class Player{
 				// A check should be added here to see if what the player is touching is actually a planet.
 				if ( isOnObject === true ) {
 					if (this.LandedOnPlanet === false) {
-						var playx = -this.TargetPlanet.x+ this.Group.position.x + this.TargetPlanet.width/2;
-						var playz = -this.TargetPlanet.z+ this.Group.position.z + this.TargetPlanet.depth/2;
-						//this.TargetPlanet.addObject( this.Group, this.Upright, playx, playz, this.Height);
+						this.TargetPlanet.add( this.Group);
+					}
+					if(this.TargetSphere!=null){
+						this.TargetPlanet.remove(this.TargetSphere);
+						scene.remove(this.TargetSphere);
+						this.TargetSphere = null;
 					}
 					this.LandedOnPlanet = true;
 					canJump = true;
@@ -404,14 +429,14 @@ class Player{
 				if( this.LandedOnPlanet === true){
 					this.controls.moveRight(- velocity.x * delta );
 					this.controls.moveForward(- velocity.z * delta );
-					this.controls.moveUp( velocity.y * delta );
+					//this.controls.moveUp( velocity.y * delta );
 
 					if(!withinBoundary){
-						this.LandedOnPlanet = false;
+						/*this.LandedOnPlanet = false;
 						if(this.TargetPlanet!==null) this.TargetPlanet.pivot.remove(this.Group);
 						isOnObject = false;
 						canJump = false;
-						this.TargetPlanet = null;
+						this.TargetPlanet = null;*/
 					}
 
 					// get distance can never be less than one.
@@ -434,11 +459,12 @@ class Player{
 				}
 				else{
 					// Controls for when you are floating in space
-					// This is where the animation for flying should be put.
-					// Rotate the character
 					// Move character towards planet
 					var distance = this.getDistance();
-					var step = 1 - (distance - 1)/distance;
+					var step = 1 - (distance - 1.5)/distance;
+					if(this.TargetSphere != null) this.LandingPoint.set(this.TargetSphere.position.x,
+																		this.TargetSphere.position.y,
+																		this.TargetSphere.position.z);
 					applyGravity(this.Group,this.LandingPoint,step);
 				}
 
@@ -455,7 +481,6 @@ class Player{
 				if( bulletIntersects.length >0 ){
 					endposition = bulletIntersects[0].point;
 				}
-				
 				AnimateObject.push(new normalBullet(
 											  {x:this.Group.position.x-1,
 											  y:this.Group.position.y,

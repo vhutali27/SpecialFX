@@ -38,7 +38,7 @@ var scene = new Physijs.Scene();
 
 // Loader
 var loader = new THREE.TextureLoader();
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 2000);
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 8000);
 // The objects added to this array should have an animate() function.
 // This function will be called by the render function for each frame.
 var AnimateObject = new Array();
@@ -53,7 +53,7 @@ LoadLevel1(scene);
 // Initialize player
 var player = new Player();
 AnimateObject.push(player);
-player.setTargetPlanet(Surface1);
+player.setTargetPlanet(S1);
 
 
 
