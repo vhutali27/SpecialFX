@@ -242,8 +242,8 @@ function createLevel(){
     var pX = Math.random() * 1000 - 500,
         pY = Math.random() * 1000 - 500,
         pZ = Math.random() * 1000 - 500,
-        particle = new THREE.Vector3(pX, pY, pZ)
-        particle.normalize().multiplyScalar(Math.random() * 1000 + 600)
+        particle = new THREE.Vector3(pX, pY, pZ);
+        particle.normalize().multiplyScalar(Math.random() * 1000 + 600);
     // add it to the geometry
     particles.vertices.push(particle);
   }

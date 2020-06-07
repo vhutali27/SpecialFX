@@ -1,174 +1,70 @@
 //////////////////////////////////////////////////
-// USEFUL INFORMATION							//
-//////////////////////////////////////////////////
-/*
-	Types of meshes
-	
-    Physijs.PlaneMesh - infinite zero-thickness plane
-    Physijs.BoxMesh - matches THREE.CubeGeometry
-    Physijs.SphereMesh - matches THREE.SphereGeometry
-    Physijs.CylinderMesh - matches THREE.CylinderGeometry
-    Physijs.ConeMesh - matches THREE.CylinderGeometry (tapered)
-    Physijs.CapsuleMesh - matches THREE.CylinderGeometry, except has two half spheres at ends
-    Physijs.ConvexMesh - matches any convex geometry you have
-    Physijs.ConcaveMesh - matches any concave geometry you have, i.e. arbitrary mesh
-    Physijs.HeightfieldMesh - matches a regular grid of height values given in the z-coordinates
-    
-    Objects that are always going to be static, simply need to have their mass set to 0.
-    set the third parameter (mass) to zero if you don't want it to be affected by gravity
-    
-    Objects that will sometimes be static, and other times be dynamic, need to have the following applied:
-	//Completely freeze an object
-	object.setAngularFactor = THREE.Vector3(0,0,0);
-	object.setLinearFactor = THREE.Vector3( 0, 0, 0 );
-	
-	//You can also clear any velocities the same way (setting them to a 0 vector3)
-	object.setAngularVelocity
-	object.setLinearVelocity
-	
-	//To reset, simply change the factors back to Vector3(1,1,1);
-	
-	
-	//Collisions
-	
-	mesh.addEventListener( 'collision', function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-    // `this` has collided with `other_object` 
-    // with an impact speed of `relative_velocity` and a rotational force of `relative_rotation` 
-    //and at normal `contact_normal`
-	});
-	
-	// Materials
-	
-	Physijs can give some extra properties to a material, and thus to an object.
-	These attributes are�friction�and�restitution (bounciness). These need to be set in a special Physijs material:
-	
-	//Values between 0.0 and 1.0
-	var friction = .8;
-	var restitution = .3;
-	
-	//Physijs Material - a three material/shader, friction, restitution
-	var material = Physijs.createMaterial(
-		new THREE.MeshBasicMaterial({ color: 0x888888 }),
-		friction,
-		restitution
-	);
-	
-	//Just apply it to the mesh like you always do
-	var mesh = new Physijs.BoxMesh(
-		new THREE.BoxGeometry( 5, 5, 5 ),
-		material
-	);
-	
-	// Because Physijs runs on a different thread than your main application,
-	there is no guarantee that it will be able to iterate the scene every time
-	you call�scene.simulate. Because of this, you may want to attach an event
-	listener to the scene that is triggered whenever the physics simulation has run.
-	
-	scene.addEventListener( 'update', function() {
-    // the scene's physics have finished updating
-	});
-	
-	// Additionally, if your scene is complex or has a lot of objects, the physics
-	simulation can slow down to the point where adding new objects can become a lot
-	of work for the application. To help alleviate some of the pain this may cause,
-	objects have a�ready�event which is triggered after the object has been added to
-	the physics simulation.�
-	
-	var readyHandler = function() {
-    // object has been added to the scene
-	};
-	var mesh = new Physijs.SphereMesh( geometry, material );
-	mesh.addEventListener( 'ready', readyHandler );
-	scene.add( mesh );
-	
-	// Compound Shapes
-	
-	parent.add( child );
-	scene.add( parent );
-	
-	//Remember, add all childs before adding the parent!
-	//And, child's positions are local/relative to the parent
-	
-	// for object constraints visit https://github.com/chandlerprall/Physijs/wiki/Constraints
-	
-	// To move a cube 100 units depending on the rendering speed use
-	theCube.position.x += 100 * timeElapsed;
-	
-	�Create basic tween
-
-	//Set position and target coordinates
-	var position = { x : 0, y: 300 };
-	var target = { x : 400, y: 50 };
-	
-	//Tell it to tween the 'position' parameter
-	//Make the tween last 2 seconds (=2000 milliseconds)
-	var tween = new TWEEN.Tween(position).to(target, 2000);
-	
-	//Now update the 3D mesh accordingly
-	tween.onUpdate(function(){
-		mesh.position.x = position.x;
-		mesh.position.y = position.y;
-	});
-	
-	//But don't forget, to start the tween
-	tween.start();
-	
-	//And also don't forget, to put this into your looping render function
-	tween.update();
-	
-	//Delay the start of the tween
-	tween.delay(500);
-	
-	//Set a different tweening (easing) function
-	tween.easing(TWEEN.Easing.Elastic.InOut);
-	
-	//Create a chain of tweens
-	//For example: this one loops between firstTween and secondTween
-	firstTween.chain(secondTween);
-	secondTween.chain(firstTween);
-	
-	// Easing function can be found here https://sole.github.io/tween.js/examples/03_graphs.html
-*/
-
-//////////////////////////////////////////////////
 // GLOBAL vARIABLES                             //
 //////////////////////////////////////////////////
 // Physics libraries that will be used.
 Physijs.scripts.worker = '/js/physijs_worker.js';
 Physijs.scripts.ammo = '/js/ammo.js';
 
-var scene = new Physijs.Scene();
-scene.addEventListener(
-			'update',
-			function() {
-				scene.simulate( undefined, 1 );
-				physics_stats.update();
-			}
-		);
+
+// to create the world add this to your main script
+  // initialize Cannon world
+ var world = new CANNON.World();
+  world.gravity.set(0, 0, 0);
+  world.broadphase = new CANNON.NaiveBroadphase();
+  
+// variables for physics
+fixedTimeStep = 1.0 / 60.0; // seconds
+const maxSubSteps = 3;
+
+var scene = new THREE.Scene();
 
 // Loader
 loader = new THREE.TextureLoader();
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 2000);
+var camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 10000);
 // The objects added to this array should have an animate() function.
 // This function will be called by the render function for each frame.
 var AnimateObject = new Array();
 
 // WorldObjects are the objects that the player can touch.
 var WorldObjects = new Array();
-
+var time, lastTime;
 //////////////////////////////////////////////////
 // Renderer                                     //
 //////////////////////////////////////////////////
 
-renderer = new THREE.WebGLRenderer({antialias: true});
-renderer.setClearColor( 0xffffff );
+
+renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setClearColor(0xEEEEEE);
 renderer.setPixelRatio( window.devicePixelRatio );
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(window.innerWidth,
+				 window.innerHeight,
+				 false);
+scene.add(camera);
+// shading
+renderer.shadowMap.enabled = true;
+renderer.shadowMapSoft = true;
+  
 document.body.appendChild(renderer.domElement);
 
 window.addEventListener( 'resize', onWindowResize, false );
 
-
+// adjust friction between ball & ground
+  groundMaterial = new CANNON.Material('groundMaterial');
+  ballMaterial = new CANNON.Material('ballMaterial');
+  var groundGroundCm = new CANNON.ContactMaterial(ballMaterial, groundMaterial, {
+      friction: 0.0, //it ws 0.9
+      restitution: 0.0,
+      contactEquationStiffness: 1e8,
+      contactEquationRelaxation: 3,
+      frictionEquationStiffness: 1e8,
+      frictionEquationRegularizationTime: 3,
+  });
+  var ballCm = new CANNON.ContactMaterial(ballMaterial, ballMaterial, {
+      friction: 0.0,
+      restitution: 0.9
+  });
+  world.addContactMaterial(groundGroundCm);
+  world.addContactMaterial(ballCm);
 //////////////////////////////////////////////////
 // LIGHTING                                     //
 //////////////////////////////////////////////////
@@ -315,41 +211,10 @@ var onKeyUp = function ( event ) {
 			break;
 	}
 };
-// when the mouse moves, call the given function
-document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-document.addEventListener( 'keydown', onKeyDown, false );
-document.addEventListener( 'keyup', onKeyUp, false );
+
 
 // Raycasting is used for working out which object the mouse is pointing at
 var raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
-
-var mouse = { x: 0, y: 0 };
-function onDocumentMouseDown( event ) 
-{
-	// the following line would stop any other event handler from firing
-	// (such as the mouse's TrackballControls)
-	// event.preventDefault();
-	switch ( event.button ) {
-		case 0: // left
-			// Shoot bullets
-			console.log("Left Click.");
-			leftClick = true;
-			break;
-		case 1: // middle
-			console.log("Middle Click.");
-			break;
-		case 2: // right
-			// Change ammo type
-			console.log("Right Click.");
-			rightClick = true;
-			break;
-	}
-	
-    event.preventDefault();
-	mouse.x = event.clientX - window.innerWidth/2;
-    mouse.y = event.clientY - window.innerHeight/2;
-
-}
 
 // Class for Player
 class Player{
@@ -369,160 +234,132 @@ class Player{
 		// is moved or acts as the player. It should be added to the players THREE.Group
 		// The player is the one that should be moved so that the game can also work with
 		// the Third Person View controls.
-		this.controls = new THREE.PointerLockControls(camera,document.body, this.Group, this.PlanetOrigin);
 		
-		var geometry = new THREE.CylinderGeometry( 2.5, 2.5, 10, 32 );
-		var material = new Physijs.createMaterial(new THREE.MeshPhongMaterial({color: 0xff00E3, specular: 0xffffff, shininess: 60}),0,0);
-		this.body = new Physijs.CapsuleMesh( geometry, material, 40);
-		this.footRaycaster = new THREE.Raycaster(new THREE.Vector3(0,-5,0), new THREE.Vector3(0,-1,0));
-		this.headRaycaster = new THREE.Raycaster(new THREE.Vector3(0,5,0), new THREE.Vector3(0,1,0));
-		this.Group.add(this.body);
-		this.Group.add(this.controls.getObject());
-		scene.add(this.Group);
-		this.Group.position.set(0,780,0);
-		this.PlanetOrigin.position.set(0,0,0);
+		var geometry = new THREE.BoxGeometry(10, 10, 10);
+		var material = new THREE.MeshPhongMaterial({ color: '#f96f42',
+												 shading: THREE.FlatShading });
+		this.mesh = new THREE.Mesh( geometry, material );
+	
+		// Cannon
+		var shape = new CANNON.Box(new CANNON.Vec3(10,10,10));
+		this.mesh.cannon = new CANNON.Body({ shape,
+										mass: 35,
+										material: ballMaterial });
+		this.mesh.cannon.linearDamping = this.mesh.cannon.angularDamping = 0.41;
+	  
+		this.mesh.castShadow = true;
+  this.mesh.cannon.inertia.set(0,0,0);
+  this.mesh.cannon.invInertia.set(0,0,0);
+		// set spawn position according to server socket message
+		this.mesh.position.x = 0;
+		this.mesh.position.y = 0;
+		this.mesh.position.z = 700;
+
+		this.mesh.name = "Main";
+		this.mesh.nickname = "DUDEMAN";
 		
-		// Position the components of the character here
+		// add pivot to attach food to
+		// For things you want to add to the character
+		this.pivot = new THREE.Group();
+  //this.pivot.add(camera);
+		this.mesh.add(this.pivot);
+  camera.position.z = 800;
+  camera.position.y = 0;
+		
+		// For cannon quaternion the z and y are switched
+		// add Cannon body
+		this.mesh.cannon.position.x = this.mesh.position.x;
+		this.mesh.cannon.position.z = this.mesh.position.y;
+		this.mesh.cannon.position.y = this.mesh.position.z;
+		this.mesh.cannon.quaternion.x = -this.mesh.quaternion.x;
+		this.mesh.cannon.quaternion.z = -this.mesh.quaternion.y;
+		this.mesh.cannon.quaternion.y = -this.mesh.quaternion.z;
+		this.mesh.cannon.quaternion.w = this.mesh.quaternion.w;
+		
+		scene.add( this.mesh );
+		world.add(this.mesh.cannon);
+  this.clampMovement = false;
+  
+  
+		// This is how gravity is applied to the player 
+		// This function is in the constructor of the player class
+  
+		// use the Cannon preStep callback, evoked each timestep, to apply the gravity from the planet center
+		//to the main player.
+		this.mesh.cannon.preStep = function(){
+		  var ball_to_planet = new CANNON.Vec3();
+		  this.position.negate(ball_to_planet);
 
-	}
+		  var distance = ball_to_planet.norm();
 
-	// Returns the Vector3 component of an object with x,y and z variables.
-	getVector3(xyz){
-		return new THREE.Vector3(xyz.x,xyz.y,xyz.z);
-	}
-
-	// Only takes in the planet class. This is called when the player clicks on
-	// a different planet to travel to it.
-	setTargetPlanet(planet){
-		// Check if is already attached to another planet
-		if(this.TargetPlanet!== null){
-			// Character from that planets pivot
-			this.TargetPlanet.pivot.remove(this.PlanetOrigin);
-		}
-		this.TargetPlanet = planet;
-		this.controls.setRadius(planet.radius);
-		this.LandedOnPlanet = false;
-		this.controls.setOrbitPoint(new THREE.Vector3(planet.x,planet.y,planet.z));
-	}
-
-	// Returns the distance between the TargetPlanet and the player.
-	getDistance(){
-		if(this.TargetPlanet!== null){
-			return this.Group.position.distanceTo(this.TargetPlanet) - this.TargetPlanet.radius;
-		}
-		else return 0;
+		  ball_to_planet.normalize();
+		  ball_to_planet = ball_to_planet.scale(3000000 * this.mass/Math.pow(distance,2));
+		  world.gravity.set(ball_to_planet.x, ball_to_planet.y, ball_to_planet.z);
+		  // changing gravity seems to apply friction, whereas just applying force doesn't
+		};
+	
+		
+		this.controls = new THREE.PointerLockControls(camera, document.body, this.mesh, this.mesh.cannon);
 	}
 	
-	switchPlanet(){
-		if(this.TargetPlanet === Surface1){
-			player.setTargetPlanet(Surface2);
-		}
-		else{
-			player.setTargetPlanet(Surface1);
-
-		}
-	}
-
+	setCannonPosition( mesh ){
+		this.mesh.cannon.position.x = mesh.position.x;
+		this.mesh.cannon.position.z = mesh.position.y;
+		this.mesh.cannon.position.y = mesh.position.z;
+		this.mesh.cannon.quaternion.x = -mesh.quaternion.x;
+		this.mesh.cannon.quaternion.z = -mesh.quaternion.y;
+		this.mesh.cannon.quaternion.y = -mesh.quaternion.z;
+		this.mesh.cannon.quaternion.w = mesh.quaternion.w;
+	  }
+	  
+	setMeshPosition( mesh ) {
+		  this.mesh.position.x = mesh.cannon.position.x;
+		  this.mesh.position.z = mesh.cannon.position.y;
+		  this.mesh.position.y = mesh.cannon.position.z;
+		  this.mesh.quaternion.x = -mesh.cannon.quaternion.x;
+		  this.mesh.quaternion.z = -mesh.cannon.quaternion.y;
+		  this.mesh.quaternion.y = -mesh.cannon.quaternion.z;
+		  this.mesh.quaternion.w = mesh.cannon.quaternion.w;
+	  }
+	
+	// Function in the class outside the constructor 
+    get meshData() {
+		return {
+		  x: this.mesh.position.x,
+		  y: this.mesh.position.y,
+		  z: this.mesh.position.z,
+		  qx: this.mesh.quaternion.x,
+		  qy: this.mesh.quaternion.y,
+		  qz: this.mesh.quaternion.z,
+		  qw: this.mesh.quaternion.w
+		};
+	}	
+	
 	animate(){
-		if ( controlsEnabled ) {
-			var time = performance.now();
-			if(this.TargetPlanet !== null){
-				var conPos = this.Group.position;
-				raycaster.ray.origin.copy( conPos );
-				this.footRaycaster.ray.origin.copy( conPos );
-				this.headRaycaster.ray.origin.copy( conPos );
-				this.footRaycaster.ray.origin.copy(new THREE.Vector3(conPos.x,conPos.y-5,conPos.z));
-				this.headRaycaster.ray.origin.copy(new THREE.Vector3(conPos.x,conPos.y+5,conPos.z));
-
-				// This is collision detection. It checks if the player is currently touching anything.
-				var intersections;
-				// The raycasters don't rotate with the player. So we need to switch based on the orientation.
-				intersections = this.footRaycaster.intersectObjects( WorldObjects );
-				
-				var isOnObject = false;
-				var dis = this.getDistance();
-				if (intersections.length > 0) {
-					if(dis<2){
-						//var firstObjectIntersected = intersections[0];
-						isOnObject= true;
-						this.controls.isGrounded = true;
-						canJump = true;
-						velocity.y = Math.max(0, velocity.y);
-					}
-					
-				}
-				if( this.getDistance()> 5+this.Height ) canJump = false;
-				
-				// Change Planet Button
-				// Add a timer after you find that it is true. So that it doesn't change a million times in a second.
-				if(leftClick && !canJump){
-					this.switchPlanet();
-					isOnObject = false;
-					//this.controls.isGrounded = false;
-					this.LandedOnPlanet = false;
-					canJump = false;
-				}
-				
-				var delta = ( time - prevTime ) / 1000;
-				
-				direction.z = Number( moveForward ) - Number( moveBackward );
-				direction.x = Number( moveRight ) - Number( moveLeft );
-				direction.normalize(); // this ensures consistent movements in all directions
-				
-				// After you land the SphereCoords are still centered at (0,0,0) instead
-				// of the new planet. We need to find a way to center SphereCoords on the new planet
-				if( this.LandedOnPlanet === true){
-					
-					var temp = new THREE.Vector3(this.TargetPlanet.pivot.x ,this.TargetPlanet.pivot.y, this.TargetPlanet.pivot.z);
-					
-					if(this.getDistance()< this.TargetPlanet.radius){
-						/*var SphereCoords = new THREE.Spherical().setFromVector3(this.Group.position);
-						SphereCoords.radius = this.TargetPlanet.radius + this.Height;
-						var vec = new THREE.Vector3().setFromSpherical(SphereCoords);
-						this.Group.quaternion.multiply(this.Group.quaternion.setFromUnitVectors(temp.normalize(),vec.normalize()));
-						//this.Group.position.set(vec);
-						velocity.y = 0;
-						canJump = true;*/
-					}
-				}
-				else{
-					// Controls for when you are floating in space
-					// This is where the animation for flying should be put.
-					// Rotate the character
-					// Move character towards planet
-					var distance = this.getDistance();
-					var step = 1 - (distance - 1)/distance;
-					applyGravity(this.Group,this.TargetPlanet,step);
-					if(distance < this.TargetPlanet.radius/6){
-						this.LandedOnPlanet = true;
-					//	this.Group.rotation.set(
-					//			0,
-					//			this.Group.rotation.y,
-					//			0);
-					//		
-					//		this.PlanetOrigin.rotation.set(
-					//			0,
-					//			this.Group.rotation.y,
-					//			0);
-					//		this.PlanetOrigin.add(this.Group);
-					//		this.Group.position.set(this.PlanetOrigin.position.x.x,this.PlanetOrigin.position.x.y + radius, this.PlanetOrigin.position.x.z);
-					//		this.Group.position.set(0,0,0);
-					}
-				}
-				direction.z = Number( moveForward ) - Number( moveBackward );
-				direction.x = Number( moveRight ) - Number( moveLeft );
-				direction.normalize(); // this ensures consistent movements in all directions
-				this.controls.UpdateDirection(direction.x,direction.z);
-				this.controls.Sprinting = sprinting;
-				this.controls.Jumping = canJump;
-				// Change click after click events have been processed.
-				leftClick = false;
-				rightClick = false;
-				prevTime = time;
-			}
-			//this.controls.Update();
-		}
-		
+	
+		// receive and process controls and camera
+		this.controls.Update();
+		// sync THREE mesh with Cannon mesh
+		// Cannon's y & z are swapped from THREE, and w is flipped
+		this.setMeshPosition(this.mesh);
+		this.setCannonPosition(this.mesh); // Not so sureabout these ones
+  
+  var vecPos = new THREE.Vector3(0,0,0);//center of sphere
+  vecPos.add(this.mesh.position.clone().negate()).normalize().negate();
+  
+  var vecChar = this.mesh.position.clone().add(camera.position).normalize();
+  
+  this.mesh.up.copy(new THREE.Vector3().crossVectors(vecPos,vecChar));
+  var quat = new THREE.Quaternion().setFromUnitVectors(vecChar,vecPos) * this.mesh.rotation;
+  //this.mesh.quaternion.slerp( quat, 1 );
+  //THREE.Quaternion.slerp( this.mesh.quaternion, quat, this.mesh.quaternion, 0.1 );
+ //var e  = this.mesh.rotation;
+ //var e2 = new THREE.Euler().setFromVector3(vecPos);
+  
+  //var angle = vecPos.angleTo(e.toVector3().normalize());
+  //camera.rotation.x -= vecPos.x*angle;
+  //this.followCam.rotation.x += vecPos.z*angle;
+  //this.followCam.rotation.y += vecPos.z*angle;*/
 	}
 }
 /* This function applies gravity between an object and a planet
@@ -562,7 +399,7 @@ class Planet{
     * @param {type} z Float
   */
   constructor( radius, widthSegments, heightSegments, planetMaterial, x, y, z, name){
-    var planetGeometry = new THREE.SphereGeometry( radius, widthSegments, heightSegments );
+    /*var planetGeometry = new THREE.SphereGeometry( radius, widthSegments, heightSegments );
 	this.radius = radius;
     this.x = x;
     this.y = y;
@@ -578,7 +415,21 @@ class Planet{
 	this.planet.position.set(0, 0, 0);
 	this.planet.name = name;
     scene.add(this.pivot);
-	WorldObjects.push(this.planet);
+	WorldObjects.push(this.planet);*/
+	
+	// planet creation
+	var planet_geometry = new THREE.TetrahedronBufferGeometry( radius, 4 );
+	var planet_material = new THREE.MeshPhongMaterial( { color: '#9f8d4a', shading: THREE.FlatShading});
+	var planet = new THREE.Mesh( planet_geometry, planet_material );
+  
+	planet.receiveShadow = true;
+  
+	scene.add(planet);
+  
+	// create Cannon planet
+	var planetShape = new CANNON.Sphere(radius);
+	var planetBody = new CANNON.Body({ mass: 0, material: groundMaterial, shape: planetShape });
+	world.add(planetBody);
   }
 
 	/**
@@ -632,19 +483,19 @@ color: 0x72f2f2,
 specular: 0xbbbbbb,
 shininess: 2
 });
-var Surface1 = new Planet( 80, 38, 38, Surface1Material, -500, -400, 0, "Surface1");
-
-var ballMaterial = new THREE.MeshPhongMaterial({
-//map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
-color: 0xf2f2f2,
-specular: 0xbbbbbb,
-shininess: 2
-});
-AnimateObject.push(Surface1);
-Surface1.addObject(getSquare(ballMaterial, 2),1,1,2);
-Surface1.addObject(getSquare(ballMaterial, 2),1,2,2);
-Surface1.addObject(getSquare(ballMaterial, 2),2,1,2);
-Surface1.addObject(getSquare(ballMaterial, 2),2,2,2);
+//var Surface1 = new Planet( 80, 38, 38, Surface1Material, -500, -400, 0, "Surface1");
+//
+//var ballMaterial = new THREE.MeshPhongMaterial({
+////map: new THREE.ImageUtils.loadTexture("images/texture1.jpg"),
+//color: 0xf2f2f2,
+//specular: 0xbbbbbb,
+//shininess: 2
+//});
+//AnimateObject.push(Surface1);
+//Surface1.addObject(getSquare(ballMaterial, 2),1,1,2);
+//Surface1.addObject(getSquare(ballMaterial, 2),1,2,2);
+//Surface1.addObject(getSquare(ballMaterial, 2),2,1,2);
+//Surface1.addObject(getSquare(ballMaterial, 2),2,2,2);
 
 
 //earth.addObject(getSquare(earthMaterial, 2),23,1,2);
@@ -672,7 +523,31 @@ scene.add(starField);
 // Initialize player
 var player = new Player();
 AnimateObject.push(player);
-player.setTargetPlanet(Surface1);
+
+// create stars
+  var particleCount = 5000,
+    particles = new THREE.Geometry(),
+    pMaterial = new THREE.PointsMaterial({
+      color: 0xFFFFFF,
+      size: 2
+    });
+
+  for (var p = 0; p < particleCount; p++) {
+    var pX = Math.random() * 1000 - 500,
+        pY = Math.random() * 1000 - 500,
+        pZ = Math.random() * 1000 - 500,
+        particle = new THREE.Vector3(pX, pY, pZ);
+        particle.normalize().multiplyScalar(Math.random() * 1000 + 600);
+    // add it to the geometry
+    particles.vertices.push(particle);
+  }
+
+  // create the particle system
+  var particleSystem = new THREE.Points(
+      particles,
+      pMaterial);
+
+  scene.add(particleSystem);
 
 
 //////////////////////////////////////////////////
@@ -735,7 +610,11 @@ if ( havePointerLock ) {
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
-	renderer.setSize( window.innerWidth, window.innerHeight );
+  
+	renderer.setPixelRatio( window.devicePixelRatio );
+	renderer.setSize(window.innerWidth / 1,
+					 window.innerHeight / 1,
+					 false);
 }
 
 //////////////////////////////////////////////////
@@ -746,6 +625,15 @@ function onWindowResize() {
 var clock = new THREE.Clock(true);
 
 var render = function() {
+	// run physics
+    time = Date.now();
+    if (lastTime !== undefined) {
+       let dt = (time - lastTime) / 1000;
+       world.step(fixedTimeStep, dt, maxSubSteps);
+    }
+    lastTime = time;
+	
+	
 	//Get the seconds elapsed since last getDelta call
 	//var timeElapsed = clock.getDelta();
 	//Or get the amount of time elapsed since start of the clock/program
@@ -754,7 +642,10 @@ var render = function() {
   AnimateObject.forEach(function(object){object.animate();});
   requestAnimationFrame(render);
   renderer.render(scene, camera);
-  
+  //render();
+  // New things . dont know what they do
+  //renderer.clear();
+  //composer.render();
 };
 
 //////////////////////////////////////////////////

@@ -96,7 +96,8 @@ export class Player {
     scene.add( mesh );
     world.add(mesh.cannon);
 
-    // use the Cannon preStep callback, evoked each timestep, to apply the gravity from the planet center to the main player.
+    // use the Cannon preStep callback, evoked each timestep, to apply the gravity from the planet center
+    //to the main player.
     if(isMainPlayer){
         mesh.cannon.preStep = function(){
           var ball_to_planet = new CANNON.Vec3();
@@ -106,7 +107,8 @@ export class Player {
 
           ball_to_planet.normalize();
           ball_to_planet = ball_to_planet.scale(3000000 * this.mass/Math.pow(distance,2))
-          world.gravity.set(ball_to_planet.x, ball_to_planet.y, ball_to_planet.z); // changing gravity seems to apply friction, whereas just applying force doesn't
+          world.gravity.set(ball_to_planet.x, ball_to_planet.y, ball_to_planet.z);
+          // changing gravity seems to apply friction, whereas just applying force doesn't
       }
     }
 
