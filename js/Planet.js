@@ -82,11 +82,18 @@ class Planet{
 						}
 
 					} );
-          obj.scale.set(objectPath.x,objectPath.y,objectPath.z);
-          obj.quaternion.multiply(obj.quaternion.setFromUnitVectors(obj.position.normalize(),vec.normalize()));
-          obj.position.copy(vec);
-          planet.addToPivot(obj);
+          planet.positionObject(obj,vec,objectPath);
 				});
+  }
+  
+  positionObject(object,vec,objectPath){
+          object.position.add(vec);
+          object.scale.set(objectPath.x,objectPath.y,objectPath.z);
+          object.castShadow = true;
+          object.position.add(this.planet.position.clone().negate());
+          var up = this.planet.position.clone().negate().add(object.position).normalize();
+          object.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(object.up,up).multiply(object.quaternion));
+          this.addToPivot(object);
   }
 
   addObjObject(objectPath, theta, phi, height){
@@ -103,10 +110,7 @@ class Planet{
       loaderOBJ.load(
         path,
         function (object) {
-          object.position.add(vec);
-          object.scale.set(objectPath.x,objectPath.y,objectPath.z);
-          object.castShadow = true;
-          planet.addToPivot(object);
+              planet.positionObject(object,vec,objectPath);
           },
           undefined, // We don't need this function
           function (error) {
@@ -128,10 +132,7 @@ class Planet{
       function ( gltf ) {
         //scene.add( gltf.scene );
         var obj = gltf.scene;
-        //obj.scale.set(objectPath.x,objectPath.y,objectPath.z);
-        obj.quaternion.multiply(obj.quaternion.setFromUnitVectors(obj.position.normalize(),vec.normalize()));
-        obj.position.copy(vec);
-        planet.addToPivot(obj);
+        planet.positionObject(obj,vec,objectPath);
       },
       undefined, // We don't need this function
       function (error) {
@@ -146,6 +147,7 @@ class Planet{
   
   // Object that can move with the planet and be removed
   add(obj){ // Needs further thought
+    this.pivot.add(obj);
     this.movableObjects.push(obj);
   }
   
@@ -153,6 +155,18 @@ class Planet{
     var index = this.movableObjects.indexOf(obj);
     if( index > -1 ){
         this.movableObjects.splice(index, 1);
+    }
+  }
+  
+  spawnRocks(value){
+    for (var i =0 ;i<value;i+=1){
+      this.addObjObject(Rocks[parseInt((Math.random()*(Rocks.length-1)),10)],Math.random()*2*Math.PI,Math.random()*2*Math.PI,-2);
+    }
+  }
+  
+  spawnTrees(value){
+    for (var i =0 ;i<value;i+=1){
+      this.addObjObject(Trees[parseInt((Math.random()*(Trees.length-1)),10)],Math.random()*2*Math.PI,Math.random()*2*Math.PI,-3);
     }
   }
 
@@ -165,7 +179,8 @@ class Planet{
     // When you change the rotation or position of a physi object
     // you need to declare the change with mesh.__dirtyPosition = true;
     // mesh.__dirtyRotation = true;
-    
+    //this.planet.rotation.y += 0.01;
+    //this.movableObjects.forEach(function(object){object.animate();});
     if(this.orbitAroundCenter){
       //Moon orbit
       this.theta += this.dTheta;

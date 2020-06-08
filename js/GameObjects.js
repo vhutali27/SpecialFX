@@ -49,32 +49,9 @@ function torus(x,y,z){
 }
     
 //Objects (We build a mesh using a geometry and a material)
-/**
-	* Function that makes a sphere
-	* @param {type} material THREE.SOME_TYPE_OF_CONSTRUCTED_MATERIAL
-	* @param {type} size decimal
-	* @param {type} segments integer
-	* @returns {getSphere.obj|THREE.Mesh}
-*/
-function getSphere( material, size, segments){
-	var geometry = new THREE.SphereGeometry(size, segments, segments);
-	var obj = new Physijs.SphereMesh(geometry, material);
-	obj.castShadow = true;
-	return obj;
-}
 
-/**
-	* Function that makes a cube
-	* @param {type} material THREE.SOME_TYPE_OF_CONSTRUCTED_MATERIAL
-	* @param {type} size decimal
-	* @returns {getSquare.obj|THREE.Mesh}
-*/
-function getSquare(material, size){
-	var geometry = new THREE.BoxGeometry(size, size, size);
-	var obj = new Physijs.BoxMesh(geometry, material, 5);
-	obj.castShadow = true;
-	return obj;
-}
+var Trees = new Array();
+var Rocks = new Array();
 
 function getObj(oPath, oMaterial , xScale, yScale, zScale){
 	return {path: oPath, materialPath: oMaterial,x:xScale,y:yScale,z:zScale};
@@ -87,6 +64,7 @@ function getSummerTree(){
 				  8,
 				  8);
 }
+Trees.push(getSummerTree());
 
 function getWinterTree(){
 	return getObj("models/Nature/Plants/Tree(Winter)/TreeWinter.obj",
@@ -95,6 +73,7 @@ function getWinterTree(){
 				  8,
 				  8);
 }
+Trees.push(getWinterTree());
 
 function getFallTree(){
 	return getObj("models/Nature/Plants/Tree(Fall)/TreeFall.obj",
@@ -103,6 +82,7 @@ function getFallTree(){
 				  8,
 				  8);
 }
+Trees.push(getFallTree());
 
 function getDeadTree(){
 	return getObj("models/Nature/Plants/Tree(Dead)/TreeDead.obj",
@@ -111,6 +91,7 @@ function getDeadTree(){
 				  8,
 				  8);
 }
+Trees.push(getDeadTree());
 
 function getCactus(){
 	var scale = 6;
@@ -120,6 +101,7 @@ function getCactus(){
 				  scale,
 				  scale);
 }
+Trees.push(getCactus());
 
 function getTent(){
 	return getObj("models/Nature/Props/Tent/Tent.obj",
@@ -128,6 +110,7 @@ function getTent(){
 				  8,
 				  8);
 }
+Rocks.push(getTent());
 
 function getBoulderAndSnow(){
 	return getObj("models/Nature/Rocks/Boulder&Snow/Boulders.obj",
@@ -136,6 +119,7 @@ function getBoulderAndSnow(){
 				  8,
 				  8);
 }
+Rocks.push(getBoulderAndSnow());
 
 function getPebblesAndSnow(){
 	return getObj("models/Nature/Rocks/Pebbles&Snow/Pebbles.obj",
@@ -144,6 +128,7 @@ function getPebblesAndSnow(){
 				  8,
 				  8);
 }
+Rocks.push(getPebblesAndSnow());
 
 function getRocksAndSnow(){
 	return getObj("models/Nature/Rocks/Rocks&Snow/Rocks.obj",
@@ -152,6 +137,7 @@ function getRocksAndSnow(){
 				  8,
 				  8);
 }
+Rocks.push(getRocksAndSnow());
 
 function getBucket(){
 	return getObj("models/bucket/bucket.obj", "models/bucket/bucket.mtl",

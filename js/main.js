@@ -48,13 +48,11 @@ var WorldObjects = new Array();
 var PlanetClasses = new Array();
 var time, lastTime;
 
-LoadLevel1(scene);
-
 // Initialize player
 var player = new Player();
 AnimateObject.push(player);
 
-
+LoadLevel1(scene);
 
 
 //////////////////////////////////////////////////

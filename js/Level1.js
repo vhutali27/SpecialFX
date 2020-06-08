@@ -35,20 +35,22 @@ function LoadLevel1(scene){
     //////////////////////////////////////////////////
     var S1 = new Planet( 400, woodenFloorMaterial, 0, 0, 0, "S2",scene);
     AnimateObject.push(S1);
+    
+    //S1.add(player.mesh);
+    //S1.add(camera);
 
     
     S2 = new Planet(400, grassMaterial, 0, 2000, 0, "Surface2", scene);
     AnimateObject.push(S2);
     S3 = new Planet(400, grassMaterial, 0, -2000, 0, "Surface3", scene);
     AnimateObject.push(S3);
-    //S2.centerOrbit(true);
-    //S3.centerOrbit(true);
     
-    for(var i  = 0; i<6 ; i+=1){
-        S1.addObjObject(getCactus(), 2*Math.PI*(i+1)/6, 2*Math.PI*(i+1)/6, 0);
-    }
-    
-    //S2.addObjObject(getBoulderAndSnow(), false, 20 ,20, 0);
+    S1.spawnTrees(30);
+    S1.spawnRocks(25);
+    S2.spawnTrees(30);
+    S2.spawnRocks(25);
+    S3.spawnTrees(30);
+    S3.spawnRocks(25);
     
     //Stars
     var starGeometry = new THREE.SphereGeometry(8000, 50, 500);
