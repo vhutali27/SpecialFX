@@ -33,25 +33,52 @@ function LoadLevel1(scene){
     //////////////////////////////////////////////////
     // SURFACES
     //////////////////////////////////////////////////
-    S1 = new BlockPlanet(1000, 1000, woodenFloorMaterial, 1000, 0, 0, "Surface1", scene);
+    var S1 = new Planet( 400, woodenFloorMaterial, 0, 0, 0, "S2",scene);
     AnimateObject.push(S1);
-    S2 = new BlockPlanet(1000, 1000, grassMaterial, 0, 1000, 0, "Surface2", scene);
+
+    
+    /*S2 = new Planet(400, grassMaterial, 0, 1000, 0, "Surface2", scene);
     AnimateObject.push(S2);
-    S3 = new BlockPlanet(1000, 1000, grassMaterial, 0, -1000, 0, "Surface3", scene);
+    S3 = new Planet(400, grassMaterial, 0, -1000, 0, "Surface3", scene);
     AnimateObject.push(S3);
     S2.centerOrbit(true);
-    S3.centerOrbit(true);
+    S3.centerOrbit(true);*/
     
-    for(var i  = 0; i<6 ; i+=1){
+    /*for(var i  = 0; i<6 ; i+=1){
         S1.addObjObject(getCactus(), true, i*900/6, i*900/6, 0);
     }
     
-    S2.addObjObject(getBoulderAndSnow(), false, 20 ,20, 0);
+    S2.addObjObject(getBoulderAndSnow(), false, 20 ,20, 0);*/
     
     //Stars
     var starGeometry = new THREE.SphereGeometry(4000, 50, 500);
     var starField = new THREE.Mesh(starGeometry, starMaterial);
     scene.add(starField);
+    
+    // create stars
+    var particleCount = 5000,
+      particles = new THREE.Geometry(),
+      pMaterial = new THREE.PointsMaterial({
+        color: 0xFFFFFF,
+        size: 2
+      });
+  
+    for (var p = 0; p < particleCount; p++) {
+      var pX = Math.random() * 1000 - 500,
+          pY = Math.random() * 1000 - 500,
+          pZ = Math.random() * 1000 - 500,
+          particle = new THREE.Vector3(pX, pY, pZ);
+          particle.normalize().multiplyScalar(Math.random() * 1000 + 600);
+      // add it to the geometry
+      particles.vertices.push(particle);
+    }
+  
+    // create the particle system
+    var particleSystem = new THREE.Points(
+        particles,
+        pMaterial);
+  
+    scene.add(particleSystem);
     
     //////////////////////////////////////////////////
     // LIGHTING                                     //
@@ -65,4 +92,8 @@ function LoadLevel1(scene){
     var spotLight = new THREE.DirectionalLight(0xffffff);
     spotLight.position.set(60,60,60);
     scene.add(spotLight);
+    
+    var spotLight2 = new THREE.DirectionalLight(0xffffff);
+    spotLight2.position.set(-60,-60,-60);
+    scene.add(spotLight2);
 }

@@ -1,21 +1,18 @@
 //////////////////////////////////////////////////
 // GLOBAL vARIABLES                             //
-//////////////////////////////////////////////////
-var Surface2;
-var Surface1;
-// Physics libraries that will be used.
-Physijs.scripts.worker = '/js/physijs_worker.js';
-Physijs.scripts.ammo = '/js/ammo.js';
+//////////////////////////////////////////////////  
 
 // Instantiate a loader
 var loaderJson = new THREE.ObjectLoader();
-var loaderGLTF = new THREE.GLTFLoader();
+//var loaderGLTF = new THREE.GLTFLoader();
 //var loaderOBJ = new THREE.OBJLoader();
 var loaderMTL = new THREE.MTLLoader();
 var loaderFBX = new THREE.FBXLoader();
+var loader = new THREE.TextureLoader();
 
 var mixer;											//THREE.js animations mixer
 var loaderAnim = document.getElementById('js-loader');
+
 
 //Create clock, set autostart to true
 var clock = new THREE.Clock(true);
@@ -24,21 +21,23 @@ var clock = new THREE.Clock(true);
 //////////////////////////////////////////////////
 // Renderer                                     //
 //////////////////////////////////////////////////
-var renderer = new THREE.WebGLRenderer();	
-renderer.setClearColor( 0xffffff );
+var renderer = new THREE.WebGLRenderer({antialias:true});	
+renderer.setClearColor( 0xEEEEEE );
 renderer.setPixelRatio( window.devicePixelRatio );
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(window.innerWidth, window.innerHeight, false);
 document.body.appendChild(renderer.domElement);
+// shading
+renderer.shadowMap.enabled = true;
+renderer.shadowMapSoft = true;
 	
 window.addEventListener( 'resize', onWindowResize, false );
 
 
 // Camera and scene variables
-var scene = new Physijs.Scene();
+var scene = new THREE.Scene();
 
-// Loader
-var loader = new THREE.TextureLoader();
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 8000);
+
+var camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 10000);
 // The objects added to this array should have an animate() function.
 // This function will be called by the render function for each frame.
 var AnimateObject = new Array();
@@ -47,13 +46,13 @@ var AnimateObject = new Array();
 var WorldObjects = new Array();
 // Planet Classes
 var PlanetClasses = new Array();
+var time, lastTime;
 
 LoadLevel1(scene);
 
 // Initialize player
 var player = new Player();
 AnimateObject.push(player);
-player.setTargetPlanet(S1);
 
 
 
@@ -125,22 +124,20 @@ function onWindowResize() {
 
 
 function startGame(){
-	scene.addEventListener(
-				'update',
-				function() {
-					scene.simulate( undefined, 1 );
-					physics_stats.update();
-				}
-			);
-	
-	
-	
-	
 	//////////////////////////////////////////////////
 	// RENDERING                                    //
 	//////////////////////////////////////////////////
 	var interval = 0;
 	var render = function() {
+		// run physics
+		time = Date.now();
+		if (lastTime !== undefined) {
+		   let dt = (time - lastTime) / 1000;
+		   world.step(fixedTimeStep, dt, maxSubSteps);
+		   // We are going to need a world array to store all the planet worlds
+		}
+		lastTime = time;
+		
 		//Get the seconds elapsed since last getDelta call
 		//var timeElapsed = clock.getDelta();
 		//Or get the amount of time elapsed since start of the clock/program
