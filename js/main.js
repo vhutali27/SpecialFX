@@ -78,6 +78,10 @@ var spotLight = new THREE.DirectionalLight(0xffffff);
 spotLight.position.set(60,60,60);
 scene.add(spotLight);
 
+var spotLight2 = new THREE.DirectionalLight(0xffffff);
+spotLight2.position.set(-60,-60,-60);
+scene.add(spotLight2);
+
 //////////////////////////////////////////////////
 // CREATING THE WORLD                           //
 //////////////////////////////////////////////////
@@ -117,102 +121,6 @@ function getSquare(material, size){
 // Player Controls
 var controlsEnabled = false;
 
-var rightClick = false;
-var leftClick = false;
-var moveForward = false;
-var moveBackward = false;
-var moveLeft = false;
-var moveRight = false;
-var changePlanet = false;
-var sprinting = false;
-
-var canJump = false;
-
-// Controller Movement
-var movementSpeed = 1;
-var sprintSpeed = 2;
-var jumpForce = 2;
-var currentMoveSpeed;
-
-//Gravity
-var hoverGravity;
-var orbitGravity;
-var currentOrbitGravity;
-var gravityLetoff;
-
-var prevTime = performance.now();
-var velocity = new THREE.Vector3();
-var direction = new THREE.Vector3();
-var vertex = new THREE.Vector3();
-var color = new THREE.Color();
-var onKeyDown = function ( event ) {
-	switch ( event.keyCode ) {
-		case 16:// Shift
-			sprinting = true;
-			break;
-		case 38: // up
-		case 87: // w
-			moveForward = true;
-			break;
-		case 37: // left
-		case 65: // a
-			moveLeft = true; break;
-		case 40: // down
-		case 83: // s
-			moveBackward = true;
-			break;
-		case 39: // right
-		case 68: // d
-			moveRight = true;
-			break;
-		case 32: // space
-			if ( canJump === true ) velocity.y += 350;
-			canJump = false;
-			// If in space it should boost
-			break;
-		case 69:// E
-			changePlanet = true;
-			break;
-		case 81://Q
-			// Drop Resources
-			break;
-	}
-};
-
-var onKeyUp = function ( event ) {
-	switch( event.keyCode ) {
-		case 16:// Shift
-			sprinting = false;
-			break;
-		case 38: // up
-		case 87: // w
-			moveForward = false;
-			break;
-		case 37: // left
-		case 65: // a
-			moveLeft = false;
-			break;
-		case 40: // down
-		case 83: // s
-			moveBackward = false;
-			break;
-		case 39: // right
-		case 68: // d
-			moveRight = false;
-			break;
-		case 32:
-			// Stop boost in space
-			break;
-		case 69:// E
-			changePlanet = false;
-			break;
-		case 81://Q
-			// Drop resources
-			break;
-	}
-};
-
-
 // Raycasting is used for working out which object the mouse is pointing at
 var raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
 
@@ -225,23 +133,22 @@ class Player{
 		// or has landed on. If he collides with a different planet on his way to
 		// the planet he wanted to go to then the new planet will be his TargetPlanet.
 		this.TargetPlanet = null;
-		this.LandedOnPlanet = false;
 		this.Height = 5;
 		this.Group = new THREE.Group();
-		this.PlanetOrigin = new THREE.Group();
 		
 		// controls is the First Person View controls. This shouldn't be the object that
 		// is moved or acts as the player. It should be added to the players THREE.Group
 		// The player is the one that should be moved so that the game can also work with
 		// the Third Person View controls.
 		
-		var geometry = new THREE.BoxGeometry(10, 10, 10);
+		var geometry = new THREE.BoxGeometry(20, 10, 20);
 		var material = new THREE.MeshPhongMaterial({ color: '#f96f42',
 												 shading: THREE.FlatShading });
 		this.mesh = new THREE.Mesh( geometry, material );
 	
 		// Cannon
-		var shape = new CANNON.Box(new CANNON.Vec3(10,10,10));
+		//var shape = new CANNON.Box(new CANNON.Vec3(20,20,20));
+  var shape = new CANNON.Sphere(20);
 		this.mesh.cannon = new CANNON.Body({ shape,
 										mass: 35,
 										material: ballMaterial });
@@ -252,8 +159,8 @@ class Player{
   this.mesh.cannon.invInertia.set(0,0,0);
 		// set spawn position according to server socket message
 		this.mesh.position.x = 0;
-		this.mesh.position.y = 0;
-		this.mesh.position.z = 700;
+		this.mesh.position.y = 600;
+		this.mesh.position.z = 0;
 
 		this.mesh.name = "Main";
 		this.mesh.nickname = "DUDEMAN";
@@ -263,9 +170,9 @@ class Player{
 		this.pivot = new THREE.Group();
   //this.pivot.add(camera);
 		this.mesh.add(this.pivot);
-  camera.position.z = 800;
-  camera.position.y = 0;
-		
+  //this.mesh.add(camera);
+  //camera.position.y += 20;
+  
 		// For cannon quaternion the z and y are switched
 		// add Cannon body
 		this.mesh.cannon.position.x = this.mesh.position.x;
@@ -301,6 +208,52 @@ class Player{
 		
 		this.controls = new THREE.PointerLockControls(camera, document.body, this.mesh, this.mesh.cannon);
 	}
+
+ 
+ alignObject(object, center){
+       
+       var poleDir = new THREE.Vector3(1,0,0); // x-Axis pole going to the right.
+       object.matrixAutoUpdate = false;
+     
+       var objectPosition = object.position.clone();
+       // So the camera is placed where the player is
+     
+       var localUp = center.clone().negate().add(objectPosition.clone()).normalize();
+      // This is the direction from the center to the player
+       
+       // find direction on planenormal by crossing the cross prods of localUp and camera dir
+      var camVec = new THREE.Vector3();
+      camera.getWorldDirection( camVec );
+      camVec.normalize();
+    
+      // lateral directional vector
+      var cross1 = new THREE.Vector3();
+      cross1.crossVectors(localUp.clone().normalize(), camVec);
+    
+      // front/back vector
+      var referenceForward = new THREE.Vector3();
+      referenceForward.crossVectors(localUp.clone().normalize(), cross1);
+    
+      var correctionAngle = Math.atan2(referenceForward.x, referenceForward.z);
+      if(object.position.y<center.y) correctionAngle*=-1;
+    
+      poleDir.applyAxisAngle(localUp,correctionAngle).normalize();
+      // Corrects the camera angle and the pole direciton. To face the camera.
+    
+      var cross = new THREE.Vector3();
+      cross.crossVectors(poleDir,localUp);
+    
+      var dot = localUp.dot(poleDir);
+      poleDir.subVectors(poleDir , localUp.clone().multiplyScalar(dot));
+    
+      var cameraTransform = new THREE.Matrix4();
+      cameraTransform.set(	poleDir.x,localUp.x,cross.x,objectPosition.x,
+         poleDir.y,localUp.y,cross.y,objectPosition.y,
+         poleDir.z,localUp.z,cross.z,objectPosition.z,
+         0,0,0,1);
+      
+      object.matrix = cameraTransform;
+ }
 	
 	setCannonPosition( mesh ){
 		this.mesh.cannon.position.x = mesh.position.x;
@@ -323,7 +276,7 @@ class Player{
 	  }
 	
 	// Function in the class outside the constructor 
-    get meshData() {
+   getmeshData() {
 		return {
 		  x: this.mesh.position.x,
 		  y: this.mesh.position.y,
@@ -336,30 +289,14 @@ class Player{
 	}	
 	
 	animate(){
-	
+  this.alignObject(this.mesh,new THREE.Vector3(0,0,0));
+  //this.positionCamera(new THREE.Vector3(0,0,0));
 		// receive and process controls and camera
 		this.controls.Update();
 		// sync THREE mesh with Cannon mesh
 		// Cannon's y & z are swapped from THREE, and w is flipped
 		this.setMeshPosition(this.mesh);
 		this.setCannonPosition(this.mesh); // Not so sureabout these ones
-  
-  var vecPos = new THREE.Vector3(0,0,0);//center of sphere
-  vecPos.add(this.mesh.position.clone().negate()).normalize().negate();
-  
-  var vecChar = this.mesh.position.clone().add(camera.position).normalize();
-  
-  this.mesh.up.copy(new THREE.Vector3().crossVectors(vecPos,vecChar));
-  var quat = new THREE.Quaternion().setFromUnitVectors(vecChar,vecPos) * this.mesh.rotation;
-  //this.mesh.quaternion.slerp( quat, 1 );
-  //THREE.Quaternion.slerp( this.mesh.quaternion, quat, this.mesh.quaternion, 0.1 );
- //var e  = this.mesh.rotation;
- //var e2 = new THREE.Euler().setFromVector3(vecPos);
-  
-  //var angle = vecPos.angleTo(e.toVector3().normalize());
-  //camera.rotation.x -= vecPos.x*angle;
-  //this.followCam.rotation.x += vecPos.z*angle;
-  //this.followCam.rotation.y += vecPos.z*angle;*/
 	}
 }
 /* This function applies gravity between an object and a planet
@@ -511,7 +448,7 @@ var Surface2 = new Planet( 400, 38, 38, Surface2Material, 0, 0, 0, "Surface2");
 AnimateObject.push(Surface2);
 
 //Stars
-var starGeometry = new THREE.SphereGeometry(1000, 50, 500);
+var starGeometry = new THREE.SphereGeometry(2000, 50, 500);
 var starMaterial = new THREE.MeshPhongMaterial({
 map: loader.load("/images/galaxy_starfield.png"),
 side: THREE.DoubleSide,

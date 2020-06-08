@@ -11,17 +11,14 @@ THREE.PointerLockControls = function ( camera, domElement, character, cannonMesh
 		domElement = document.body;
 	}
 
-	this.camera = camera;
 	this.domElement = domElement;
 	this.isLocked = false;
+	this.camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 10000);
 	this.player = character;
 	this.cannonMesh = cannonMesh;
 	this.speedMult = 1;
 	this.launchMult = 1;
 	this.i = 1;
-	var horizontalRot = 0;
-	var verticalRot = 0;
-	var verticalChange =0;
 	
 	this.playerRotation = new THREE.Quaternion();
 
@@ -29,6 +26,14 @@ THREE.PointerLockControls = function ( camera, domElement, character, cannonMesh
 	this.LeftOrRight = 0;
 	
 	var keyState = {};
+	
+	
+	var curCamZoom = 60;
+	var curCamHeight = 70;
+
+	var cameraReferenceOrientation = new THREE.Quaternion();
+	var cameraReferenceOrientationObj = new THREE.Object3D();
+	var poleDir = new THREE.Vector3(1,0,0);
 
 	var changeEvent = { type: 'change' };
 	var lockEvent = { type: 'lock' };
@@ -59,6 +64,8 @@ THREE.PointerLockControls = function ( camera, domElement, character, cannonMesh
 	
 	var clock = new THREE.Clock(true);
 	var radius;
+	var xRotation =1;
+	var yRotation =1;
 
 	var PI_2 = Math.PI / 2;
 
@@ -66,9 +73,6 @@ THREE.PointerLockControls = function ( camera, domElement, character, cannonMesh
 
 	var mouseX;
 	var mouseY;
-	var cameraReferenceOrientation = new THREE.Quaternion();
-	var cameraReferenceOrientationObj = new THREE.Object3D();
-	var poleDir = new THREE.Vector3(1,0,0);
 
 	function onMouseMove( event ) {
 		if ( scope.isLocked === false ) return;
@@ -79,8 +83,22 @@ THREE.PointerLockControls = function ( camera, domElement, character, cannonMesh
 		mouseX = event.pageX;
 		mouseY = event.pageY;
 		
-		verticalChange = movementY*0.002;
-		horizontalRot = movementX*0.002;
+		
+		movementX*=xRotation;
+
+		euler.setFromQuaternion( camera.quaternion );
+		charEuler.setFromQuaternion( character.quaternion );
+		
+
+		if(!isGrounded) euler.y -= movementX * 0.002;
+		euler.x -= movementY * 0.002;
+		charEuler.y -= movementX * 0.002;
+
+		euler.x = Math.max( - PI_2, Math.min( PI_2, euler.x ) );
+
+		camera.quaternion.setFromEuler( euler );
+		character.quaternion.setFromEuler( charEuler );
+
 		scope.dispatchEvent( changeEvent );
 
 	}
@@ -167,24 +185,35 @@ THREE.PointerLockControls = function ( camera, domElement, character, cannonMesh
 	};
 	
 	this.Update = function(){
-		this.checkKeyStates();
+		// fov scales according to scale and speedMult
+		//this.camera.fov = Math.max(55, Math.min(45 + this.speedMult*10, 65/(1 + (scope.scale * 0.01) )));
+		//this.camera.updateProjectionMatrix();
 		
-		this.camera.updateProjectionMatrix();
+		this.checkKeyStates();
 
-		var cameraPosition = character.position.clone();
+		// now we position and orient the camera with respect to player and planet using matrix transforms
+	    /*var playerPosition = new THREE.Vector3(this.player.position.x, this.player.position.y, this.player.position.z);
+		
+		var cameraPosition = this.player.position.clone();
+		var poleDirection = new THREE.Vector3(1,0,0);
 
 	    var localUp = cameraPosition.clone().normalize();
-
-	
-	 	cameraReferenceOrientationObj.rotation.y -= horizontalRot;
-		horizontalRot=0;
-
+		
+		if(this.LeftOrRight===-1){
+	 		cameraReferenceOrientationObj.rotation.y = 0.05;
+	 		this.LeftOrRight = 0;
+	 	}
+	 	else if(this.LeftOrRight===1){
+	 		cameraReferenceOrientationObj.rotation.y = -0.05;
+	 		this.LeftOrRight = 0;
+	 	}
+		
 		var referenceForward = new THREE.Vector3(0, 0, 1);
 		referenceForward.applyQuaternion(cameraReferenceOrientationObj.quaternion);
 
 		var correctionAngle = Math.atan2(referenceForward.x, referenceForward.z);
 		var cameraPoru = new THREE.Vector3(0,-1,0);
-
+		
 		cameraReferenceOrientationObj.quaternion.setFromAxisAngle(cameraPoru,correctionAngle);
 		poleDir.applyAxisAngle(localUp,correctionAngle).normalize();
 
@@ -197,29 +226,30 @@ THREE.PointerLockControls = function ( camera, domElement, character, cannonMesh
 		poleDir.subVectors(poleDir , localUp.clone().multiplyScalar(dot));
 
 	    var cameraTransform = new THREE.Matrix4();
-	    cameraTransform.set(	poleDir.x,localUp.x,cross.x,cameraPosition.x,
+		
+		cameraTransform.set(	poleDir.x,localUp.x,cross.x,cameraPosition.x,
 	    			poleDir.y,localUp.y,cross.y,cameraPosition.y,
 	    			poleDir.z,localUp.z,cross.z,cameraPosition.z,
 	    			0,0,0,1);
 
-	 	this.camera.matrixAutoUpdate = false;
+	 	//this.camera.matrixAutoUpdate = false;
 
 		var cameraPlace = new THREE.Matrix4();
-	    cameraPlace.makeTranslation ( 0, 20, 0);
+	    cameraPlace.makeTranslation ( 0, curCamHeight * scope.scale * 0.8, curCamZoom * scope.scale * 0.8);
 
 	    var cameraRot = new THREE.Matrix4();
-		verticalRot-= verticalChange;
-		verticalRot = Math.max( - PI_2, Math.min( PI_2, verticalRot ) );
-	    cameraRot.makeRotationX(verticalRot);
-		verticalChange=0;
+	    cameraRot.makeRotationX(-0.32 - (playerPosition.length()/1200));
 
 	    var oneTwo = new THREE.Matrix4();
 	    oneTwo.multiplyMatrices(cameraTransform , cameraPlace);
 
 		var oneTwoThree = new THREE.Matrix4();
 	    oneTwoThree.multiplyMatrices(oneTwo, cameraRot);
-
-	    this.camera.matrix = oneTwoThree;
+*/
+	    //this.camera.matrix = oneTwoThree;
+		
+		/*console.log(camera.position);*/
+		
 	};
 	
 	this.checkKeyStates = function () {
