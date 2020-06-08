@@ -15,6 +15,7 @@ class Planet{
     this.planet = new THREE.Mesh( planet_geometry, planet_material );
     
     this.planet.receiveShadow = true;
+    this.planet.position.set(x,y,z);
     
     scene.add(this.planet);
     
@@ -31,7 +32,7 @@ class Planet{
     
     // Planet Orbit Variables
     this.orbitAroundCenter = false;
-    this.r = this.y;
+    this.r = new THREE.Vector3(0,0,0).distanceTo(this.planet.position);
     this.theta = 0;
     this.dTheta = 2 * Math.PI / 1000;
     this.scene = scene;
@@ -83,7 +84,7 @@ class Planet{
 					} );
           obj.scale.set(objectPath.x,objectPath.y,objectPath.z);
           obj.quaternion.multiply(obj.quaternion.setFromUnitVectors(obj.position.normalize(),vec.normalize()));
-          obj.position.set(vec);
+          obj.position.copy(vec);
           planet.addToPivot(obj);
 				});
   }
@@ -101,11 +102,11 @@ class Planet{
       loaderOBJ.setMaterials(materials);
       loaderOBJ.load(
         path,
-        function (obj) {
-          obj.scale.set(objectPath.x,objectPath.y,objectPath.z);
-          obj.quaternion.multiply(obj.quaternion.setFromUnitVectors(obj.position.normalize(),vec.normalize()));
-          obj.position.set(vec);
-          planet.addToPivot(obj);
+        function (object) {
+          object.position.add(vec);
+          object.scale.set(objectPath.x,objectPath.y,objectPath.z);
+          object.castShadow = true;
+          planet.addToPivot(object);
           },
           undefined, // We don't need this function
           function (error) {
@@ -129,7 +130,7 @@ class Planet{
         var obj = gltf.scene;
         //obj.scale.set(objectPath.x,objectPath.y,objectPath.z);
         obj.quaternion.multiply(obj.quaternion.setFromUnitVectors(obj.position.normalize(),vec.normalize()));
-        obj.position.set(vec);
+        obj.position.copy(vec);
         planet.addToPivot(obj);
       },
       undefined, // We don't need this function
@@ -171,10 +172,10 @@ class Planet{
       var xTrans = this.r * Math.cos(this.theta) - this.pivot.position.x;
       var yTrans = this.r * Math.sin(this.theta) - this.pivot.position.y;
 
-      this.movableObjects.forEach(function(object){object.position.x += xTrans;object.position.y += yTrans;});
+      //this.movableObjects.forEach(function(object){object.position.x += xTrans;object.position.y += yTrans;});
       
-      this.pivot.position.x += xTrans;
-      this.pivot.position.y += yTrans;
+      this.planet.position.x += xTrans/1500;
+      this.planet.position.y += yTrans/1500;
     }
   }
 }

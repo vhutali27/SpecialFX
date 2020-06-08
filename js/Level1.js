@@ -37,21 +37,21 @@ function LoadLevel1(scene){
     AnimateObject.push(S1);
 
     
-    /*S2 = new Planet(400, grassMaterial, 0, 1000, 0, "Surface2", scene);
+    S2 = new Planet(400, grassMaterial, 0, 2000, 0, "Surface2", scene);
     AnimateObject.push(S2);
-    S3 = new Planet(400, grassMaterial, 0, -1000, 0, "Surface3", scene);
+    S3 = new Planet(400, grassMaterial, 0, -2000, 0, "Surface3", scene);
     AnimateObject.push(S3);
-    S2.centerOrbit(true);
-    S3.centerOrbit(true);*/
+    //S2.centerOrbit(true);
+    //S3.centerOrbit(true);
     
-    /*for(var i  = 0; i<6 ; i+=1){
-        S1.addObjObject(getCactus(), true, i*900/6, i*900/6, 0);
+    for(var i  = 0; i<6 ; i+=1){
+        S1.addObjObject(getCactus(), 2*Math.PI*(i+1)/6, 2*Math.PI*(i+1)/6, 0);
     }
     
-    S2.addObjObject(getBoulderAndSnow(), false, 20 ,20, 0);*/
+    //S2.addObjObject(getBoulderAndSnow(), false, 20 ,20, 0);
     
     //Stars
-    var starGeometry = new THREE.SphereGeometry(4000, 50, 500);
+    var starGeometry = new THREE.SphereGeometry(8000, 50, 500);
     var starField = new THREE.Mesh(starGeometry, starMaterial);
     scene.add(starField);
     

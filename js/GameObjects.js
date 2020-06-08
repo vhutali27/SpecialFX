@@ -113,11 +113,12 @@ function getDeadTree(){
 }
 
 function getCactus(){
+	var scale = 6;
 	return getObj("models/Nature/Plants/Cactus/Cactus.obj",
 				  "models/Nature/Plants/Cactus/Cactus.mtl",
-				  2,
-				  2,
-				  2);
+				  scale,
+				  scale,
+				  scale);
 }
 
 function getTent(){
