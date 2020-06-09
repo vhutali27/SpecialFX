@@ -370,11 +370,10 @@ class Player{
 										  z:this.Group.position.z+3},
 										  endposition));// GetFromCameraRaycast
 		}*/
-	}
 
+		// Update the players position variable
+		this.position = this.Group.position;
 
-	getPosition(){
-		return(this.Group.position); // Return the players position
 	}
 	
 }

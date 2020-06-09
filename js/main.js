@@ -17,11 +17,10 @@ var loaderAnim = document.getElementById('js-loader');
 //Create clock, set autostart to true
 var clock = new THREE.Clock(true);
 
-
 //////////////////////////////////////////////////
 // Renderer                                     //
 //////////////////////////////////////////////////
-var renderer = new THREE.WebGLRenderer({antialias:true});	
+var renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setClearColor( 0xEEEEEE );
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(window.innerWidth, window.innerHeight, false);
@@ -55,7 +54,11 @@ var player = new Player();
 AnimateObject.push(player);
 
 
+// Initialize MiniView
+initMiniView();
 
+// Initialize GUI Elements
+initGUIElements();
 
 //////////////////////////////////////////////////
 // MENU AND GAME SCREEN.                        //
@@ -159,7 +162,10 @@ function startGame(){
 		if (mixer) {
 			mixer.update(clock.getDelta());
 		}
-	
+
+		// Update the miniView
+		// renderMiniView(player.position);
+
 		AnimateObject.forEach(function(object){object.animate();});
 		requestAnimationFrame(render);
 		renderer.render(scene, camera);
