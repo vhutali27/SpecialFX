@@ -48,12 +48,11 @@ var WorldObjects = new Array();
 var PlanetClasses = new Array();
 var time, lastTime;
 
-// Initialize player
-var player = new Player();
-AnimateObject.push(player);
-
 LoadLevel1(scene);
 
+// Initialize player
+var player = new Player(S2);
+AnimateObject.push(player);
 
 //////////////////////////////////////////////////
 // MENU AND GAME SCREEN.                        //
@@ -132,7 +131,6 @@ function startGame(){
 		if (lastTime !== undefined) {
 		   let dt = (time - lastTime) / 1000;
 		   world.step(fixedTimeStep, dt, maxSubSteps);
-		   // We are going to need a world array to store all the planet worlds
 		}
 		lastTime = time;
 		

@@ -1,14 +1,6 @@
 // Class for Planes
 class Planet{
   constructor( radius, planetMaterial, x, y, z, name, scene){
-    /*
-    // to create the world add this to your main script
-    // initialize Cannon world
-    this.world = new CANNON.World();
-    this.world.gravity.set(x, y, z);
-    this.world.broadphase = new CANNON.NaiveBroadphase();
-    */
-    // Each world should have its own world.
     
     var planet_geometry = new THREE.TetrahedronBufferGeometry( radius, 4 );
     var planet_material = new THREE.MeshPhongMaterial( { color: '#9f8d4a', shading: THREE.FlatShading});
@@ -18,12 +10,19 @@ class Planet{
     this.planet.position.set(x,y,z);
     
     scene.add(this.planet);
-    
     // create Cannon planet
     var planetShape = new CANNON.Sphere(radius);
-    this.planet.cannon = new CANNON.Body({ mass: 0, material: groundMaterial, shape: planetShape });
-    world.add(this.planet.cannon);
-    // Should be this.world.add()
+    this.cannon = new CANNON.Body({ mass: 0, material: groundMaterial, shape: planetShape });
+    
+    this.cannon.position.x = this.planet.position.x;
+    this.cannon.position.z = this.planet.position.y;
+    this.cannon.position.y = this.planet.position.z;
+    this.cannon.quaternion.x = -this.planet.quaternion.x;
+    this.cannon.quaternion.z = -this.planet.quaternion.y;
+    this.cannon.quaternion.y = -this.planet.quaternion.z;
+    this.cannon.quaternion.w = this.planet.quaternion.w;
+    
+    world.add(this.cannon);
      
     // Array for movable objects
     this.movableObjects = new Array();

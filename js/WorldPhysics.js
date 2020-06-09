@@ -1,8 +1,9 @@
 // to create the world add this to your main script
 // initialize Cannon world
 var world = new CANNON.World();
-world.gravity.set(0, 0, 0);
+world.gravity.set(0, 0, 0);//No Gravity
 world.broadphase = new CANNON.NaiveBroadphase();
+world.solver.iterations = 5;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////Should be deleted if the individual planet world works
 
 // adjust friction between ball & ground

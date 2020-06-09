@@ -63,11 +63,11 @@ function onDocumentMouseUp( event ){
 
 // Class for Player
 class Player{
-	constructor(){
+	constructor(initPlanet){
 		// Target Planet is the planet that the character is traveling towards
 		// or has landed on. If he collides with a different planet on his way to
-		// the planet he wanted to go to then the new planet will be his TargetPlanet.
-		this.TargetPlanet = null;
+		// the planet he wanted to go to then the new planet will be his planet.
+		this.planet = initPlanet;
 		this.Height = 5;
 		this.Group = new THREE.Group();
 
@@ -142,7 +142,7 @@ class Player{
 				}
 		);
 */
-		var geometry = new THREE.BoxGeometry(20, 10, 20);
+		var geometry = new THREE.SphereGeometry(20,10);
 		var material = new THREE.MeshPhongMaterial({ color: '#f96f42',
 												 shading: THREE.FlatShading });
 		this.mesh = new THREE.Mesh( geometry, material );
@@ -151,7 +151,7 @@ class Player{
 		//var shape = new CANNON.Box(new CANNON.Vec3(20,20,20));
 		var shape = new CANNON.Sphere(20);
 		this.mesh.cannon = new CANNON.Body({ shape,
-										mass: 35,
+										mass: 1,
 										material: ballMaterial });
 		this.mesh.cannon.linearDamping = this.mesh.cannon.angularDamping = 0.41;
 	  
@@ -159,15 +159,18 @@ class Player{
 		this.mesh.cannon.inertia.set(0,0,0);
 		this.mesh.cannon.invInertia.set(0,0,0);
 		// set spawn position according to server socket message
-		this.mesh.position.x = 0;
-		this.mesh.position.y = 600;
-		this.mesh.position.z = 0;
+		this.mesh.position.copy(this.planet.planet.position);
+		this.mesh.position.x += 60;
+		this.mesh.position.y += -1000;
+		this.mesh.position.z += 60;
 
 		this.mesh.name = "Main";
 		this.mesh.nickname = "DUDEMAN";
 		
 		// For things you want to add to the character
 		this.mesh.add(this.Group);
+		camera.position.y = 25;
+		this.mesh.add(camera);
   
 		// For cannon quaternion the z and y are switched
 		// add Cannon body
@@ -182,27 +185,45 @@ class Player{
 		scene.add( this.mesh );
 		world.add(this.mesh.cannon);
 		this.clampMovement = false;////////////////////////////////////////should be applied to mesh
+		
+		// set no collisions with other players (mitigate latency issues)
+		this.mesh.cannon.collisionResponse = 100;
+		this.activateGraviy = true;
+		// collision handler
+		this.mesh.cannon.addEventListener('collide', e => {
+			var planet = null;
+			PlanetClasses.forEach(function(p){
+				if(p.cannon === e.body) planet = p;
+			}
+			);
+			if(planet!=null){
+				//Stop moving player
+				e.target.velocity.set(0,0,0);
+				player.activateGravity=false;
+				console.log(e);
+			}
+		});
   
-  
-		// This is how gravity is applied to the player 
-		// This function is in the constructor of the player class
-  
-		// use the Cannon preStep callback, evoked each timestep, to apply the gravity from the planet center
-		//to the main player.
-		this.mesh.cannon.preStep = function(){
-			var ball_to_planet = new CANNON.Vec3();// should be planet applied to player
-			this.position.negate(ball_to_planet);
-
-			var distance = ball_to_planet.norm();
-  
-			ball_to_planet.normalize();
-			ball_to_planet = ball_to_planet.scale(3000000 * this.mass/Math.pow(distance,2));
-			world.gravity.set(ball_to_planet.x, ball_to_planet.y, ball_to_planet.z);
-			// Should be applied planets world
-		};
-
 		this.controls = new THREE.PointerLockControls(camera, document.body, this.mesh, this.mesh.cannon);
 	}
+	
+	applyGravity(){
+			var norm = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
+			var gravity = 9.8;
+			// get unit (directional) vector for position
+			this.mesh.cannon.applyImpulse(new CANNON.Vec3(norm.x*gravity ,
+														 norm.z*gravity,
+														 norm.y*gravity).negate(),
+										 this.mesh.cannon.position);
+			this.orientBody();
+	}
+	
+	orientBody(){
+		var up = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
+        this.mesh.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(this.mesh.up,up).multiply(this.mesh.quaternion));
+	}
+	
+	
 	
 	alignObject(object, center){
        
@@ -284,11 +305,11 @@ class Player{
 
 	// Only takes in the planet class. This is called when the player clicks on
 	// a different planet to travel to it.
-	setTargetPlanet(planet){
+	setPlanet(setPlanet){
 		// Check if is already attached to another planet
-		if(this.TargetPlanet!==null) this.TargetPlanet.remove(this.Group);
-		this.TargetPlanet = planet;
-		this.LandingPoint.set(planet.x,planet.y,planet.z);
+		if(this.planet!==null) this.planet.remove(this.Group);
+		this.planet = setPlanet;
+		this.LandingPoint.set(setPlanet.x,setPlanet.y,setPlanet.z);
 		this.LandedOnPlanet = false;
 	}
 	
@@ -310,24 +331,24 @@ class Player{
 			else if(!above && this.Upright) this.upright(false);
 			
 			if(this.TargetSphere!=null){
-						this.TargetPlanet.remove(this.TargetSphere);
+						this.planet.remove(this.TargetSphere);
 						scene.remove(this.TargetSphere);
 						this.TargetSphere = null;
 			}
 					
-			this.setTargetPlanet(destinationPlanet);
+			this.setPlanet(destinationPlanet);
 			this.LandingPoint.set(coords.x,coords.y,coords.z);
 			
 			this.TargetSphere = getSphere(this.grassMaterial,80,10);
 			this.TargetSphere.position.set(coords.x,coords.y,coords.z);
-			this.TargetPlanet.add(this.TargetSphere);
+			this.planet.add(this.TargetSphere);
 			scene.add(this.TargetSphere);
 			
 	}
 
 	animate(){
-		
-		this.alignObject(this.mesh,new THREE.Vector3(0,0,0));
+		this.applyGravity();
+		//this.alignObject(this.mesh,new THREE.Vector3(0,0,0));
 		// receive and process controls and camera
 		this.controls.Update();
 		// sync THREE mesh with Cannon mesh

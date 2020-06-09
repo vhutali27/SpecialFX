@@ -169,7 +169,7 @@ THREE.PointerLockControls = function ( camera, domElement, character, cannonMesh
 	this.Update = function(){
 		this.checkKeyStates();
 		
-		this.camera.updateProjectionMatrix();
+		/*this.camera.updateProjectionMatrix();
 
 		var cameraPosition = character.position.clone();
 
@@ -219,7 +219,7 @@ THREE.PointerLockControls = function ( camera, domElement, character, cannonMesh
 		var oneTwoThree = new THREE.Matrix4();
 	    oneTwoThree.multiplyMatrices(oneTwo, cameraRot);
 
-	    this.camera.matrix = oneTwoThree;
+	    this.camera.matrix = oneTwoThree;*/
 	};
 	
 	this.checkKeyStates = function () {
