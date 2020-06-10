@@ -89,9 +89,9 @@ class Planet{
           object.position.add(vec);
           object.scale.set(objectPath.x,objectPath.y,objectPath.z);
           object.castShadow = true;
-          object.position.add(this.planet.position.clone().negate());
-          var up = this.planet.position.clone().negate().add(object.position).normalize();
+          var up = object.position.clone().normalize();
           object.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(object.up,up).multiply(object.quaternion));
+          object.position.add(this.planet.position.clone().negate());
           this.addToPivot(object);
   }
 

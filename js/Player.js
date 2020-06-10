@@ -142,11 +142,11 @@ class Player{
 				}
 		);
 */
-		var geometry = new THREE.SphereGeometry(20,10);
+		var geometry = new THREE.BoxGeometry(10,20,10);
 		var material = new THREE.MeshPhongMaterial({ color: '#f96f42',
 												 shading: THREE.FlatShading });
 		this.mesh = new THREE.Mesh( geometry, material );
-	
+
 		// Cannon
 		//var shape = new CANNON.Box(new CANNON.Vec3(20,20,20));
 		var shape = new CANNON.Sphere(20);
@@ -154,24 +154,24 @@ class Player{
 										mass: 1,
 										material: ballMaterial });
 		this.mesh.cannon.linearDamping = this.mesh.cannon.angularDamping = 0.41;
-	  
+
 		this.mesh.castShadow = true;
 		this.mesh.cannon.inertia.set(0,0,0);
 		this.mesh.cannon.invInertia.set(0,0,0);
+
+		// For things you want to add to the character
+		this.mesh.add(this.Group);
 		// set spawn position according to server socket message
 		this.mesh.position.copy(this.planet.planet.position);
-		this.mesh.position.x += 60;
-		this.mesh.position.y += -1000;
-		this.mesh.position.z += 60;
+		this.mesh.position.x += 0;
+		this.mesh.position.y += 0;
+		this.mesh.position.z += 600;
 
 		this.mesh.name = "Main";
 		this.mesh.nickname = "DUDEMAN";
-		
-		// For things you want to add to the character
-		this.mesh.add(this.Group);
-		camera.position.y = 25;
-		this.mesh.add(camera);
-  
+
+
+
 		// For cannon quaternion the z and y are switched
 		// add Cannon body
 		this.mesh.cannon.position.x = this.mesh.position.x;
@@ -181,11 +181,11 @@ class Player{
 		this.mesh.cannon.quaternion.z = -this.mesh.quaternion.y;
 		this.mesh.cannon.quaternion.y = -this.mesh.quaternion.z;
 		this.mesh.cannon.quaternion.w = this.mesh.quaternion.w;
-		
+
 		scene.add( this.mesh );
 		world.add(this.mesh.cannon);
 		this.clampMovement = false;////////////////////////////////////////should be applied to mesh
-		
+
 		// set no collisions with other players (mitigate latency issues)
 		this.mesh.cannon.collisionResponse = 100;
 		this.activateGraviy = true;
@@ -198,15 +198,17 @@ class Player{
 			);
 			if(planet!=null){
 				//Stop moving player
-				e.target.velocity.set(0,0,0);
-				player.activateGravity=false;
-				console.log(e);
+				//e.target.velocity.set(0,0,0);
+				//player.activateGravity=false;
+				//console.log(e);
 			}
 		});
-  
-		this.controls = new THREE.PointerLockControls(camera, document.body, this.mesh, this.mesh.cannon);
+
+		this.controls = new THREE.PointerLockControls(camera, document.body, this);
+		this.cameraRot = new THREE.Quaternion();
+		this.cameraRotObj = new THREE.Object3D();
 	}
-	
+
 	applyGravity(){
 			var norm = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
 			var gravity = 9.8;
@@ -215,61 +217,38 @@ class Player{
 														 norm.z*gravity,
 														 norm.y*gravity).negate(),
 										 this.mesh.cannon.position);
-			this.orientBody();
 	}
-	
-	orientBody(){
+
+	updateCamera(){
 		var up = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
-        this.mesh.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(this.mesh.up,up).multiply(this.mesh.quaternion));
+		// Position
+		var position = this.mesh.position.clone().add(up.clone().multiplyScalar(35));
+		camera.matrixAutoUpdate = false;
+		camera.matrixWorld.setPosition(position);
+
 	}
-	
-	
-	
+
 	alignObject(object, center){
-       
-       var poleDir = new THREE.Vector3(1,0,0); // x-Axis pole going to the right.
-       object.matrixAutoUpdate = false;
-     
-       var objectPosition = object.position.clone();
-       // So the camera is placed where the player is
-     
-       var localUp = center.clone().negate().add(objectPosition.clone()).normalize();
-      // This is the direction from the center to the player
-       
-       // find direction on planenormal by crossing the cross prods of localUp and camera dir
-      var camVec = new THREE.Vector3();
-      camera.getWorldDirection( camVec );
-      camVec.normalize();
-    
-      // lateral directional vector
-      var cross1 = new THREE.Vector3();
-      cross1.crossVectors(localUp.clone().normalize(), camVec);
-    
-      // front/back vector
-      var referenceForward = new THREE.Vector3();
-      referenceForward.crossVectors(localUp.clone().normalize(), cross1);
-    
-      var correctionAngle = Math.atan2(referenceForward.x, referenceForward.z);
-      if(object.position.y<center.y) correctionAngle*=-1;
-    
-      poleDir.applyAxisAngle(localUp,correctionAngle).normalize();
-      // Corrects the camera angle and the pole direciton. To face the camera.
-    
-      var cross = new THREE.Vector3();
-      cross.crossVectors(poleDir,localUp);
-    
-      var dot = localUp.dot(poleDir);
-      poleDir.subVectors(poleDir , localUp.clone().multiplyScalar(dot));
-    
-      var cameraTransform = new THREE.Matrix4();
-      cameraTransform.set(	poleDir.x,localUp.x,cross.x,objectPosition.x,
-         poleDir.y,localUp.y,cross.y,objectPosition.y,
-         poleDir.z,localUp.z,cross.z,objectPosition.z,
-         0,0,0,1);
-      
-      object.matrix = cameraTransform;
+				var localUp = center.clone().negate().add(object.position.clone()).normalize();
+				var x= new THREE.Vector3(),y= new THREE.Vector3(),z = new THREE.Vector3();
+				// Update the cameras z and y basis to that of the object.
+				object.matrix.extractBasis(x,y,z);
+				camera.matrixWorld.makeBasis(x,
+					y.applyAxisAngle(x,this.controls.yAngle),
+					z.applyAxisAngle(x,this.controls.yAngle)).setPosition(camera.position);
+				object.matrixAutoUpdate = false;
+				camera.matrixAutoUpdate = false;
+
+				var poleDir = x.clone();
+
+				var cross = new THREE.Vector3();
+	      cross.crossVectors(poleDir,localUp);
+	      var dot = localUp.dot(poleDir);
+	      poleDir.subVectors(poleDir,localUp.clone().multiplyScalar(dot));
+
+				object.matrix.makeBasis(poleDir.normalize(),localUp.normalize(),cross.normalize()).setPosition(object.position);
 	}
-	
+
 	setCannonPosition( mesh ){
 		this.mesh.cannon.position.x = mesh.position.x;
 		this.mesh.cannon.position.z = mesh.position.y;
@@ -279,7 +258,7 @@ class Player{
 		this.mesh.cannon.quaternion.y = -mesh.quaternion.z;
 		this.mesh.cannon.quaternion.w = mesh.quaternion.w;
 	  }
-	  
+
 	setMeshPosition( mesh ) {
 		  this.mesh.position.x = mesh.cannon.position.x;
 		  this.mesh.position.z = mesh.cannon.position.y;
@@ -289,8 +268,8 @@ class Player{
 		  this.mesh.quaternion.y = -mesh.cannon.quaternion.z;
 		  this.mesh.quaternion.w = mesh.cannon.quaternion.w;
 	  }
-	
-	// Function in the class outside the constructor 
+
+	// Function in the class outside the constructor
 	getmeshData() {
 		return {
 		  x: this.mesh.position.x,
@@ -301,7 +280,7 @@ class Player{
 		  qz: this.mesh.quaternion.z,
 		  qw: this.mesh.quaternion.w
 		};
-	}	
+	}
 
 	// Only takes in the planet class. This is called when the player clicks on
 	// a different planet to travel to it.
@@ -312,12 +291,12 @@ class Player{
 		this.LandingPoint.set(setPlanet.x,setPlanet.y,setPlanet.z);
 		this.LandedOnPlanet = false;
 	}
-	
+
 	getIntersects(objects){
 		// update the mouse variable
 					mouse.x = camera.position.x;
 					mouse.y = camera.position.y;
-				
+
 					// find intersections
 					MouseRaycaster.setFromCamera( mouse, camera);
 					return MouseRaycaster.intersectObjects( objects );
@@ -329,38 +308,39 @@ class Player{
 			console.log(above + " " + this.Upright);
 			if(above && !this.Upright) this.upright(true);
 			else if(!above && this.Upright) this.upright(false);
-			
+
 			if(this.TargetSphere!=null){
 						this.planet.remove(this.TargetSphere);
 						scene.remove(this.TargetSphere);
 						this.TargetSphere = null;
 			}
-					
+
 			this.setPlanet(destinationPlanet);
 			this.LandingPoint.set(coords.x,coords.y,coords.z);
-			
+
 			this.TargetSphere = getSphere(this.grassMaterial,80,10);
 			this.TargetSphere.position.set(coords.x,coords.y,coords.z);
 			this.planet.add(this.TargetSphere);
 			scene.add(this.TargetSphere);
-			
+
 	}
 
 	animate(){
 		this.applyGravity();
-		//this.alignObject(this.mesh,new THREE.Vector3(0,0,0));
+		this.alignObject(this.mesh,this.planet.planet.position);
 		// receive and process controls and camera
 		this.controls.Update();
 		// sync THREE mesh with Cannon mesh
 		// Cannon's y & z are swapped from THREE, and w is flipped
 		this.setMeshPosition(this.mesh);
 		this.setCannonPosition(this.mesh); // Not so sureabout these ones
-		
+		this.updateCamera();
+
 		/*MouseRaycaster.ray.origin.copy( camera.position );// Change Planet Button
 		// Add a timer after you find that it is true. So that it doesn't change a million times in a second.
 		if(changePlanet)){
 			var intersects = this.getIntersects( WorldObjects );
-		
+
 			// if there is one (or more) intersections
 			if ( intersects.length > 0 && canChangePlanet)
 			{
@@ -376,12 +356,12 @@ class Player{
 				setTimeout(function(){canChangePlanet = true;},1000);
 			}
 		}
-		
+
 		// Shooting Bullets
 		if(leftClick){
 			var endposition = new THREE.Vector3();
 			var bulletIntersects = this.getIntersects(scene.children);
-			
+
 			if( bulletIntersects.length >0 ){
 				endposition = bulletIntersects[0].point;
 			}
@@ -389,7 +369,7 @@ class Player{
 										  {x:this.Group.position.x-1,
 										  y:this.Group.position.y,
 										  z:this.Group.position.z+3},
-										  endposition));// GetFromCameraRaycast		
+										  endposition));// GetFromCameraRaycast
 		}*/
 	}
 }
