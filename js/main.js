@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////
 // GLOBAL vARIABLES                             //
-//////////////////////////////////////////////////  
+//////////////////////////////////////////////////
 
 // Instantiate a loader
 var loaderJson = new THREE.ObjectLoader();
@@ -17,11 +17,10 @@ var loaderAnim = document.getElementById('js-loader');
 //Create clock, set autostart to true
 var clock = new THREE.Clock(true);
 
-
 //////////////////////////////////////////////////
 // Renderer                                     //
 //////////////////////////////////////////////////
-var renderer = new THREE.WebGLRenderer({antialias:true});	
+var renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setClearColor( 0xEEEEEE );
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(window.innerWidth, window.innerHeight, false);
@@ -29,7 +28,7 @@ document.body.appendChild(renderer.domElement);
 // shading
 renderer.shadowMap.enabled = true;
 renderer.shadowMapSoft = true;
-	
+
 window.addEventListener( 'resize', onWindowResize, false );
 
 
@@ -133,15 +132,15 @@ function startGame(){
 		   world.step(fixedTimeStep, dt, maxSubSteps);
 		}
 		lastTime = time;
-		
+
 		//Get the seconds elapsed since last getDelta call
 		//var timeElapsed = clock.getDelta();
 		//Or get the amount of time elapsed since start of the clock/program
 		//var timeElapsed = clock.getTimeElapsed();
-	
+
 		//light fluctuation for models
 		//flare();
-	
+
 		//places new object in time intervals
 		var timeElapsed = Math.round(clock.getElapsedTime());
 		//console.log(timeElapsed);
@@ -149,22 +148,29 @@ function startGame(){
 			randomPlace();
 			interval = timeElapsed; //This deals with multiple items being dropped at the same second due to rounding
 		 }
-	
+
 		//randomPlace();
 		// Animation Mixer for character
 		if (mixer) {
 			mixer.update(clock.getDelta());
 		}
-	
+
+		// Update the miniView
+		// renderMiniView(player.position);
+
 		AnimateObject.forEach(function(object){object.animate();});
 		requestAnimationFrame(render);
 		renderer.render(scene, camera);
-	
+
 	};
-	
+
 	//////////////////////////////////////////////////
 	// INITIALISE AND RENDER SCENE                  //
 	//////////////////////////////////////////////////
-	
+	// Initialize MiniView
+	initMiniView();
+
+	// Initialize GUI Elements
+	initGUIElements();
 	render();
 }
