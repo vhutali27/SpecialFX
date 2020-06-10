@@ -71,6 +71,9 @@ class Player{
 		this.Height = 5;
 		this.Group = new THREE.Group();
 
+		// Initial Health Value of the player
+		this.health = 100;
+
 		// Loads the character's gun
 		loaderMTL.load("models/Gun/gun.mtl", function ( materials ) {
 			materials.preload();
@@ -325,6 +328,10 @@ class Player{
 
 	}
 
+	updateHealth(health){
+		this.health = health;
+	}
+
 	animate(){
 
 		this.alignObject(this.mesh,new THREE.Vector3(0,0,0));
@@ -373,6 +380,11 @@ class Player{
 
 		// Update the players position variable
 		this.position = this.Group.position;
+
+		// Update The Player's Health Value
+		// Todo Remove the following line in the final production, this is just to test that animation works
+		this.health -= 0.05;
+		healthBar.updateHealth(this.health)
 
 	}
 	

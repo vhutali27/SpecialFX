@@ -54,11 +54,6 @@ var player = new Player();
 AnimateObject.push(player);
 
 
-// Initialize MiniView
-initMiniView();
-
-// Initialize GUI Elements
-initGUIElements();
 
 //////////////////////////////////////////////////
 // MENU AND GAME SCREEN.                        //
@@ -175,6 +170,10 @@ function startGame(){
 	//////////////////////////////////////////////////
 	// INITIALISE AND RENDER SCENE                  //
 	//////////////////////////////////////////////////
-	
+	// Initialize MiniView
+	initMiniView();
+
+	// Initialize GUI Elements
+	initGUIElements();
 	render();
 }
