@@ -161,11 +161,11 @@ THREE.PointerLockControls = function ( camera, domElement, playerClass) {
 
 	}();
 
-	this.Update = function(){
-			this.checkKeyStates();
+	this.setOrbitPoint = function ( value ) {
+		orbitPoint.copy(value);
 	};
 
-	this.checkKeyStates = function () {
+	this.Update = function () {
 			if(this.speedMult < 1){ this.speedMult = 1;}
 
 			// get quaternion and position to apply impulse
@@ -178,7 +178,7 @@ THREE.PointerLockControls = function ( camera, domElement, playerClass) {
 	   	var topVec = new CANNON.Vec3(0,0,1);
 	   	var quaternionOnPlanet = new CANNON.Quaternion();
 	    quaternionOnPlanet.setFromVectors(topVec, playerPositionCannon);
-	    var topOfBall = quaternionOnPlanet.vmult(new CANNON.Vec3(0,0,norm).vadd(new CANNON.Vec3(0,0, scope.scale * 10)));
+	    var topOfBall = quaternionOnPlanet.vmult(new CANNON.Vec3(0,0,norm).vadd(new CANNON.Vec3(0,0, 1 * 10)));
 
 			// find direction on planenormal by crossing the cross prods of localUp and camera dir
 			var x= new THREE.Vector3(),y= new THREE.Vector3(),z = new THREE.Vector3();
@@ -240,6 +240,11 @@ THREE.PointerLockControls = function ( camera, domElement, playerClass) {
 	    	// decrement speedMult when no keys down
 	    	this.speedMult -= 0.1;
 	    }
+
+			// Planet Switching on 'Key'E' Press
+			if(keyState[69]){
+				playerClass.changePlanet();
+			}
 
 	    // launch if spacebar up and launchMult greater than 1
 	    if (!keyState[32] && this.launchMult > 1 ) {// SpaceBar

@@ -70,6 +70,7 @@ class Player{
 		this.planet = initPlanet;
 		this.Height = 5;
 		this.Group = new THREE.Group();
+		this.canChangePlanet = true;
 
 		// Initial Health Value of the player
 		this.health = 100;
@@ -191,7 +192,6 @@ class Player{
 
 		// set no collisions with other players (mitigate latency issues)
 		this.mesh.cannon.collisionResponse = 100;
-		this.activateGraviy = true;
 		// collision handler
 		this.mesh.cannon.addEventListener('collide', e => {
 			var planet = null;
@@ -200,16 +200,11 @@ class Player{
 			}
 			);
 			if(planet!=null){
-				//Stop moving player
-				//e.target.velocity.set(0,0,0);
-				//player.activateGravity=false;
-				//console.log(e);
+				// Change this.planet if planet is not the target one
 			}
 		});
 
 		this.controls = new THREE.PointerLockControls(camera, document.body, this);
-		this.cameraRot = new THREE.Quaternion();
-		this.cameraRotObj = new THREE.Object3D();
 	}
 
 	applyGravity(){
@@ -297,35 +292,48 @@ class Player{
 
 	getIntersects(objects){
 		// update the mouse variable
-					mouse.x = camera.position.x;
-					mouse.y = camera.position.y;
+		var mouse = new THREE.Vector2();
+		mouse.x = camera.position.x;
+		mouse.y = camera.position.y;
+		var x= new THREE.Vector3(),y= new THREE.Vector3(),z = new THREE.Vector3();
+		// Update the cameras z and y basis to that of the object.
+		camera.matrixWorld.extractBasis(x,y,z);
 
-					// find intersections
-					MouseRaycaster.setFromCamera( mouse, camera);
-					return MouseRaycaster.intersectObjects( objects );
+		// find intersections
+		MouseRaycaster.setFromCamera( mouse, camera);
+		return MouseRaycaster.intersectObjects( objects );
 	}
 
-	switchPlanet(destinationPlanet, coords){
-			var above = false;
-			if(destinationPlanet.pivot.position.y < this.Group.position.y) above = true;
-			console.log(above + " " + this.Upright);
-			if(above && !this.Upright) this.upright(true);
-			else if(!above && this.Upright) this.upright(false);
+	changePlanet(){
+		var intersects = this.getIntersects( WorldObjects );
 
-			if(this.TargetSphere!=null){
-						this.planet.remove(this.TargetSphere);
-						scene.remove(this.TargetSphere);
-						this.TargetSphere = null;
+		// if there is one (or more) intersections
+		if ( intersects.length > 0 && this.canChangePlanet)
+		{
+			console.log("We hit something");
+			var PlanetName = intersects[0].object.name;
+			var PlanetClass = null;
+			PlanetClasses.forEach(function(planetObject){
+				if(PlanetName === planetObject.planet.name){
+					PlanetClass = planetObject;
+				}
+			});
+			if(PlanetClass!=null && PlanetClass!=this.planet){
+				console.log("We his a planet");
+				this.switchPlanet(PlanetClass);
 			}
+		}
+	}
 
-			this.setPlanet(destinationPlanet);
-			this.LandingPoint.set(coords.x,coords.y,coords.z);
+	switchPlanet(PlanetClass){
+		// Check if is already attached to another planet
+		if(this.planet!==null) this.planet.remove(this.mesh);
+		this.planet = PlanetClass;
 
-			this.TargetSphere = getSphere(this.grassMaterial,80,10);
-			this.TargetSphere.position.set(coords.x,coords.y,coords.z);
-			this.planet.add(this.TargetSphere);
-			scene.add(this.TargetSphere);
+		//this.planet.add(this.mesh);
 
+		this.canChangePlanet = false;
+		setTimeout(function(){this.canChangePlanet = true;},1000);
 	}
 
 	updateHealth(health){
@@ -343,27 +351,7 @@ class Player{
 		this.setCannonPosition(this.mesh); // Not so sureabout these ones
 		this.updateCamera();
 
-		/*MouseRaycaster.ray.origin.copy( camera.position );// Change Planet Button
-		// Add a timer after you find that it is true. So that it doesn't change a million times in a second.
-		if(changePlanet)){
-			var intersects = this.getIntersects( WorldObjects );
-
-			// if there is one (or more) intersections
-			if ( intersects.length > 0 && canChangePlanet)
-			{
-				var PlanetName = intersects[0].object.name;
-				var PlanetClass = null;
-				PlanetClasses.forEach(function(planetObject){
-					if(PlanetName === planetObject.planet.name){
-						PlanetClass = planetObject;
-					}
-				});
-				this.switchPlanet(PlanetClass, intersects[0].point);
-				canChangePlanet = false;
-				setTimeout(function(){canChangePlanet = true;},1000);
-			}
-		}
-
+		/*
 		// Shooting Bullets
 		if(leftClick){
 			var endposition = new THREE.Vector3();
@@ -378,9 +366,6 @@ class Player{
 										  z:this.Group.position.z+3},
 										  endposition));// GetFromCameraRaycast
 		}*/
-
-		// Update the players position variable
-		this.position = this.Group.position;
 
 		// Update The Player's Health Value
 		// Todo Remove the following line in the final production, this is just to test that animation works

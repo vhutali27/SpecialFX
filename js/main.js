@@ -50,7 +50,7 @@ var time, lastTime;
 LoadLevel1(scene);
 
 // Initialize player
-var player = new Player(S2);
+var player = new Player(PlanetClasses[0]);
 AnimateObject.push(player);
 
 //////////////////////////////////////////////////
