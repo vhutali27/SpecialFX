@@ -64,5 +64,5 @@ function  initGUIElements() {
     healthBar = new HealthBar(displayCanvasContext, 5, 5, 50, 5, 100, 100)
 
     // Initialize the timer
-    initCountdown(200);
+    initCountdown(180);
 }

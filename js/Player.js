@@ -188,6 +188,8 @@ class Player{
 		camera.matrixAutoUpdate = false;
 		camera.matrixWorld.setPosition(position);
 
+		// Update player's position variable
+		this.position = position;
 	}
 
 	alignObject(object, center){
@@ -345,10 +347,11 @@ class Player{
 
 
 		// Update The Player's Health Value
-		// Todo Remove the following line in the final production, this is just to test that animation works
-		this.health -= 0.5;
-		healthBar.updateHealth(this.health);
+		// healthBar.updateHealth(this.health);
 
 
+	}
+	getPosition(){
+		return this.position;
 	}
 }
