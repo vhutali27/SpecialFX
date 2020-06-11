@@ -46,28 +46,48 @@
         camera.position.x = 0;
         camera.position.y = -3;
     
-        /*let stacy_txt = new THREE.TextureLoader().load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/stacy.jpg');
+        let stacy_txt = new THREE.TextureLoader().load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/stacy.jpg');
         stacy_txt.flipY = false;
     
         const stacy_mtl = new THREE.MeshPhongMaterial({
           map: stacy_txt,
           color: 0xffffff,
           skinning: true 
-        });*/
+        });
     
         var loader = new THREE.GLTFLoader();
 
+          //main lady
         loader.load(
-          'Canister.glb',
+          'untitled.glb',
           function (gltf) {
             model = gltf.scene;
             let fileAnimations = gltf.animations;
+            
+
+            model.traverse(o => {
+    
+              if (o.isMesh) {
+                o.castShadow = true;
+                o.receiveShadow = true;
+              }
+              // Reference the neck and waist bones
+              // if (o.isBone && o.name === 'mixamorigNeck') {
+              //   neck = o;
+              // }
+              // if (o.isBone && o.name === 'mixamorigSpine') {
+              //   waist = o;
+              // }
+            })
             model.scale.set(7, 7, 7);
-            model.position.y = 0;
-      
+            model.position.set(-10,-11,-2);
+
             scene.add(model);
       
             loaderAnim.remove();
+            mixer = new THREE.AnimationMixer(model);
+            let runAnim = THREE.AnimationClip.findByName(fileAnimations, 'running');
+            run = mixer.clipAction(runAnim);
           },
           undefined, // We don't need this function
           function (error) {
@@ -76,8 +96,9 @@
 
         );
     
+        //Banana in Pajama 1
         loader.load(
-        MODEL_PATH,
+          'stacy_lightweight.glb',
         function (gltf) {
           model = gltf.scene;
           let fileAnimations = gltf.animations;
@@ -87,7 +108,7 @@
             if (o.isMesh) {
               o.castShadow = true;
               o.receiveShadow = true;
-              //o.material = stacy_mtl;
+              //o.material  = stacy_mtl;
             }
             // Reference the neck and waist bones
             if (o.isBone && o.name === 'mixamorigNeck') {
@@ -133,6 +154,7 @@
           console.error(error);
         });
 
+          //Banana in Pajama 2
         loader.load(
           MODEL_PATH,
           function (gltf) {
@@ -144,7 +166,7 @@
               if (o.isMesh) {
                 o.castShadow = true;
                 o.receiveShadow = true;
-                //o.material = stacy_mtl;
+                o.material = stacy_mtl;
               }
               // Reference the neck and waist bones
               if (o.isBone && o.name === 'mixamorigNeck') {
@@ -162,6 +184,10 @@
             scene.add(model);
       
             loaderAnim.remove();
+            mixer = new THREE.AnimationMixer(model);
+            let idleAnim = THREE.AnimationClip.findByName(fileAnimations, 'idle');
+            idle = mixer.clipAction(idleAnim);
+idle.play();
           },
           undefined, // We don't need this function
           function (error) {
@@ -208,7 +234,10 @@
   
     function update() {
   
-  
+      if (mixer) {
+        mixer.update(clock.getDelta());
+      }
+
       if (resizeRendererToDisplaySize(renderer)) {
         const canvas = renderer.domElement;
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
@@ -217,6 +246,8 @@
       renderer.render(scene, camera);
       requestAnimationFrame(update);
     }
+
+    
   
     update();
   
