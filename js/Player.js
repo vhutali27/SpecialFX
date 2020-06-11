@@ -30,6 +30,8 @@ class Player{
 
 		// Initial Health Value of the player
 		this.health = 100;
+		// Initial Energy Value of the player
+		this.energy = 100;
 
 		// Loads the character's gun
 		/*loaderMTL.load("models/Gun/gun.mtl", function ( materials ) {
@@ -347,7 +349,7 @@ class Player{
 
 		// Update The Player's Health Value
 		// Todo Remove the following line in the final production, this is just to test that animation works
-		this.health -= 0.05;
+		this.health -= 0.5;
 		healthBar.updateHealth(this.health);
 
 

@@ -199,6 +199,16 @@ class Planet{
 			obj.box.copy( obj.mesh.geometry.boundingBox ).applyMatrix4( obj.mesh.matrixWorld );
 			var collision = player.box.isIntersectionBox(obj.box);
 			if(collision){
+        if(obj.isHealth){
+          if(player.health<100){
+            player.health+=5;
+          }
+        }
+        else{
+          if(player.energy<100){
+            player.energy+=5;
+          }
+        }
         pivot.remove(obj.mesh);
         var index = collectablesArr.indexOf(obj);
         if( index > -1 ){
