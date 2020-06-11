@@ -4,7 +4,7 @@ class Planet{
 
     var planet_geometry = new THREE.TetrahedronBufferGeometry( radius, 4 );
     var planet_material = new THREE.MeshPhongMaterial( { color: '#9f8d4a', shading: THREE.FlatShading});
-    this.planet = new THREE.Mesh( planet_geometry, planetMaterial );
+    this.planet = new THREE.Mesh( planet_geometry, planet_material );
 
     this.planet.receiveShadow = true;
     this.planet.position.set(x,y,z);
@@ -44,7 +44,9 @@ class Planet{
     this.planet.add(this.pivot);
     this.planet.name = name;
     this.pivot.name = name;
+    this.cannon.name = name;
     WorldObjects.push(this.planet);
+    WorldCannonObjects.push(this.cannon);
     PlanetClasses.push(this);
     AnimateObject.push(this);
   }

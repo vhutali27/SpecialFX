@@ -43,6 +43,7 @@ var AnimateObject = new Array();
 
 // WorldObjects are the objects that the player can touch.
 var WorldObjects = new Array();
+var WorldCannonObjects = new Array();
 // Planet Classes
 var PlanetClasses = new Array();
 var time, lastTime;
@@ -115,6 +116,7 @@ function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize( window.innerWidth, window.innerHeight );
+	player.mouse.set((window.innerWidth/2),(window.innerHeight/2));
 }
 
 

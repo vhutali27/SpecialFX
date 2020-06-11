@@ -13,14 +13,10 @@ var direction = new THREE.Vector3();
 document.addEventListener( 'mouseup', onDocumentMouseUp, false );
 document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 
-// Raycasting is used for working out which object the mouse is pointing at
-var MouseRaycaster = new THREE.Raycaster();
-var mouse = new THREE.Vector2();
 // Bullets Array
 var Bullets = [];
 var leftClick = false;
 var rightClick = false;
-var mouse = { x: 0, y: 0 };
 function onDocumentMouseDown( event )
 {
 	// the following line would stop any other event handler from firing
@@ -71,6 +67,9 @@ class Player{
 		this.Height = 5;
 		this.Group = new THREE.Group();
 		this.canChangePlanet = true;
+		// Raycasting is used for working out which object the mouse is pointing at
+		this.MouseRaycaster = new THREE.Raycaster();
+		this.mouse = new THREE.Vector2(window.innerWidth/2-1,window.innerHeight/2+1);
 
 		// Initial Health Value of the player
 		this.health = 100;
@@ -291,33 +290,54 @@ class Player{
 	}
 
 	getIntersects(objects){
-		// update the mouse variable
-		var mouse = new THREE.Vector2();
-		mouse.x = camera.position.x;
-		mouse.y = camera.position.y;
-		var x= new THREE.Vector3(),y= new THREE.Vector3(),z = new THREE.Vector3();
-		// Update the cameras z and y basis to that of the object.
-		camera.matrixWorld.extractBasis(x,y,z);
-
 		// find intersections
-		MouseRaycaster.setFromCamera( mouse, camera);
-		return MouseRaycaster.intersectObjects( objects );
+		this.MouseRaycaster.setFromCamera( this.mouse, camera);
+		return this.MouseRaycaster.intersectObjects( objects , true );
+	}
+
+	getCannonIntersects(){
+								var x= new THREE.Vector3(),y= new THREE.Vector3(),z = new THREE.Vector3();
+								// Update the cameras z and y basis to that of the object.
+								camera.matrixWorld.extractBasis(x,y,z);
+                var result = new CANNON.RaycastResult();
+                result.reset();
+                //world.raycastClosest(camera.position, camera.position.clone().add(z), {}, result);
+								var up = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
+								// Position
+								var position = this.mesh.position.clone().add(up.clone().multiplyScalar(35));
+								var pos = new CANNON.Vec3(position.x
+									,position.y
+									,position.z);
+									var pos2 = new CANNON.Vec3(position.x+z.x
+										,position.y+z.y
+										,position.z+z.z);
+								var r = new CANNON.Ray(pos,
+																			 pos2);
+								r.intersectBodies(WorldCannonObjects,result);
+                console.log(r);
+
 	}
 
 	changePlanet(){
+		//this.getCannonIntersects();
 		var intersects = this.getIntersects( WorldObjects );
 
 		// if there is one (or more) intersections
 		if ( intersects.length > 0 && this.canChangePlanet)
 		{
-			console.log("We hit something");
-			var PlanetName = intersects[0].object.name;
+
 			var PlanetClass = null;
-			PlanetClasses.forEach(function(planetObject){
-				if(PlanetName === planetObject.planet.name){
-					PlanetClass = planetObject;
-				}
+			console.log("We hit something");
+			intersects.forEach(function(obj){
+				var PlanetName = obj.object.name;
+				PlanetClasses.forEach(function(planetObject){
+					if(PlanetName === planetObject.planet.name){
+						PlanetClass = planetObject;
+					}
+				});
 			});
+
+
 			if(PlanetClass!=null && PlanetClass!=this.planet){
 				console.log("We his a planet");
 				this.switchPlanet(PlanetClass);
