@@ -32,7 +32,7 @@ class Player{
 		this.health = 100;
 
 		// Loads the character's gun
-		loaderMTL.load("models/Gun/gun.mtl", function ( materials ) {
+		/*loaderMTL.load("models/Gun/gun.mtl", function ( materials ) {
 			materials.preload();
 			var loaderOBJ = new THREE.OBJLoader();
 			loaderOBJ.setMaterials(materials);
@@ -51,7 +51,7 @@ class Player{
 					  console.error(error);
 			});
 		});
-
+*/
 		// Loads the Characters model
 		// Load a glTF resource
 			/*loaderGLTF.load(
@@ -341,7 +341,9 @@ class Player{
 		this.setCannonPosition(this.mesh); // Not so sureabout these ones
 		this.updateCamera();
 
-		// Check Food Collisions
+		// in the animation loop, compute the current bounding box with the world matrix
+		this.box.copy( this.mesh.geometry.boundingBox ).applyMatrix4( this.mesh.matrixWorld );
+
 
 		// Update The Player's Health Value
 		// Todo Remove the following line in the final production, this is just to test that animation works

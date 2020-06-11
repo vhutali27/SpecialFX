@@ -52,48 +52,10 @@ class Planet{
     AnimateObject.push(this);
   }
 
-  setCannonPosition( mesh ){
-		mesh.cannon.position.x = mesh.position.x;
-		mesh.cannon.position.z = mesh.position.y;
-		mesh.cannon.position.y = mesh.position.z;
-		mesh.cannon.quaternion.x = -mesh.quaternion.x;
-		mesh.cannon.quaternion.z = -mesh.quaternion.y;
-		mesh.cannon.quaternion.y = -mesh.quaternion.z;
-		mesh.cannon.quaternion.w = mesh.quaternion.w;
-	  }
-
-	setMeshPosition( mesh ) {
-		  mesh.position.x = mesh.cannon.position.x;
-		  mesh.position.z = mesh.cannon.position.y;
-		  mesh.position.y = mesh.cannon.position.z;
-		  mesh.quaternion.x = -mesh.cannon.quaternion.x;
-		  mesh.quaternion.z = -mesh.cannon.quaternion.y;
-		  mesh.quaternion.y = -mesh.cannon.quaternion.z;
-		  mesh.quaternion.w = mesh.cannon.quaternion.w;
-	  }
-
-    updatePlanetObjects(){
-      var parent = this;
-      this.collectables.forEach(function(obj){
-        parent.setMeshPosition(obj.mesh);
-        parent.setCannonPosition(obj.mesh);
-      });
-    }
-
-  addObject( obj, theta, phi, height, isCannonObject){
+  addObject( obj, theta, phi, height){
    var SphereCoords = new THREE.Spherical(this.radius + height , theta,phi );
    var vec = new THREE.Vector3().setFromSpherical(SphereCoords);
    this.positionObject(obj,vec);
-   if(isCannonObject){
-      obj.lookAt(new THREE.Vector3(0,0,0));
-     	obj.cannon.position.x = obj.position.x;
-     	obj.cannon.position.z = obj.position.y;
-     	obj.cannon.position.y = obj.position.z;
-     	obj.cannon.quaternion.x = -obj.quaternion.x;
-     	obj.cannon.quaternion.z = -obj.quaternion.y;
-     	obj.cannon.quaternion.y = -obj.quaternion.z;
-     	obj.cannon.quaternion.w = obj.quaternion.w;
-   }
   }
 
   addToPivot(obj){
@@ -228,7 +190,23 @@ class Planet{
     // mesh.__dirtyRotation = true;
     //this.planet.rotation.y += 0.01;
     //this.movableObjects.forEach(function(object){object.animate();});
-    this.updatePlanetObjects();
+
+    // Check Food Collisions
+    var collectablesArr = this.collectables;
+    var pivot = this.pivot;
+		this.collectables.forEach(function(obj){
+			// in the animation loop, compute the current bounding box with the world matrix
+			obj.box.copy( obj.mesh.geometry.boundingBox ).applyMatrix4( obj.mesh.matrixWorld );
+			var collision = player.box.isIntersectionBox(obj.box);
+			if(collision){
+        pivot.remove(obj.mesh);
+        var index = collectablesArr.indexOf(obj);
+        if( index > -1 ){
+            collectablesArr.splice(index, 1);
+        }
+      }
+		});
+
     if(this.orbitAroundCenter){
       //Moon orbit
       this.theta += this.dTheta;
