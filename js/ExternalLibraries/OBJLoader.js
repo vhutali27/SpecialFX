@@ -706,10 +706,10 @@ THREE.OBJLoader.prototype = {
 
         }
 
-        console.timeEnd('OBJLoader');
+        //console.timeEnd('OBJLoader');
 
         return container;
 
     }
 
-}; 
+};

@@ -4,7 +4,7 @@ class Planet{
 
     var planet_geometry = new THREE.TetrahedronBufferGeometry( radius, 4 );
     var planet_material = new THREE.MeshPhongMaterial( { color: '#9f8d4a', shading: THREE.FlatShading});
-    this.planet = new THREE.Mesh( planet_geometry, planetMaterial );
+    this.planet = new THREE.Mesh( planet_geometry, planet_material );
 
     this.planet.receiveShadow = true;
     this.planet.position.set(x,y,z);
@@ -28,6 +28,7 @@ class Planet{
     this.movableObjects = new Array();
 
     this.radius = radius;
+    this.collectables = new Array();
 
     // Planet Orbit Variables
     this.orbitAroundCenter = false;
@@ -44,7 +45,9 @@ class Planet{
     this.planet.add(this.pivot);
     this.planet.name = name;
     this.pivot.name = name;
+    this.cannon.name = name;
     WorldObjects.push(this.planet);
+    WorldCannonObjects.push(this.cannon);
     PlanetClasses.push(this);
     AnimateObject.push(this);
   }
@@ -52,9 +55,7 @@ class Planet{
   addObject( obj, theta, phi, height){
    var SphereCoords = new THREE.Spherical(this.radius + height , theta,phi );
    var vec = new THREE.Vector3().setFromSpherical(SphereCoords);
-   obj.quaternion.multiply(obj.quaternion.setFromUnitVectors(obj.position.normalize(),vec.normalize()));
-   obj.position.set(vec);
-   this.addToPivot(obj);
+   this.positionObject(obj,vec);
   }
 
   addToPivot(obj){
@@ -82,13 +83,13 @@ class Planet{
 						}
 
 					} );
-          planet.positionObject(obj,vec,objectPath);
+          obj.scale.set(objectPath.x,objectPath.y,objectPath.z);
+          planet.positionObject(obj,vec);
 				});
   }
 
-  positionObject(object,vec,objectPath){
+  positionObject(object,vec){
           object.position.add(vec);
-          object.scale.set(objectPath.x,objectPath.y,objectPath.z);
           object.castShadow = true;
           var up = object.position.clone().normalize();
           object.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(object.up,up).multiply(object.quaternion));
@@ -110,7 +111,8 @@ class Planet{
       loaderOBJ.load(
         path,
         function (object) {
-              planet.positionObject(object,vec,objectPath);
+              object.scale.set(objectPath.x,objectPath.y,objectPath.z);
+              planet.positionObject(object,vec);
           },
           undefined, // We don't need this function
           function (error) {
@@ -132,13 +134,19 @@ class Planet{
       function ( gltf ) {
         //scene.add( gltf.scene );
         var obj = gltf.scene;
-        planet.positionObject(obj,vec,objectPath);
+        planet.positionObject(obj,vec);
       },
       undefined, // We don't need this function
       function (error) {
         console.error(error);
       }
     );
+  }
+
+  addCollectables(value,isHealth){
+    for (var i =0 ;i<value;i+=1){
+      this.collectables.push(new Canister(this.collectables.length,this,isHealth));
+    }
   }
 
   centerOrbit(boolVal){
@@ -170,6 +178,7 @@ class Planet{
     }
   }
 
+
 	/**
 		* Function to rotate the planet
 		* @param {type} xRotation Float
@@ -181,6 +190,33 @@ class Planet{
     // mesh.__dirtyRotation = true;
     //this.planet.rotation.y += 0.01;
     //this.movableObjects.forEach(function(object){object.animate();});
+
+    // Check Food Collisions
+    var collectablesArr = this.collectables;
+    var pivot = this.pivot;
+		this.collectables.forEach(function(obj){
+			// in the animation loop, compute the current bounding box with the world matrix
+			obj.box.copy( obj.mesh.geometry.boundingBox ).applyMatrix4( obj.mesh.matrixWorld );
+			var collision = player.box.isIntersectionBox(obj.box);
+			if(collision){
+        if(obj.isHealth){
+          if(player.health<100){
+            player.health+=5;
+          }
+        }
+        else{
+          if(player.energy<100){
+            player.energy+=5;
+          }
+        }
+        pivot.remove(obj.mesh);
+        var index = collectablesArr.indexOf(obj);
+        if( index > -1 ){
+            collectablesArr.splice(index, 1);
+        }
+      }
+		});
+
     if(this.orbitAroundCenter){
       //Moon orbit
       this.theta += this.dTheta;

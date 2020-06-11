@@ -257,11 +257,19 @@ class Player{
 	getIntersects(objects){
 		var vec = new THREE.Vector3(0,0,1);
 
+<<<<<<< HEAD
 		vec.unproject( camera );
 
 		var dir = new THREE.Vector3( 0, 0, - 1 ).transformDirection( camera.matrixWorld );
 
 		this.MouseRaycaster.set( vec, dir );
+=======
+    vec.unproject( camera );
+
+    var dir = new THREE.Vector3( 0, 0, - 1 ).transformDirection( camera.matrixWorld );
+
+    this.MouseRaycaster.set( vec, dir );
+>>>>>>> 26c0843cffe993e2b584ddf10165296f5e06fec6
 		// find intersections
 		//this.MouseRaycaster.setFromCamera( this.mouse, camera);
 		//this.MouseRaycaster.set(position,z);
@@ -319,10 +327,17 @@ class Player{
 			endposition = bulletIntersects[0].point;
 		}
 		AnimateObject.push(new normalBullet(
+<<<<<<< HEAD
 			{x:this.Group.position.x-1,
 				y:this.Group.position.y,
 				z:this.Group.position.z+3},
 			endposition));// GetFromCameraRaycast
+=======
+										{x:this.Group.position.x-1,
+										y:this.Group.position.y,
+										z:this.Group.position.z+3},
+										endposition));// GetFromCameraRaycast
+>>>>>>> 26c0843cffe993e2b584ddf10165296f5e06fec6
 	}
 
 	changeAmmo(){
