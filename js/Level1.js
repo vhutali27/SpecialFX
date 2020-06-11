@@ -43,6 +43,8 @@ function LoadLevel1(scene){
     S2.spawnRocks(25);
     S3.spawnTrees(30);
     S3.spawnRocks(25);
+    S1.addCollectables(25,true);
+    S1.addCollectables(25,false);
 
     //Stars
     var starGeometry = new THREE.SphereGeometry(8000, 50, 500);
@@ -90,4 +92,10 @@ function LoadLevel1(scene){
     var spotLight2 = new THREE.DirectionalLight(0xffffff);
     spotLight2.position.set(-60,-60,-60);
     scene.add(spotLight2);
+
+    /////////////////////////////////////////////////////
+    // Load Enemies                                    //
+    /////////////////////////////////////////////////////
+    //LoadEnemies();
+
 }

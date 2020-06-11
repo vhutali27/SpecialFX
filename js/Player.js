@@ -9,53 +9,10 @@ var prevTime = performance.now();
 var velocity = new THREE.Vector3();
 var direction = new THREE.Vector3();
 
-// when the mouse moves, call the given function
-document.addEventListener( 'mouseup', onDocumentMouseUp, false );
-document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-
 // Bullets Array
 var Bullets = [];
 var leftClick = false;
 var rightClick = false;
-function onDocumentMouseDown( event )
-{
-	// the following line would stop any other event handler from firing
-	// (such as the mouse's TrackballControls)
-	// event.preventDefault();
-	switch ( event.button ) {
-		case 0:// Left Click
-			// Shoot bullets
-			console.log("Left Click.");
-			leftClick = true;
-			break;
-		case 1: // middle
-			console.log("Middle Click.");
-			break;
-		case 2: // right
-			// Change ammo type
-			console.log("Right Click.");
-			rightClick = true;
-			break;
-	}
-
-    event.preventDefault();
-
-}
-
-function onDocumentMouseUp( event ){
-	switch ( event.button ) {
-		case 0:// Left Click
-			// Shoot bullets
-			leftClick = false;
-			break;
-		case 1: // middle
-			break;
-		case 2: // right
-			// Change ammo type
-			rightClick = false;
-			break;
-	}
-}
 
 // Class for Player
 class Player{
@@ -69,7 +26,7 @@ class Player{
 		this.canChangePlanet = true;
 		// Raycasting is used for working out which object the mouse is pointing at
 		this.MouseRaycaster = new THREE.Raycaster();
-		this.mouse = new THREE.Vector2(window.innerWidth/2-1,window.innerHeight/2+1);
+		this.mouse = new THREE.Vector2(0,0);
 
 		// Initial Health Value of the player
 		this.health = 100;
@@ -150,6 +107,9 @@ class Player{
 												 shading: THREE.FlatShading });
 		this.mesh = new THREE.Mesh( geometry, material );
 
+		// Collision Box
+		this.box = new THREE.Box3().setFromObject(this.mesh);
+
 		// Cannon
 		//var shape = new CANNON.Box(new CANNON.Vec3(20,20,20));
 		var shape = new CANNON.Sphere(20);
@@ -189,17 +149,23 @@ class Player{
 		world.add(this.mesh.cannon);
 		this.clampMovement = false;////////////////////////////////////////should be applied to mesh
 
+		//this.projector = new THREE.Projector();
+		//Projects 2D rays into 3D rays
+
 		// set no collisions with other players (mitigate latency issues)
 		this.mesh.cannon.collisionResponse = 100;
 		// collision handler
 		this.mesh.cannon.addEventListener('collide', e => {
+			// Health Packs
+			console.log(e.body.name);
+
 			var planet = null;
 			PlanetClasses.forEach(function(p){
-				if(p.cannon === e.body) planet = p;
-			}
-			);
-			if(planet!=null){
-				// Change this.planet if planet is not the target one
+				if(p.cannon.name === e.body.name) planet = p;
+			});
+
+			if(planet!=null && planet!=this.planet){
+				this.switchPlanet(planet);
 			}
 		});
 
@@ -290,37 +256,22 @@ class Player{
 	}
 
 	getIntersects(objects){
+		var vec = new THREE.Vector3(0,0,1);
+
+    vec.unproject( camera );
+
+    var dir = new THREE.Vector3( 0, 0, - 1 ).transformDirection( camera.matrixWorld );
+
+    this.MouseRaycaster.set( vec, dir );
 		// find intersections
-		this.MouseRaycaster.setFromCamera( this.mouse, camera);
+		//this.MouseRaycaster.setFromCamera( this.mouse, camera);
+		//this.MouseRaycaster.set(position,z);
 		return this.MouseRaycaster.intersectObjects( objects , true );
-	}
-
-	getCannonIntersects(){
-								var x= new THREE.Vector3(),y= new THREE.Vector3(),z = new THREE.Vector3();
-								// Update the cameras z and y basis to that of the object.
-								camera.matrixWorld.extractBasis(x,y,z);
-                var result = new CANNON.RaycastResult();
-                result.reset();
-                //world.raycastClosest(camera.position, camera.position.clone().add(z), {}, result);
-								var up = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
-								// Position
-								var position = this.mesh.position.clone().add(up.clone().multiplyScalar(35));
-								var pos = new CANNON.Vec3(position.x
-									,position.y
-									,position.z);
-									var pos2 = new CANNON.Vec3(position.x+z.x
-										,position.y+z.y
-										,position.z+z.z);
-								var r = new CANNON.Ray(pos,
-																			 pos2);
-								r.intersectBodies(WorldCannonObjects,result);
-                console.log(r);
-
 	}
 
 	changePlanet(){
 		//this.getCannonIntersects();
-		var intersects = this.getIntersects( WorldObjects );
+		var intersects = this.getIntersects( scene.children );
 
 		// if there is one (or more) intersections
 		if ( intersects.length > 0 && this.canChangePlanet)
@@ -329,6 +280,7 @@ class Player{
 			var PlanetClass = null;
 			console.log("We hit something");
 			intersects.forEach(function(obj){
+				console.log(obj.object.name);
 				var PlanetName = obj.object.name;
 				PlanetClasses.forEach(function(planetObject){
 					if(PlanetName === planetObject.planet.name){
@@ -352,12 +304,30 @@ class Player{
 
 		//this.planet.add(this.mesh);
 
-		this.canChangePlanet = false;
-		setTimeout(function(){this.canChangePlanet = true;},1000);
+		//this.canChangePlanet = false;
+		//setTimeout(function(){this.canChangePlanet = true;},1000);
 	}
 
 	updateHealth(health){
 		this.health = health;
+	}
+
+	shoot(){
+		var endposition = new THREE.Vector3();
+		var bulletIntersects = this.getIntersects(scene.children);
+
+		if( bulletIntersects.length >0 ){
+			endposition = bulletIntersects[0].point;
+		}
+		AnimateObject.push(new normalBullet(
+										{x:this.Group.position.x-1,
+										y:this.Group.position.y,
+										z:this.Group.position.z+3},
+										endposition));// GetFromCameraRaycast
+	}
+
+	changeAmmo(){
+
 	}
 
 	animate(){
@@ -371,26 +341,13 @@ class Player{
 		this.setCannonPosition(this.mesh); // Not so sureabout these ones
 		this.updateCamera();
 
-		/*
-		// Shooting Bullets
-		if(leftClick){
-			var endposition = new THREE.Vector3();
-			var bulletIntersects = this.getIntersects(scene.children);
-
-			if( bulletIntersects.length >0 ){
-				endposition = bulletIntersects[0].point;
-			}
-			AnimateObject.push(new normalBullet(
-										  {x:this.Group.position.x-1,
-										  y:this.Group.position.y,
-										  z:this.Group.position.z+3},
-										  endposition));// GetFromCameraRaycast
-		}*/
+		// Check Food Collisions
 
 		// Update The Player's Health Value
 		// Todo Remove the following line in the final production, this is just to test that animation works
 		this.health -= 0.05;
-		healthBar.updateHealth(this.health)
+		healthBar.updateHealth(this.health);
+
 
 	}
 }

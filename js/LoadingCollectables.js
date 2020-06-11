@@ -59,3 +59,89 @@ function randomPlace(){
 		}
 	}
 }
+
+
+// Health Pack
+function getHealthPack(){
+	var health_geometry = new THREE.TetrahedronBufferGeometry( 10, 4 );
+	var health_material = new THREE.MeshPhongMaterial( { color: '#FF0000', shading: THREE.FlatShading});
+	var health_mesh = new THREE.Mesh( health_geometry, health_material );
+
+	health_mesh.receiveShadow = true;
+	scene.add(health_mesh);
+
+	// create Cannon mesh
+	var heathShape = new CANNON.Sphere(10);
+	health_mesh.cannon = new CANNON.Body({ mass: 20, material: groundMaterial, shape: heathShape });
+	health_mesh.cannon.collisionResponse = 10;
+	world.add(health_mesh.cannon);
+
+	return health_mesh;
+}
+
+class Canister {
+  constructor(id, planet, isHealth) {
+    this.id = id;
+		this.isHealth = isHealth;
+    this.mesh;
+		this.planet = planet;
+    this.eaten = false;
+    this.init();
+  }
+
+  init() {
+    // Create THREE object based on initial data parameters
+		var geometry;
+		var material;
+		var shape;
+    if(this.isHealth){
+			// Health
+			geometry = new THREE.BoxBufferGeometry( 5, 5, 10 );
+			material = new THREE.MeshPhongMaterial( {color: '#ff0000', shading: THREE.FlatShading} );
+			shape = new CANNON.Box(new CANNON.Vec3(5 / 2, 5 / 2, 10 / 2));
+		}
+		else{
+			// Energy
+			geometry = new THREE.TetrahedronBufferGeometry( 5, 1 );
+			material = new THREE.MeshPhongMaterial( {color: '#00ff00', shading: THREE.FlatShading} );
+			shape = new CANNON.Sphere(5);
+		}
+
+    this.mesh = new THREE.Mesh( geometry, material );
+    this.mesh.name = this.id;
+
+    this.mesh.castShadow = true;
+
+		// Create Cannon object based on initial data parameters
+    this.mesh.cannon = new CANNON.Body({ shape, mass: 0, material: groundMaterial });
+		world.add(this.mesh.cannon);
+    this.planet.addObject(this.mesh,Math.random()*2*Math.PI,Math.random()*2*Math.PI,15,true);
+
+    this.mesh.cannon.collisionResponse = 0;
+
+
+    this.mesh.cannon.addEventListener('collide', e => {
+
+			this.box = new THREE.Box3().setFromObject(this.mesh);
+      // ensure food has not already been eaten and that collision was between own player and food
+			console.log("Touched");
+      if (!this.eaten) {
+          for (let contact of world.contacts) {
+            let foodHits = contact.bi === this.mesh.cannon;
+            let playerIsHit = contact.bj === player.cannon;
+            let playerHits = contact.bi === player.cannon;
+            let foodIsHit = contact.bj === this.mesh.cannon;
+            if (foodHits && playerIsHit || playerHits && foodIsHit) {
+                this.eaten = true;
+                scene.remove(this.mesh);
+								world.remove(this.mesh.cannon);
+								var index = this.planet.collectables.indexOf(this);
+						    if( index > -1 ){
+						        this.planet.collectables.splice(index, 1);
+						    }
+            }
+          }
+      }
+    });
+  }
+}

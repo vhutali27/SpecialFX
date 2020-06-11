@@ -28,6 +28,7 @@ class Planet{
     this.movableObjects = new Array();
 
     this.radius = radius;
+    this.collectables = new Array();
 
     // Planet Orbit Variables
     this.orbitAroundCenter = false;
@@ -51,12 +52,48 @@ class Planet{
     AnimateObject.push(this);
   }
 
-  addObject( obj, theta, phi, height){
+  setCannonPosition( mesh ){
+		mesh.cannon.position.x = mesh.position.x;
+		mesh.cannon.position.z = mesh.position.y;
+		mesh.cannon.position.y = mesh.position.z;
+		mesh.cannon.quaternion.x = -mesh.quaternion.x;
+		mesh.cannon.quaternion.z = -mesh.quaternion.y;
+		mesh.cannon.quaternion.y = -mesh.quaternion.z;
+		mesh.cannon.quaternion.w = mesh.quaternion.w;
+	  }
+
+	setMeshPosition( mesh ) {
+		  mesh.position.x = mesh.cannon.position.x;
+		  mesh.position.z = mesh.cannon.position.y;
+		  mesh.position.y = mesh.cannon.position.z;
+		  mesh.quaternion.x = -mesh.cannon.quaternion.x;
+		  mesh.quaternion.z = -mesh.cannon.quaternion.y;
+		  mesh.quaternion.y = -mesh.cannon.quaternion.z;
+		  mesh.quaternion.w = mesh.cannon.quaternion.w;
+	  }
+
+    updatePlanetObjects(){
+      var parent = this;
+      this.collectables.forEach(function(obj){
+        parent.setMeshPosition(obj.mesh);
+        parent.setCannonPosition(obj.mesh);
+      });
+    }
+
+  addObject( obj, theta, phi, height, isCannonObject){
    var SphereCoords = new THREE.Spherical(this.radius + height , theta,phi );
    var vec = new THREE.Vector3().setFromSpherical(SphereCoords);
-   obj.quaternion.multiply(obj.quaternion.setFromUnitVectors(obj.position.normalize(),vec.normalize()));
-   obj.position.set(vec);
-   this.addToPivot(obj);
+   this.positionObject(obj,vec);
+   if(isCannonObject){
+      obj.lookAt(new THREE.Vector3(0,0,0));
+     	obj.cannon.position.x = obj.position.x;
+     	obj.cannon.position.z = obj.position.y;
+     	obj.cannon.position.y = obj.position.z;
+     	obj.cannon.quaternion.x = -obj.quaternion.x;
+     	obj.cannon.quaternion.z = -obj.quaternion.y;
+     	obj.cannon.quaternion.y = -obj.quaternion.z;
+     	obj.cannon.quaternion.w = obj.quaternion.w;
+   }
   }
 
   addToPivot(obj){
@@ -84,13 +121,13 @@ class Planet{
 						}
 
 					} );
-          planet.positionObject(obj,vec,objectPath);
+          obj.scale.set(objectPath.x,objectPath.y,objectPath.z);
+          planet.positionObject(obj,vec);
 				});
   }
 
-  positionObject(object,vec,objectPath){
+  positionObject(object,vec){
           object.position.add(vec);
-          object.scale.set(objectPath.x,objectPath.y,objectPath.z);
           object.castShadow = true;
           var up = object.position.clone().normalize();
           object.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(object.up,up).multiply(object.quaternion));
@@ -112,7 +149,8 @@ class Planet{
       loaderOBJ.load(
         path,
         function (object) {
-              planet.positionObject(object,vec,objectPath);
+              object.scale.set(objectPath.x,objectPath.y,objectPath.z);
+              planet.positionObject(object,vec);
           },
           undefined, // We don't need this function
           function (error) {
@@ -134,13 +172,19 @@ class Planet{
       function ( gltf ) {
         //scene.add( gltf.scene );
         var obj = gltf.scene;
-        planet.positionObject(obj,vec,objectPath);
+        planet.positionObject(obj,vec);
       },
       undefined, // We don't need this function
       function (error) {
         console.error(error);
       }
     );
+  }
+
+  addCollectables(value,isHealth){
+    for (var i =0 ;i<value;i+=1){
+      this.collectables.push(new Canister(this.collectables.length,this,isHealth));
+    }
   }
 
   centerOrbit(boolVal){
@@ -172,6 +216,7 @@ class Planet{
     }
   }
 
+
 	/**
 		* Function to rotate the planet
 		* @param {type} xRotation Float
@@ -183,6 +228,7 @@ class Planet{
     // mesh.__dirtyRotation = true;
     //this.planet.rotation.y += 0.01;
     //this.movableObjects.forEach(function(object){object.animate();});
+    this.updatePlanetObjects();
     if(this.orbitAroundCenter){
       //Moon orbit
       this.theta += this.dTheta;

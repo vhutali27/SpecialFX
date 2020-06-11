@@ -36,7 +36,7 @@ window.addEventListener( 'resize', onWindowResize, false );
 var scene = new THREE.Scene();
 
 
-var camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 10000);
+var camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 15000);
 // The objects added to this array should have an animate() function.
 // This function will be called by the render function for each frame.
 var AnimateObject = new Array();
@@ -116,10 +116,7 @@ function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize( window.innerWidth, window.innerHeight );
-	player.mouse.set((window.innerWidth/2),(window.innerHeight/2));
 }
-
-
 
 function startGame(){
 	//////////////////////////////////////////////////
@@ -145,7 +142,6 @@ function startGame(){
 
 		//places new object in time intervals
 		var timeElapsed = Math.round(clock.getElapsedTime());
-		//console.log(timeElapsed);
 		if (timeElapsed % 10 == 0 && timeElapsed != interval){
 			randomPlace();
 			interval = timeElapsed; //This deals with multiple items being dropped at the same second due to rounding

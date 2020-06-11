@@ -246,6 +246,18 @@ THREE.PointerLockControls = function ( camera, domElement, playerClass) {
 				playerClass.changePlanet();
 			}
 
+			// Shoot Bullets
+			if(keyState[0]){
+				//Left click
+				playerClass.shoot();
+			}
+
+			// Change Ammo Type
+			if(keyState[2]){
+				// Right Click
+				playerClass.changeAmmo();
+			}
+
 	    // launch if spacebar up and launchMult greater than 1
 	    if (!keyState[32] && this.launchMult > 1 ) {// SpaceBar
 		    var cross1o = new THREE.Vector3();
