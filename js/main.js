@@ -39,6 +39,9 @@ var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 10000);
 // The objects added to this array should have an animate() function.
 // This function will be called by the render function for each frame.
+
+
+
 var AnimateObject = new Array();
 
 // WorldObjects are the objects that the player can touch.
@@ -52,6 +55,12 @@ LoadLevel1(scene);
 // Initialize player
 var player = new Player(PlanetClasses[0]);
 AnimateObject.push(player);
+
+
+// Orthographic Camera to be used for the mini view
+var orthoCamera = new THREE.OrthographicCamera(-5000, 5000, window.innerHeight / 2, window.innerHeight / - 2, 0, 1000000000 );
+// scene.add(orthoCamera);
+orthoCamera.position.set(3000, 0, 6000);
 
 //////////////////////////////////////////////////
 // MENU AND GAME SCREEN.                        //
@@ -156,7 +165,7 @@ function startGame(){
 		}
 
 		// Update the miniView
-		// renderMiniView(player.position);
+		renderMiniView();
 
 		AnimateObject.forEach(function(object){object.animate();});
 		requestAnimationFrame(render);
@@ -168,7 +177,7 @@ function startGame(){
 	// INITIALISE AND RENDER SCENE                  //
 	//////////////////////////////////////////////////
 	// Initialize MiniView
-	initMiniView();
+	miniScene();
 
 	// Initialize GUI Elements
 	initGUIElements();

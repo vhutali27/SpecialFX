@@ -75,6 +75,7 @@ class Player{
 		// Initial Health Value of the player
 		this.health = 100;
 
+
 		// Loads the character's gun
 		loaderMTL.load("models/Gun/gun.mtl", function ( materials ) {
 			materials.preload();
@@ -203,6 +204,8 @@ class Player{
 				// Change this.planet if planet is not the target one
 			}
 		});
+		// Player position variable
+		this.position = this.mesh.position.clone();
 
 		this.controls = new THREE.PointerLockControls(camera, document.body, this);
 	}
@@ -221,9 +224,12 @@ class Player{
 		var up = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
 		// Position
 		var position = this.mesh.position.clone().add(up.clone().multiplyScalar(35));
+
 		camera.matrixAutoUpdate = false;
 		camera.matrixWorld.setPosition(position);
 
+		// Update player's position variable
+		this.position = position;
 	}
 
 	alignObject(object, center){
@@ -368,9 +374,13 @@ class Player{
 		}*/
 
 		// Update The Player's Health Value
-		// Todo Remove the following line in the final production, this is just to test that animation works
-		this.health -= 0.05;
-		healthBar.updateHealth(this.health)
+		healthBar.updateHealth(this.health);
 
+
+	}
+
+	// getter function for the position variable
+	getPosition(){
+		return this.position;
 	}
 }
