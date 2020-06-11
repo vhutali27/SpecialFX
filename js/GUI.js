@@ -1,4 +1,3 @@
-
 var healthBar;
 
 function initCountdown(e) {
@@ -49,18 +48,6 @@ function initCountdown(e) {
 
 function  initGUIElements() {
 
-<<<<<<< HEAD
-    /////////////////////////////////////////////////////////
-    // GUI                                                 //
-    /////////////////////////////////////////////////////////
-
-    // Display the HUD: radar, health, score, and credits/directions
-    /*$('body').append('<canvas id="radar" width="200" height="200"></canvas>');
-    $('body').append('<div id="hud"><p>Health: <span id="health">100</span><br />Score: <span id="score">0</span></p></div>');
-    // Set up the brief red flash that shows when you get hurt
-    $('body').append('<div id="hurt"></div>');
-    $('#hurt').css({width: window.innerWidth, height: window.innerHeight,});*/
-=======
   /////////////////////////////////////////////////////////
   // GUI                                                 //
   /////////////////////////////////////////////////////////
@@ -68,11 +55,9 @@ function  initGUIElements() {
   // Display the HUD: radar, health, score, and credits/directions
   /*$('body').append('<canvas id="radar" width="200" height="200"></canvas>');
   $('body').append('<div id="hud"><p>Health: <span id="health">100</span><br />Score: <span id="score">0</span></p></div>');
-
   // Set up the brief red flash that shows when you get hurt
   $('body').append('<div id="hurt"></div>');
   $('#hurt').css({width: window.innerWidth, height: window.innerHeight,});*/
->>>>>>> 26c0843cffe993e2b584ddf10165296f5e06fec6
 
     // The canvas used to render onto
     var displayCanvasContext = document.getElementById('displayCanvas').getContext('2d');
