@@ -9,70 +9,27 @@ var prevTime = performance.now();
 var velocity = new THREE.Vector3();
 var direction = new THREE.Vector3();
 
-var playerAmmo = 0;
-var playerCollectable = 0;
-
-// when the mouse moves, call the given function
-document.addEventListener( 'mouseup', onDocumentMouseUp, false );
-document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-
-// Raycasting is used for working out which object the mouse is pointing at
-var MouseRaycaster = new THREE.Raycaster();
-var mouse = new THREE.Vector2();
 // Bullets Array
 var Bullets = [];
 var leftClick = false;
 var rightClick = false;
-var mouse = { x: 0, y: 0 };
-function onDocumentMouseDown( event )
-{
-	// the following line would stop any other event handler from firing
-	// (such as the mouse's TrackballControls)
-	// event.preventDefault();
-	switch ( event.button ) {
-		case 0:// Left Click
-			// Shoot bullets
-			console.log("Left Click.");
-			leftClick = true;
-			break;
-		case 1: // middle
-			console.log("Middle Click.");
-			break;
-		case 2: // right
-			// Change ammo type
-			console.log("Right Click.");
-			rightClick = true;
-			break;
-	}
-
-    event.preventDefault();
-
-}
-
-function onDocumentMouseUp( event ){
-	switch ( event.button ) {
-		case 0:// Left Click
-			// Shoot bullets
-			leftClick = false;
-			break;
-		case 1: // middle
-			break;
-		case 2: // right
-			// Change ammo type
-			rightClick = false;
-			break;
-	}
-}
 
 // Class for Player
 class Player{
-	constructor(){
+	constructor(initPlanet){
 		// Target Planet is the planet that the character is traveling towards
 		// or has landed on. If he collides with a different planet on his way to
-		// the planet he wanted to go to then the new planet will be his TargetPlanet.
-		this.TargetPlanet = null;
+		// the planet he wanted to go to then the new planet will be his planet.
+		this.planet = initPlanet;
 		this.Height = 5;
 		this.Group = new THREE.Group();
+		this.canChangePlanet = true;
+		// Raycasting is used for working out which object the mouse is pointing at
+		this.MouseRaycaster = new THREE.Raycaster();
+		this.mouse = new THREE.Vector2(0,0);
+
+		// Initial Health Value of the player
+		this.health = 100;
 
 		// Loads the character's gun
 		loaderMTL.load("models/Gun/gun.mtl", function ( materials ) {
@@ -145,33 +102,39 @@ class Player{
 				}
 		);
 */
-		var geometry = new THREE.BoxGeometry(20, 10, 20);
+		var geometry = new THREE.BoxGeometry(10,20,10);
 		var material = new THREE.MeshPhongMaterial({ color: '#f96f42',
 												 shading: THREE.FlatShading });
 		this.mesh = new THREE.Mesh( geometry, material );
-	
+
+		// Collision Box
+		this.box = new THREE.Box3().setFromObject(this.mesh);
+
 		// Cannon
 		//var shape = new CANNON.Box(new CANNON.Vec3(20,20,20));
 		var shape = new CANNON.Sphere(20);
 		this.mesh.cannon = new CANNON.Body({ shape,
-										mass: 35,
+										mass: 1,
 										material: ballMaterial });
 		this.mesh.cannon.linearDamping = this.mesh.cannon.angularDamping = 0.41;
-	  
+
 		this.mesh.castShadow = true;
 		this.mesh.cannon.inertia.set(0,0,0);
 		this.mesh.cannon.invInertia.set(0,0,0);
+
+		// For things you want to add to the character
+		this.mesh.add(this.Group);
 		// set spawn position according to server socket message
-		this.mesh.position.x = 0;
-		this.mesh.position.y = 600;
-		this.mesh.position.z = 0;
+		this.mesh.position.copy(this.planet.planet.position);
+		this.mesh.position.x += 0;
+		this.mesh.position.y += 0;
+		this.mesh.position.z += 600;
 
 		this.mesh.name = "Main";
 		this.mesh.nickname = "DUDEMAN";
-		
-		// For things you want to add to the character
-		this.mesh.add(this.Group);
-  
+
+
+
 		// For cannon quaternion the z and y are switched
 		// add Cannon body
 		this.mesh.cannon.position.x = this.mesh.position.x;
@@ -181,77 +144,74 @@ class Player{
 		this.mesh.cannon.quaternion.z = -this.mesh.quaternion.y;
 		this.mesh.cannon.quaternion.y = -this.mesh.quaternion.z;
 		this.mesh.cannon.quaternion.w = this.mesh.quaternion.w;
-		
+
 		scene.add( this.mesh );
 		world.add(this.mesh.cannon);
 		this.clampMovement = false;////////////////////////////////////////should be applied to mesh
-  
-  
-		// This is how gravity is applied to the player 
-		// This function is in the constructor of the player class
-  
-		// use the Cannon preStep callback, evoked each timestep, to apply the gravity from the planet center
-		//to the main player.
-		this.mesh.cannon.preStep = function(){
-			var ball_to_planet = new CANNON.Vec3();// should be planet applied to player
-			this.position.negate(ball_to_planet);
 
-			var distance = ball_to_planet.norm();
-  
-			ball_to_planet.normalize();
-			ball_to_planet = ball_to_planet.scale(3000000 * this.mass/Math.pow(distance,2));
-			world.gravity.set(ball_to_planet.x, ball_to_planet.y, ball_to_planet.z);
-			// Should be applied planets world
-		};
+		//this.projector = new THREE.Projector();
+		//Projects 2D rays into 3D rays
 
-		this.controls = new THREE.PointerLockControls(camera, document.body, this.mesh, this.mesh.cannon);
+		// set no collisions with other players (mitigate latency issues)
+		this.mesh.cannon.collisionResponse = 100;
+		// collision handler
+		this.mesh.cannon.addEventListener('collide', e => {
+			// Health Packs
+			console.log(e.body.name);
+
+			var planet = null;
+			PlanetClasses.forEach(function(p){
+				if(p.cannon.name === e.body.name) planet = p;
+			});
+
+			if(planet!=null && planet!=this.planet){
+				this.switchPlanet(planet);
+			}
+		});
+
+		this.controls = new THREE.PointerLockControls(camera, document.body, this);
 	}
-	
+
+	applyGravity(){
+			var norm = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
+			var gravity = 9.8;
+			// get unit (directional) vector for position
+			this.mesh.cannon.applyImpulse(new CANNON.Vec3(norm.x*gravity ,
+														 norm.z*gravity,
+														 norm.y*gravity).negate(),
+										 this.mesh.cannon.position);
+	}
+
+	updateCamera(){
+		var up = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
+		// Position
+		var position = this.mesh.position.clone().add(up.clone().multiplyScalar(35));
+		camera.matrixAutoUpdate = false;
+		camera.matrixWorld.setPosition(position);
+
+	}
+
 	alignObject(object, center){
-       
-       var poleDir = new THREE.Vector3(1,0,0); // x-Axis pole going to the right.
-       object.matrixAutoUpdate = false;
-     
-       var objectPosition = object.position.clone();
-       // So the camera is placed where the player is
-     
-       var localUp = center.clone().negate().add(objectPosition.clone()).normalize();
-      // This is the direction from the center to the player
-       
-       // find direction on planenormal by crossing the cross prods of localUp and camera dir
-      var camVec = new THREE.Vector3();
-      camera.getWorldDirection( camVec );
-      camVec.normalize();
-    
-      // lateral directional vector
-      var cross1 = new THREE.Vector3();
-      cross1.crossVectors(localUp.clone().normalize(), camVec);
-    
-      // front/back vector
-      var referenceForward = new THREE.Vector3();
-      referenceForward.crossVectors(localUp.clone().normalize(), cross1);
-    
-      var correctionAngle = Math.atan2(referenceForward.x, referenceForward.z);
-      if(object.position.y<center.y) correctionAngle*=-1;
-    
-      poleDir.applyAxisAngle(localUp,correctionAngle).normalize();
-      // Corrects the camera angle and the pole direciton. To face the camera.
-    
-      var cross = new THREE.Vector3();
-      cross.crossVectors(poleDir,localUp);
-    
-      var dot = localUp.dot(poleDir);
-      poleDir.subVectors(poleDir , localUp.clone().multiplyScalar(dot));
-    
-      var cameraTransform = new THREE.Matrix4();
-      cameraTransform.set(	poleDir.x,localUp.x,cross.x,objectPosition.x,
-         poleDir.y,localUp.y,cross.y,objectPosition.y,
-         poleDir.z,localUp.z,cross.z,objectPosition.z,
-         0,0,0,1);
-      
-      object.matrix = cameraTransform;
+				var localUp = center.clone().negate().add(object.position.clone()).normalize();
+				var x= new THREE.Vector3(),y= new THREE.Vector3(),z = new THREE.Vector3();
+				// Update the cameras z and y basis to that of the object.
+				object.matrix.extractBasis(x,y,z);
+				camera.matrixWorld.makeBasis(x,
+					y.applyAxisAngle(x,this.controls.yAngle),
+					z.applyAxisAngle(x,this.controls.yAngle)).setPosition(camera.position);
+				object.matrixAutoUpdate = false;
+				camera.matrixAutoUpdate = false;
+
+				var poleDir = x.clone();
+
+				var cross = new THREE.Vector3();
+	      cross.crossVectors(poleDir,localUp);
+	      var dot = localUp.dot(poleDir);
+	      poleDir.subVectors(poleDir,localUp.clone().multiplyScalar(dot));
+
+				object.matrix.makeBasis(poleDir.normalize(),localUp.normalize(),cross.normalize()).setPosition(object.position);
 	}
-	
+
 	setCannonPosition( mesh ){
 		this.mesh.cannon.position.x = mesh.position.x;
 		this.mesh.cannon.position.z = mesh.position.y;
@@ -261,7 +221,7 @@ class Player{
 		this.mesh.cannon.quaternion.y = -mesh.quaternion.z;
 		this.mesh.cannon.quaternion.w = mesh.quaternion.w;
 	  }
-	  
+
 	setMeshPosition( mesh ) {
 		  this.mesh.position.x = mesh.cannon.position.x;
 		  this.mesh.position.z = mesh.cannon.position.y;
@@ -271,8 +231,8 @@ class Player{
 		  this.mesh.quaternion.y = -mesh.cannon.quaternion.z;
 		  this.mesh.quaternion.w = mesh.cannon.quaternion.w;
 	  }
-	
-	// Function in the class outside the constructor 
+
+	// Function in the class outside the constructor
 	getmeshData() {
 		return {
 		  x: this.mesh.position.x,
@@ -283,95 +243,111 @@ class Player{
 		  qz: this.mesh.quaternion.z,
 		  qw: this.mesh.quaternion.w
 		};
-	}	
+	}
 
 	// Only takes in the planet class. This is called when the player clicks on
 	// a different planet to travel to it.
-	setTargetPlanet(planet){
+	setPlanet(setPlanet){
 		// Check if is already attached to another planet
-		if(this.TargetPlanet!==null) this.TargetPlanet.remove(this.Group);
-		this.TargetPlanet = planet;
-		this.LandingPoint.set(planet.x,planet.y,planet.z);
+		if(this.planet!==null) this.planet.remove(this.Group);
+		this.planet = setPlanet;
+		this.LandingPoint.set(setPlanet.x,setPlanet.y,setPlanet.z);
 		this.LandedOnPlanet = false;
 	}
-	
+
 	getIntersects(objects){
-		// update the mouse variable
-					mouse.x = camera.position.x;
-					mouse.y = camera.position.y;
-				
-					// find intersections
-					MouseRaycaster.setFromCamera( mouse, camera);
-					return MouseRaycaster.intersectObjects( objects );
+		var vec = new THREE.Vector3(0,0,1);
+
+    vec.unproject( camera );
+
+    var dir = new THREE.Vector3( 0, 0, - 1 ).transformDirection( camera.matrixWorld );
+
+    this.MouseRaycaster.set( vec, dir );
+		// find intersections
+		//this.MouseRaycaster.setFromCamera( this.mouse, camera);
+		//this.MouseRaycaster.set(position,z);
+		return this.MouseRaycaster.intersectObjects( objects , true );
 	}
 
-	switchPlanet(destinationPlanet, coords){
-			var above = false;
-			if(destinationPlanet.pivot.position.y < this.Group.position.y) above = true;
-			console.log(above + " " + this.Upright);
-			if(above && !this.Upright) this.upright(true);
-			else if(!above && this.Upright) this.upright(false);
-			
-			if(this.TargetSphere!=null){
-						this.TargetPlanet.remove(this.TargetSphere);
-						scene.remove(this.TargetSphere);
-						this.TargetSphere = null;
+	changePlanet(){
+		//this.getCannonIntersects();
+		var intersects = this.getIntersects( scene.children );
+
+		// if there is one (or more) intersections
+		if ( intersects.length > 0 && this.canChangePlanet)
+		{
+
+			var PlanetClass = null;
+			console.log("We hit something");
+			intersects.forEach(function(obj){
+				console.log(obj.object.name);
+				var PlanetName = obj.object.name;
+				PlanetClasses.forEach(function(planetObject){
+					if(PlanetName === planetObject.planet.name){
+						PlanetClass = planetObject;
+					}
+				});
+			});
+
+
+			if(PlanetClass!=null && PlanetClass!=this.planet){
+				console.log("We his a planet");
+				this.switchPlanet(PlanetClass);
 			}
-					
-			this.setTargetPlanet(destinationPlanet);
-			this.LandingPoint.set(coords.x,coords.y,coords.z);
-			
-			this.TargetSphere = getSphere(this.grassMaterial,80,10);
-			this.TargetSphere.position.set(coords.x,coords.y,coords.z);
-			this.TargetPlanet.add(this.TargetSphere);
-			scene.add(this.TargetSphere);
-			
+		}
+	}
+
+	switchPlanet(PlanetClass){
+		// Check if is already attached to another planet
+		if(this.planet!==null) this.planet.remove(this.mesh);
+		this.planet = PlanetClass;
+
+		//this.planet.add(this.mesh);
+
+		//this.canChangePlanet = false;
+		//setTimeout(function(){this.canChangePlanet = true;},1000);
+	}
+
+	updateHealth(health){
+		this.health = health;
+	}
+
+	shoot(){
+		var endposition = new THREE.Vector3();
+		var bulletIntersects = this.getIntersects(scene.children);
+
+		if( bulletIntersects.length >0 ){
+			endposition = bulletIntersects[0].point;
+		}
+		AnimateObject.push(new normalBullet(
+										{x:this.Group.position.x-1,
+										y:this.Group.position.y,
+										z:this.Group.position.z+3},
+										endposition));// GetFromCameraRaycast
+	}
+
+	changeAmmo(){
+
 	}
 
 	animate(){
-		
-		this.alignObject(this.mesh,new THREE.Vector3(0,0,0));
+		this.applyGravity();
+		this.alignObject(this.mesh,this.planet.planet.position);
 		// receive and process controls and camera
 		this.controls.Update();
 		// sync THREE mesh with Cannon mesh
 		// Cannon's y & z are swapped from THREE, and w is flipped
 		this.setMeshPosition(this.mesh);
 		this.setCannonPosition(this.mesh); // Not so sureabout these ones
-		
-		/*MouseRaycaster.ray.origin.copy( camera.position );// Change Planet Button
-		// Add a timer after you find that it is true. So that it doesn't change a million times in a second.
-		if(changePlanet)){
-			var intersects = this.getIntersects( WorldObjects );
-		
-			// if there is one (or more) intersections
-			if ( intersects.length > 0 && canChangePlanet)
-			{
-				var PlanetName = intersects[0].object.name;
-				var PlanetClass = null;
-				PlanetClasses.forEach(function(planetObject){
-					if(PlanetName === planetObject.planet.name){
-						PlanetClass = planetObject;
-					}
-				});
-				this.switchPlanet(PlanetClass, intersects[0].point);
-				canChangePlanet = false;
-				setTimeout(function(){canChangePlanet = true;},1000);
-			}
-		}
-		
-		// Shooting Bullets
-		if(leftClick){
-			var endposition = new THREE.Vector3();
-			var bulletIntersects = this.getIntersects(scene.children);
-			
-			if( bulletIntersects.length >0 ){
-				endposition = bulletIntersects[0].point;
-			}
-			AnimateObject.push(new normalBullet(
-										  {x:this.Group.position.x-1,
-										  y:this.Group.position.y,
-										  z:this.Group.position.z+3},
-										  endposition));// GetFromCameraRaycast		
-		}*/
+		this.updateCamera();
+
+		// Check Food Collisions
+
+		// Update The Player's Health Value
+		// Todo Remove the following line in the final production, this is just to test that animation works
+		this.health -= 0.05;
+		healthBar.updateHealth(this.health);
+
+
 	}
 }

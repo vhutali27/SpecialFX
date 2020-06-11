@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////
 // GLOBAL vARIABLES                             //
-//////////////////////////////////////////////////  
+//////////////////////////////////////////////////
 
 // Instantiate a loader
 var loadingManager = new THREE.LoadingManager();
@@ -18,11 +18,10 @@ var loaderAnim = document.getElementById('js-loader');
 //Create clock, set autostart to true
 var clock = new THREE.Clock(true);
 
-
 //////////////////////////////////////////////////
 // Renderer                                     //
 //////////////////////////////////////////////////
-var renderer = new THREE.WebGLRenderer({antialias:true});	
+var renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setClearColor( 0xEEEEEE );
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(window.innerWidth, window.innerHeight, false);
@@ -30,7 +29,7 @@ document.body.appendChild(renderer.domElement);
 // shading
 renderer.shadowMap.enabled = true;
 renderer.shadowMapSoft = true;
-	
+
 window.addEventListener( 'resize', onWindowResize, false );
 
 
@@ -38,13 +37,14 @@ window.addEventListener( 'resize', onWindowResize, false );
 var scene = new THREE.Scene();
 
 
-var camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 10000);
+var camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 15000);
 // The objects added to this array should have an animate() function.
 // This function will be called by the render function for each frame.
 var AnimateObject = new Array();
 
 // WorldObjects are the objects that the player can touch.
 var WorldObjects = new Array();
+var WorldCannonObjects = new Array();
 // Planet Classes
 var PlanetClasses = new Array();
 var time, lastTime;
@@ -52,11 +52,8 @@ var time, lastTime;
 LoadLevel1(scene);
 
 // Initialize player
-var player = new Player();
+var player = new Player(PlanetClasses[0]);
 AnimateObject.push(player);
-
-
-
 
 //////////////////////////////////////////////////
 // MENU AND GAME SCREEN.                        //
@@ -122,8 +119,6 @@ function onWindowResize() {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
-
-
 function startGame(){
 	//////////////////////////////////////////////////
 	// RENDERING                                    //
@@ -135,41 +130,51 @@ function startGame(){
 		if (lastTime !== undefined) {
 		   let dt = (time - lastTime) / 1000;
 		   world.step(fixedTimeStep, dt, maxSubSteps);
-		   // We are going to need a world array to store all the planet worlds
 		}
 		lastTime = time;
-		
+
 		//Get the seconds elapsed since last getDelta call
 		//var timeElapsed = clock.getDelta();
 		//Or get the amount of time elapsed since start of the clock/program
 		//var timeElapsed = clock.getTimeElapsed();
-	
+
 		//light fluctuation for models
 		//flare();
-	
+
 		//places new object in time intervals
 		var timeElapsed = Math.round(clock.getElapsedTime());
+<<<<<<< HEAD
 		console.log(timeElapsed);
 		if (timeElapsed % 5 == 0 && timeElapsed != interval){
+=======
+		if (timeElapsed % 10 == 0 && timeElapsed != interval){
+>>>>>>> 29dc4f5346c581b526cccadd4765b0eb989f034d
 			randomPlace();
 			interval = timeElapsed; //This deals with multiple items being dropped at the same second due to rounding
 		 }
-	
+
 		//randomPlace();
 		// Animation Mixer for character
 		if (mixer) {
 			mixer.update(clock.getDelta());
 		}
-	
+
+		// Update the miniView
+		// renderMiniView(player.position);
+
 		AnimateObject.forEach(function(object){object.animate();});
 		requestAnimationFrame(render);
 		renderer.render(scene, camera);
-	
+
 	};
-	
+
 	//////////////////////////////////////////////////
 	// INITIALISE AND RENDER SCENE                  //
 	//////////////////////////////////////////////////
-	
+	// Initialize MiniView
+	initMiniView();
+
+	// Initialize GUI Elements
+	initGUIElements();
 	render();
 }
