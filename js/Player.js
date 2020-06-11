@@ -56,54 +56,54 @@ class Player{
 */
 		// Loads the Characters model
 		// Load a glTF resource
-		/*loaderGLTF.load(
-            // resource URL
-            'models/character.glb',
-            // called when the resource is loaded
-            function ( gltf ) {
-                //Characters model
-                var model = gltf.scene;								//Our character
-                var neck;											//Reference to the neck bone
-                var waist;											//Reference to waist bone
-                var possibleAnims;									//Animations found in file
-                var idle;											//Idle, the default state
-                var currentlyAnimating = false;						//Used to check if neck is in use
-                var loaderAnim = document.getElementById('js-loader');
-                //Character's animations
-                let fileAnimations = gltf.animations;
-                model.traverse(o => {
-                  if (o.isMesh) {
-                    o.castShadow = true;
-                    o.receiveShadow = true;
-                    //o.material = stacy_mtl;
-                  }
-                  // Reference the neck and waist bones
-                  if (o.isBone && o.name === 'mixamorigNeck') {
-                    neck = o;
-                  }
-                  if (o.isBone && o.name === 'mixamorigSpine') {
-                    waist = o;
-                  }
-                });
-                model.scale.set(7,7,7);
-                model.rotation.y += Math.PI;
-                model.position.set( 0, -5, -20);
-                group.add(model);
-                loaderAnim.remove();
-                mixer = new THREE.AnimationMixer(model);
-                let idleAnim = THREE.AnimationClip.findByName(fileAnimations, 'idle');
-                idle = mixer.clipAction(idleAnim);
-                idle.play();
-            },
-            undefined, // We don't need this function
-              function (error) {
-                console.error(error);
-            }
-    );
+			/*loaderGLTF.load(
+				// resource URL
+				'models/character.glb',
+				// called when the resource is loaded
+				function ( gltf ) {
+					//Characters model
+					var model = gltf.scene;								//Our character
+					var neck;											//Reference to the neck bone
+					var waist;											//Reference to waist bone
+					var possibleAnims;									//Animations found in file
+					var idle;											//Idle, the default state
+					var currentlyAnimating = false;						//Used to check if neck is in use
+					var loaderAnim = document.getElementById('js-loader');
+					//Character's animations
+					let fileAnimations = gltf.animations;
+					model.traverse(o => {
+		              if (o.isMesh) {
+		                o.castShadow = true;
+		                o.receiveShadow = true;
+		                //o.material = stacy_mtl;
+		              }
+		              // Reference the neck and waist bones
+		              if (o.isBone && o.name === 'mixamorigNeck') {
+		                neck = o;
+		              }
+		              if (o.isBone && o.name === 'mixamorigSpine') {
+		                waist = o;
+		              }
+		            });
+					model.scale.set(7,7,7);
+					model.rotation.y += Math.PI;
+					model.position.set( 0, -5, -20);
+					group.add(model);
+					loaderAnim.remove();
+					mixer = new THREE.AnimationMixer(model);
+					let idleAnim = THREE.AnimationClip.findByName(fileAnimations, 'idle');
+					idle = mixer.clipAction(idleAnim);
+					idle.play();
+				},
+				undefined, // We don't need this function
+				  function (error) {
+					console.error(error);
+				}
+		);
 */
 		var geometry = new THREE.BoxGeometry(10,20,10);
 		var material = new THREE.MeshPhongMaterial({ color: '#f96f42',
-			shading: THREE.FlatShading });
+												 shading: THREE.FlatShading });
 		this.mesh = new THREE.Mesh( geometry, material );
 
 		// Collision Box
@@ -113,8 +113,8 @@ class Player{
 		//var shape = new CANNON.Box(new CANNON.Vec3(20,20,20));
 		var shape = new CANNON.Sphere(20);
 		this.mesh.cannon = new CANNON.Body({ shape,
-			mass: 1,
-			material: ballMaterial });
+										mass: 1,
+										material: ballMaterial });
 		this.mesh.cannon.linearDamping = this.mesh.cannon.angularDamping = 0.41;
 
 		this.mesh.castShadow = true;
@@ -172,13 +172,13 @@ class Player{
 	}
 
 	applyGravity(){
-		var norm = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
-		var gravity = 9.8;
-		// get unit (directional) vector for position
-		this.mesh.cannon.applyImpulse(new CANNON.Vec3(norm.x*gravity ,
-			norm.z*gravity,
-			norm.y*gravity).negate(),
-			this.mesh.cannon.position);
+			var norm = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
+			var gravity = 9.8;
+			// get unit (directional) vector for position
+			this.mesh.cannon.applyImpulse(new CANNON.Vec3(norm.x*gravity ,
+														 norm.z*gravity,
+														 norm.y*gravity).negate(),
+										 this.mesh.cannon.position);
 	}
 
 	updateCamera(){
@@ -191,24 +191,24 @@ class Player{
 	}
 
 	alignObject(object, center){
-		var localUp = center.clone().negate().add(object.position.clone()).normalize();
-		var x= new THREE.Vector3(),y= new THREE.Vector3(),z = new THREE.Vector3();
-		// Update the cameras z and y basis to that of the object.
-		object.matrix.extractBasis(x,y,z);
-		camera.matrixWorld.makeBasis(x,
-			y.applyAxisAngle(x,this.controls.yAngle),
-			z.applyAxisAngle(x,this.controls.yAngle)).setPosition(camera.position);
-		object.matrixAutoUpdate = false;
-		camera.matrixAutoUpdate = false;
+				var localUp = center.clone().negate().add(object.position.clone()).normalize();
+				var x= new THREE.Vector3(),y= new THREE.Vector3(),z = new THREE.Vector3();
+				// Update the cameras z and y basis to that of the object.
+				object.matrix.extractBasis(x,y,z);
+				camera.matrixWorld.makeBasis(x,
+					y.applyAxisAngle(x,this.controls.yAngle),
+					z.applyAxisAngle(x,this.controls.yAngle)).setPosition(camera.position);
+				object.matrixAutoUpdate = false;
+				camera.matrixAutoUpdate = false;
 
-		var poleDir = x.clone();
+				var poleDir = x.clone();
 
-		var cross = new THREE.Vector3();
-		cross.crossVectors(poleDir,localUp);
-		var dot = localUp.dot(poleDir);
-		poleDir.subVectors(poleDir,localUp.clone().multiplyScalar(dot));
+				var cross = new THREE.Vector3();
+	      cross.crossVectors(poleDir,localUp);
+	      var dot = localUp.dot(poleDir);
+	      poleDir.subVectors(poleDir,localUp.clone().multiplyScalar(dot));
 
-		object.matrix.makeBasis(poleDir.normalize(),localUp.normalize(),cross.normalize()).setPosition(object.position);
+				object.matrix.makeBasis(poleDir.normalize(),localUp.normalize(),cross.normalize()).setPosition(object.position);
 	}
 
 	setCannonPosition( mesh ){
@@ -219,28 +219,28 @@ class Player{
 		this.mesh.cannon.quaternion.z = -mesh.quaternion.y;
 		this.mesh.cannon.quaternion.y = -mesh.quaternion.z;
 		this.mesh.cannon.quaternion.w = mesh.quaternion.w;
-	}
+	  }
 
 	setMeshPosition( mesh ) {
-		this.mesh.position.x = mesh.cannon.position.x;
-		this.mesh.position.z = mesh.cannon.position.y;
-		this.mesh.position.y = mesh.cannon.position.z;
-		this.mesh.quaternion.x = -mesh.cannon.quaternion.x;
-		this.mesh.quaternion.z = -mesh.cannon.quaternion.y;
-		this.mesh.quaternion.y = -mesh.cannon.quaternion.z;
-		this.mesh.quaternion.w = mesh.cannon.quaternion.w;
-	}
+		  this.mesh.position.x = mesh.cannon.position.x;
+		  this.mesh.position.z = mesh.cannon.position.y;
+		  this.mesh.position.y = mesh.cannon.position.z;
+		  this.mesh.quaternion.x = -mesh.cannon.quaternion.x;
+		  this.mesh.quaternion.z = -mesh.cannon.quaternion.y;
+		  this.mesh.quaternion.y = -mesh.cannon.quaternion.z;
+		  this.mesh.quaternion.w = mesh.cannon.quaternion.w;
+	  }
 
 	// Function in the class outside the constructor
 	getmeshData() {
 		return {
-			x: this.mesh.position.x,
-			y: this.mesh.position.y,
-			z: this.mesh.position.z,
-			qx: this.mesh.quaternion.x,
-			qy: this.mesh.quaternion.y,
-			qz: this.mesh.quaternion.z,
-			qw: this.mesh.quaternion.w
+		  x: this.mesh.position.x,
+		  y: this.mesh.position.y,
+		  z: this.mesh.position.z,
+		  qx: this.mesh.quaternion.x,
+		  qy: this.mesh.quaternion.y,
+		  qz: this.mesh.quaternion.z,
+		  qw: this.mesh.quaternion.w
 		};
 	}
 
@@ -257,19 +257,11 @@ class Player{
 	getIntersects(objects){
 		var vec = new THREE.Vector3(0,0,1);
 
-<<<<<<< HEAD
-		vec.unproject( camera );
-
-		var dir = new THREE.Vector3( 0, 0, - 1 ).transformDirection( camera.matrixWorld );
-
-		this.MouseRaycaster.set( vec, dir );
-=======
     vec.unproject( camera );
 
     var dir = new THREE.Vector3( 0, 0, - 1 ).transformDirection( camera.matrixWorld );
 
     this.MouseRaycaster.set( vec, dir );
->>>>>>> 26c0843cffe993e2b584ddf10165296f5e06fec6
 		// find intersections
 		//this.MouseRaycaster.setFromCamera( this.mouse, camera);
 		//this.MouseRaycaster.set(position,z);
@@ -327,17 +319,10 @@ class Player{
 			endposition = bulletIntersects[0].point;
 		}
 		AnimateObject.push(new normalBullet(
-<<<<<<< HEAD
-			{x:this.Group.position.x-1,
-				y:this.Group.position.y,
-				z:this.Group.position.z+3},
-			endposition));// GetFromCameraRaycast
-=======
 										{x:this.Group.position.x-1,
 										y:this.Group.position.y,
 										z:this.Group.position.z+3},
 										endposition));// GetFromCameraRaycast
->>>>>>> 26c0843cffe993e2b584ddf10165296f5e06fec6
 	}
 
 	changeAmmo(){
