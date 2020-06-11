@@ -122,7 +122,7 @@ class Planet{
     // Load a glTF resource
     loaderGLTF.load(
       // resource URL
-      'models/character.glb',
+      'models/tPose.glb',
       // called when the resource is loaded
       function ( gltf ) {
         //scene.add( gltf.scene );

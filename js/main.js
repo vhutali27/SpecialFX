@@ -3,8 +3,9 @@
 //////////////////////////////////////////////////  
 
 // Instantiate a loader
+var loadingManager = new THREE.LoadingManager();
 var loaderJson = new THREE.ObjectLoader();
-//var loaderGLTF = new THREE.GLTFLoader();
+var loaderGLTF = new THREE.GLTFLoader(loadingManager);
 //var loaderOBJ = new THREE.OBJLoader();
 var loaderMTL = new THREE.MTLLoader();
 var loaderFBX = new THREE.FBXLoader();
@@ -148,8 +149,8 @@ function startGame(){
 	
 		//places new object in time intervals
 		var timeElapsed = Math.round(clock.getElapsedTime());
-		//console.log(timeElapsed);
-		if (timeElapsed % 10 == 0 && timeElapsed != interval){
+		console.log(timeElapsed);
+		if (timeElapsed % 5 == 0 && timeElapsed != interval){
 			randomPlace();
 			interval = timeElapsed; //This deals with multiple items being dropped at the same second due to rounding
 		 }

@@ -9,6 +9,9 @@ var prevTime = performance.now();
 var velocity = new THREE.Vector3();
 var direction = new THREE.Vector3();
 
+var playerAmmo = 0;
+var playerCollectable = 0;
+
 // when the mouse moves, call the given function
 document.addEventListener( 'mouseup', onDocumentMouseUp, false );
 document.addEventListener( 'mousedown', onDocumentMouseDown, false );
