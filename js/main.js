@@ -119,11 +119,18 @@ function startGame(){
 	// INITIALISE AND RENDER SCENE                  //
 	//////////////////////////////////////////////////
 	// Initialize MiniView
-	//miniScene();
+	// miniScene();
 
 	// Initialize GUI Elements
 	initGUIElements();
+
+    // Initialize the timer
+    initCountdown(180);
+
+    // start the game
 	START_GAME = true;
+
+
 }
 
 //////////////////////////////////////////////////

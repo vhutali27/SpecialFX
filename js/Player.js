@@ -182,6 +182,13 @@ class Player{
 		camera.matrixWorld.setPosition(position);
 	}
 
+	updatePosition(){
+		var up = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
+		// Position
+		var position = this.mesh.position.clone().add(up.clone().multiplyScalar(25));
+		this.position = position;
+	}
+
 	alignObject(object, center){
 				var localUp = center.clone().negate().add(object.position.clone()).normalize();
 				var x= new THREE.Vector3(),y= new THREE.Vector3(),z = new THREE.Vector3();
@@ -303,6 +310,10 @@ class Player{
 		this.health = health;
 	}
 
+	updateEnergy(energy){
+		this.energy = energy;
+	}
+
 	shoot(){
 		var endposition = new THREE.Vector3();
 		var bulletIntersects = this.getIntersects(scene.children);
@@ -337,11 +348,15 @@ class Player{
 
 
 		// Update The Player's Health Value
-		// healthBar.updateHealth(this.health);
+		healthBar.updateHealth(this.health);
 
+		// Update the Player's energy value
+		energyBar.updateHealth(this.energy);
 
 	}
 	getPosition(){
+		this.updatePosition();
 		return this.position;
 	}
+
 }

@@ -1,89 +1,90 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <script src="js/ExternalLibraries/cannon.min.js"></script>
-        <script src="js/ExternalLibraries/three.min.js"></script>
-        <script src="js/ExternalLibraries/physi.js"></script>
-        <script src="js/ExternalLibraries/physijs_worker.js"></script>
-        <script src="js/ExternalLibraries/ammo.js"></script>
-        <script src="js/ExternalLibraries/stats.min.js"></script>
-        <script src="js/ExternalLibraries/OrbitControls.js"></script>
-        <script src="js/ExternalLibraries/PointerLockControls.js"></script>
-        <script src="js/ExternalLibraries/tween.js"></script>
-        <script src="js/ExternalLibraries/GLTFLoader.js"></script>
-        <script src="js/ExternalLibraries/gltf.js"></script>
-        <script src="js/ExternalLibraries/FBXLoader.js"></script>
-        <script src="js/ExternalLibraries/OBJLoader.js"></script>
-        <script src="js/ExternalLibraries/MTLLoader.js"></script>
-        <title>Special FX Space Shooter</title>
-        <style>
-            body { margin: 0; }
-            canvas { display : block; }
-            #displayCanvas{
-                position: absolute;
-                width: 100%;
-                height: 100%;
-            }
-            /* #miniViewCanvas{
-                position: absolute;
-                width: 20%;
-                height: 20%;
-                left: 0px;
-                bottom: 0px;
-                z-index: 10;
-            } */
-            #divMain {
-                width: 90%;
-                height: 90%;
-                position: absolute;
-            }
+<head>
+    <meta charset="utf-8">
+    <script src="js/ExternalLibraries/cannon.min.js"></script>
+    <script src="js/ExternalLibraries/three.min.js"></script>
+    <script src="js/ExternalLibraries/physi.js"></script>
+    <script src="js/ExternalLibraries/physijs_worker.js"></script>
+    <script src="js/ExternalLibraries/ammo.js"></script>
+    <script src="js/ExternalLibraries/stats.min.js"></script>
+    <script src="js/ExternalLibraries/OrbitControls.js"></script>
+    <script src="js/ExternalLibraries/PointerLockControls.js"></script>
+    <script src="js/ExternalLibraries/tween.js"></script>
+    <script src="js/ExternalLibraries/GLTFLoader.js"></script>
+    <script src="js/ExternalLibraries/gltf.js"></script>
+    <script src="js/ExternalLibraries/FBXLoader.js"></script>
+    <script src="js/ExternalLibraries/OBJLoader.js"></script>
+    <script src="js/ExternalLibraries/MTLLoader.js"></script>
+    <title>Special FX Space Shooter</title>
+    <style>
+        body { margin: 0; }
+        canvas { display : block; }
+        #displayCanvas{
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        #miniViewCanvas{
+            position: absolute;
+            width: 20%;
+            height: 20%;
+            left: 0px;
+            bottom: 0px;
+            z-index: 10;
+        }
+        #divMain {
+            width: 90%;
+            height: 90%;
+            position: absolute;
+        }
 
-            #name-box{
-                font-weight: bold;
-                color: white;
-                position: fixed;
-                font-size: 4vh;
-                top: 55%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 25vw;
-                height: 7vh;
-                border: 1px solid;
-                border-radius: 8px;
-                background-color: transparent;
-                text-align: center;
-            }
+        #name-box{
+            font-weight: bold;
+            color: white;
+            position: fixed;
+            font-size: 4vh;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 25vw;
+            height: 7vh;
+            border: 1px solid;
+            border-radius: 8px;
+            background-color: transparent;
+            text-align: center;
+        }
 
-            /* Counter Div for the timer */
-            #divCountdown {
-                margin: auto;
-                width: 100px;
-                height: 50px;
-                right: 0px;
-                position: absolute;
-                text-align: center;
-                font-size: 20px;
-                color: white;
-                border: 5px solid rgb(23, 7, 83);
-                font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-            }
-            #divCountdown{
-                /* Layer divCountdown on top of the main div */
-                z-index: 10;
-            }
+        /* Counter Div for the timer */
+        #divCountdown {
+            margin: auto;
+            width: 100px;
+            height: 50px;
+            right: 0px;
+            position: absolute;
+            text-align: center;
+            font-size: 20px;
+            color: white;
+            border: 5px solid rgb(23, 7, 83);
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+        #divCountdown{
+            /* Layer divCountdown on top of the main div */
+            z-index: 10;
+        }
 
-        </style>
-    </head>
-    <body>
-      <div id="blocker">
+    </style>
+</head>
+<body>
+<div id="blocker">
 
-        <div id="instructions" style="color: white">
-          <span style="color: white; font-size:40px">Click to play</span>
-          <br />
-          (W, A, S, D = Move, SPACE = Jump, MOUSE = Look around, E = Change planet, Left Click = Shoot)
-        </div>
+    <div id="instructions" style="color: white">
+        <span style="color: white; font-size:40px">Click to play</span>
+        <br />
+        (W, A, S, D = Move, SPACE = Jump, MOUSE = Look around, E = Change planet, Left Click = Shoot)
+    </div>
 
+<<<<<<< HEAD
       </div>
       <div class="divMain" id="divMain">
           <canvas id="displayCanvas"></canvas>
@@ -103,10 +104,34 @@
           <script src='js/main.js'></script>
       </div>
     </body>
+=======
+</div>
+<div class="divMain" id="divMain">
+    <canvas id="displayCanvas">
+    </canvas>
+    <canvas id="miniViewCanvas"></canvas>
+    <div class="divCountdown" id="divCountdown" style="width:0px;height:0px;"></div>
+    <div class="loading" id="js-loader"><div class="loader"></div></div>
+    <script src='js/WorldPhysics.js'></script>
+    <script src='js/GameObjects.js'></script>
+    <script src='js/Bullets.js'></script>
+    <script src='js/Player.js'></script>
+    <script src='js/Planet.js'></script>
+    <script src='js/LoadingCollectables.js'></script>
+    <script src='js/Level1.js'></script>
+    <script src='js/MiniView.js'></script>
+    <script src='js/GUI.js'></script>
+    <script src="js/HealthBar.js"></script>
+    <script src='js/main.js'></script>
+    <img src="images/scream_canisters.png" id="canisterIcon" style="width:0px;height:0px;">
+    <img src="images/anti_virus_old_school.png" id="healthIcon" style="width:0px;height:0px;">
+</div>
+</body>
+>>>>>>> 5d990de4a5dd8f63c72fb2e1ad4df39eaca4fbee
 <!--background for the overlay scene with button. Image is in the images folder-->
-    <body style="background:url('images/galaxy_starfield.png'); background-size: 100%;"></body>
-    <!--button to start game when we start the game at the onClick the timer starts in the js file. Added by Phediso. view index.html to see the code original code-->
+<body style="background:url('images/galaxy_starfield.png'); background-size: 100%;"></body>
+<!--button to start game when we start the game at the onClick the timer starts in the js file. Added by Phediso. view index.html to see the code original code-->
 
-    <div id="mycounter"></div>
+<div id="mycounter"></div>
 
 </html>
