@@ -34,26 +34,22 @@ class Player{
 		this.energy = 100;
 
 		// Loads the character's gun
-		/*loaderMTL.load("models/Gun/gun.mtl", function ( materials ) {
-			materials.preload();
-			var loaderOBJ = new THREE.OBJLoader();
-			loaderOBJ.setMaterials(materials);
-			loaderOBJ.load(
-				"models/Gun/gun.obj",
-				function (object) {
-					//object.rotation.x += Math.PI/4;
-					object.rotation.y += Math.PI/2;
-					//object.rotation.z += Math.PI/4;
-					object.scale.set(5,5,5);
-					object.position.set(3, -3,-6);
-					camera.add(object);
-					},
-					undefined, // We don't need this function
-					function (error) {
-					  console.error(error);
-			});
+		var loaderOBJ = new THREE.OBJLoader(loadingManager);
+		loaderOBJ.load(
+			"models/gun/gun.obj",
+			function (object) {
+				//object.rotation.x += Math.PI/4;
+				object.rotation.y += Math.PI/2;
+				//object.rotation.z += Math.PI/4;
+				object.scale.set(5,5,5);
+				object.position.set(3, -3,-6);
+				camera.add(object);
+				},
+				undefined, // What to do while it is loading
+				function (error) {
+					console.error(error);
 		});
-*/
+
 		// Loads the Characters model
 		// Load a glTF resource
 			/*loaderGLTF.load(
@@ -158,9 +154,6 @@ class Player{
 		this.mesh.cannon.collisionResponse = 100;
 		// collision handler
 		this.mesh.cannon.addEventListener('collide', e => {
-			// Health Packs
-			console.log(e.body.name);
-
 			var planet = null;
 			PlanetClasses.forEach(function(p){
 				if(p.cannon.name === e.body.name) planet = p;
@@ -187,10 +180,9 @@ class Player{
 	updateCamera(){
 		var up = this.planet.planet.position.clone().negate().add(this.mesh.position).normalize();
 		// Position
-		var position = this.mesh.position.clone().add(up.clone().multiplyScalar(35));
+		var position = this.mesh.position.clone().add(up.clone().multiplyScalar(25));
 		camera.matrixAutoUpdate = false;
 		camera.matrixWorld.setPosition(position);
-
 	}
 
 	alignObject(object, center){

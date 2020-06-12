@@ -34,6 +34,7 @@ function LoadLevel1(scene){
     // SURFACES
     //////////////////////////////////////////////////
     S1 = new Planet(400, woodenFloorMaterial, 2000, 0, 0, "S1",scene);
+    camera.lookAt(S1.planet.position);
     S2 = new Planet(400, grassMaterial, 0, 2000, 0, "S2", scene);
     S3 = new Planet(400, grassMaterial, 0, -2000, 0, "S3", scene);
 
@@ -56,7 +57,7 @@ function LoadLevel1(scene){
     scene.add(starField);
 
     // create stars
-    var particleCount = 5000,
+    var particleCount = 50000,
       particles = new THREE.Geometry(),
       pMaterial = new THREE.PointsMaterial({
         color: 0xFFFFFF,
@@ -64,11 +65,11 @@ function LoadLevel1(scene){
       });
 
     for (var p = 0; p < particleCount; p++) {
-      var pX = Math.random() * 1000 - 500,
-          pY = Math.random() * 1000 - 500,
-          pZ = Math.random() * 1000 - 500,
+      var pX = Math.random() * 10000 - 500,
+          pY = Math.random() * 10000 - 500,
+          pZ = Math.random() * 10000 - 500,
           particle = new THREE.Vector3(pX, pY, pZ);
-          particle.normalize().multiplyScalar(Math.random() * 1000 + 600);
+          particle.normalize().multiplyScalar(Math.random() * 10000 + 600);
       // add it to the geometry
       particles.vertices.push(particle);
     }
