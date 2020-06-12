@@ -4,10 +4,10 @@
 
 var maxHealth = 100; // cap on resources allowed in scene
 var maxAmmo = 100;		//cap on ammo allowed in scene
-var planetNum = Math.round(Math.random()*PlanetClasses.length);
-function randomPlace(){
 
-	// //substitute shapes in switch with ammo/collectable models
+function randomPlace(){
+	var planetNum = Math.round(Math.random()*PlanetClasses.length);
+	//substitute shapes in switch with ammo/collectable models
 	if (maxHealth > 0 && maxAmmo > 0){
 			var resource = new Canister(id,PlanetClasses[planetNum],Math.round(Math.random()));
 		}

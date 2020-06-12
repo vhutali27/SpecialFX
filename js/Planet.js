@@ -166,17 +166,17 @@ class Planet{
     }
   }
 
-  // spawnRocks(value){
-  //   for (var i =0 ;i<value;i+=1){
-  //     this.addObjObject(Rocks[parseInt((Math.random()*(Rocks.length-1)),10)],Math.random()*2*Math.PI,Math.random()*2*Math.PI,-2);
-  //   }
-  // }
+  spawnRocks(value){
+    for (var i =0 ;i<value;i+=1){
+      this.addObjObject(Rocks[parseInt((Math.random()*(Rocks.length-1)),10)],Math.random()*2*Math.PI,Math.random()*2*Math.PI,-2);
+    }
+  }
 
-  // spawnTrees(value){
-  //   for (var i =0 ;i<value;i+=1){
-  //     this.addObjObject(Trees[parseInt((Math.random()*(Trees.length-1)),10)],Math.random()*2*Math.PI,Math.random()*2*Math.PI,-3);
-  //   }
-  // }
+  spawnTrees(value){
+    for (var i =0 ;i<value;i+=1){
+      this.addObjObject(Trees[parseInt((Math.random()*(Trees.length-1)),10)],Math.random()*2*Math.PI,Math.random()*2*Math.PI,-3);
+    }
+  }
 
 
 	/**
