@@ -37,10 +37,12 @@ function randomPlace(){
 				break;
 			}
 			case 2:{
-				//adding new cannon bodies
-				var resource = new collectable
+				//adding n
+				var id = resourceGroup.length;
+				console.log("id is ",id);
+				var resource = new Canister(id,PlanetClasses[planetNum],false);
 				resourceGroup.add(resource);
-				maxCollectable -= resource.collectableScore;
+				maxCollectable -= 5;
 				
 
 				//torus.addEventListener('onCollide',Collision,false);
@@ -85,9 +87,9 @@ function getHealthPack(){
 class Canister {
   constructor(id, planet, isHealth) {
     this.id = id;
-		this.isHealth = isHealth;
+	this.isHealth = isHealth;
     this.mesh;
-		this.planet = planet;
+	this.planet = planet;
     this.eaten = false;
     this.init();
   }
