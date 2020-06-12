@@ -1,5 +1,10 @@
 var healthBar;
 
+function energyBar(){
+    var energyBar_ = document.getElementById("energybar")
+    energyBar_.style.scale(0.1, 0.1)
+}
+
 function initCountdown(e) {
     var sec, min, hund, secExt, hundExt, setTimer;
     var divCountdown = document.getElementById("divCountdown");
@@ -65,4 +70,5 @@ function  initGUIElements() {
 
     // Initialize the timer
     initCountdown(180);
+    energyBar();
 }
