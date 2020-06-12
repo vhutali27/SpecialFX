@@ -35,7 +35,9 @@ window.addEventListener( 'resize', onWindowResize, false );
 
 // Camera and scene variables
 var scene = new THREE.Scene();
-
+// Orthographic Camera to be used for the mini view
+var orthoCamera = new THREE.OrthographicCamera(-5000, 5000, window.innerHeight / 2, window.innerHeight / - 2, 0, 10000 );
+orthoCamera.position.set(3000, 0, 6000);
 
 var camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 15000);
 // The objects added to this array should have an animate() function.
@@ -128,8 +130,8 @@ function startGame(){
 		// run physics
 		time = Date.now();
 		if (lastTime !== undefined) {
-		   let dt = (time - lastTime) / 1000;
-		   world.step(fixedTimeStep, dt, maxSubSteps);
+			let dt = (time - lastTime) / 1000;
+			world.step(fixedTimeStep, dt, maxSubSteps);
 		}
 		lastTime = time;
 
@@ -147,7 +149,7 @@ function startGame(){
 		if (timeElapsed % 5 == 0 && timeElapsed != interval){
 			randomPlace();
 			interval = timeElapsed; //This deals with multiple items being dropped at the same second due to rounding
-		 }
+		}
 
 		//randomPlace();
 		// Animation Mixer for character
@@ -156,7 +158,7 @@ function startGame(){
 		}
 
 		// Update the miniView
-		// renderMiniView(player.position);
+		renderMiniView();
 
 		AnimateObject.forEach(function(object){object.animate();});
 		requestAnimationFrame(render);
@@ -168,7 +170,7 @@ function startGame(){
 	// INITIALISE AND RENDER SCENE                  //
 	//////////////////////////////////////////////////
 	// Initialize MiniView
-	initMiniView();
+	miniScene();
 
 	// Initialize GUI Elements
 	initGUIElements();

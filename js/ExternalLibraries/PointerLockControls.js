@@ -199,9 +199,9 @@ THREE.PointerLockControls = function ( camera, domElement, playerClass) {
 	    		if(this.speedMult < 1) this.speedMult += 0.005;
 	        // up arrow or 'w' - move forward
           this.cannonMesh.applyImpulse(new CANNON.Vec3(
-													   -cross2.x * 150/2 *this.speedMult,
-													   -cross2.z * 150/2 *this.speedMult,
-													   -cross2.y * 150/2 *this.speedMult
+													   -cross2.x * 50/2 *this.speedMult,
+													   -cross2.z * 50/2 *this.speedMult,
+													   -cross2.y * 50/2 *this.speedMult
 													   ),topOfBall);
 	    }
 
@@ -209,30 +209,30 @@ THREE.PointerLockControls = function ( camera, domElement, playerClass) {
 	    	if(this.speedMult <1) this.speedMult += 0.005;
 	        // down arrow or 's' - move backward
           this.cannonMesh.applyImpulse(new CANNON.Vec3(
-													   cross2.x * 150/2 *this.speedMult,
-													   cross2.z * 150/2 *this.speedMult,
-													   cross2.y * 150/2 *this.speedMult
+													   cross2.x * 50/2 *this.speedMult,
+													   cross2.z * 50/2 *this.speedMult,
+													   cross2.y * 50/2 *this.speedMult
 													   ) ,topOfBall);
 	    }
 
 	    if (keyState[37] || keyState[65]) {
 	    	if(this.speedMult < 1) this.speedMult += 0.005;
-	        // left arrow or 'a' - rotate left
+	        // left arrow or 'a' - move left
 	        this.cannonMesh.applyImpulse(new CANNON.Vec3(
-														 -cross1.x * 100/2 * this.speedMult,
-														 -cross1.z * 100/2 * this.speedMult,
-														 -cross1.y * 100/2 * this.speedMult
+														 -cross1.x * 50/2 * this.speedMult,
+														 -cross1.z * 50/2 * this.speedMult,
+														 -cross1.y * 50/2 * this.speedMult
 														 ) ,topOfBall);
 	        this.LeftOrRight -= 1;
 	    }
 
 	    if (keyState[39] || keyState[68]) {
 	    	if(this.speedMult < 1) this.speedMult += 0.005;
-	        // right arrow or 'd' - rotate right
+	        // right arrow or 'd' - move right
             this.cannonMesh.applyImpulse(new CANNON.Vec3(
-														 cross1.x * 100/2 * this.speedMult,
-														 cross1.z * 100/2 * this.speedMult,
-														 cross1.y * 100/2 * this.speedMult
+														 cross1.x * 50/2 * this.speedMult,
+														 cross1.z * 50/2 * this.speedMult,
+														 cross1.y * 50/2 * this.speedMult
 														 ), topOfBall);
             this.LeftOrRight += 1;
 	    }

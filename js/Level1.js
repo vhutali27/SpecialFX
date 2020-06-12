@@ -45,6 +45,10 @@ function LoadLevel1(scene){
     S3.spawnRocks(25);
     S1.addCollectables(25,true);
     S1.addCollectables(25,false);
+    S2.addCollectables(25,true);
+    S2.addCollectables(25,false);
+    S3.addCollectables(25,true);
+    S3.addCollectables(25,false);
 
     //Stars
     var starGeometry = new THREE.SphereGeometry(8000, 50, 500);

@@ -89,8 +89,13 @@ class Canister {
     this.id = id;
 	this.isHealth = isHealth;
     this.mesh;
+<<<<<<< HEAD
 	this.planet = planet;
     this.eaten = false;
+=======
+		this.box;
+		this.planet = planet;
+>>>>>>> e08db15c4405c49f460201c1112a7337bb515053
     this.init();
   }
 
@@ -117,36 +122,8 @@ class Canister {
 
     this.mesh.castShadow = true;
 
-		// Create Cannon object based on initial data parameters
-    this.mesh.cannon = new CANNON.Body({ shape, mass: 0, material: groundMaterial });
-		world.add(this.mesh.cannon);
-    this.planet.addObject(this.mesh,Math.random()*2*Math.PI,Math.random()*2*Math.PI,15,true);
-
-    this.mesh.cannon.collisionResponse = 0;
-
-
-    this.mesh.cannon.addEventListener('collide', e => {
-
-			this.box = new THREE.Box3().setFromObject(this.mesh);
-      // ensure food has not already been eaten and that collision was between own player and food
-			console.log("Touched");
-      if (!this.eaten) {
-          for (let contact of world.contacts) {
-            let foodHits = contact.bi === this.mesh.cannon;
-            let playerIsHit = contact.bj === player.cannon;
-            let playerHits = contact.bi === player.cannon;
-            let foodIsHit = contact.bj === this.mesh.cannon;
-            if (foodHits && playerIsHit || playerHits && foodIsHit) {
-                this.eaten = true;
-                scene.remove(this.mesh);
-								world.remove(this.mesh.cannon);
-								var index = this.planet.collectables.indexOf(this);
-						    if( index > -1 ){
-						        this.planet.collectables.splice(index, 1);
-						    }
-            }
-          }
-      }
-    });
+    this.planet.addObject(this.mesh,Math.random()*2*Math.PI,Math.random()*2*Math.PI,15);
+		this.mesh.lookAt(new THREE.Vector3(0,0,0));
+		this.box = new THREE.Box3().setFromObject(this.mesh);
   }
 }

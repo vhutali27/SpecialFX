@@ -30,9 +30,11 @@ class Player{
 
 		// Initial Health Value of the player
 		this.health = 100;
+		// Initial Energy Value of the player
+		this.energy = 100;
 
 		// Loads the character's gun
-		loaderMTL.load("models/Gun/gun.mtl", function ( materials ) {
+		/*loaderMTL.load("models/Gun/gun.mtl", function ( materials ) {
 			materials.preload();
 			var loaderOBJ = new THREE.OBJLoader();
 			loaderOBJ.setMaterials(materials);
@@ -51,7 +53,7 @@ class Player{
 					  console.error(error);
 			});
 		});
-
+*/
 		// Loads the Characters model
 		// Load a glTF resource
 			/*loaderGLTF.load(
@@ -70,7 +72,6 @@ class Player{
 					//Character's animations
 					let fileAnimations = gltf.animations;
 					model.traverse(o => {
-
 		              if (o.isMesh) {
 		                o.castShadow = true;
 		                o.receiveShadow = true;
@@ -88,13 +89,11 @@ class Player{
 					model.rotation.y += Math.PI;
 					model.position.set( 0, -5, -20);
 					group.add(model);
-
 					loaderAnim.remove();
 					mixer = new THREE.AnimationMixer(model);
 					let idleAnim = THREE.AnimationClip.findByName(fileAnimations, 'idle');
 					idle = mixer.clipAction(idleAnim);
 					idle.play();
-
 				},
 				undefined, // We don't need this function
 				  function (error) {
@@ -189,6 +188,8 @@ class Player{
 		camera.matrixAutoUpdate = false;
 		camera.matrixWorld.setPosition(position);
 
+		// Update player's position variable
+		this.position = position;
 	}
 
 	alignObject(object, center){
@@ -341,13 +342,16 @@ class Player{
 		this.setCannonPosition(this.mesh); // Not so sureabout these ones
 		this.updateCamera();
 
-		// Check Food Collisions
+		// in the animation loop, compute the current bounding box with the world matrix
+		this.box.copy( this.mesh.geometry.boundingBox ).applyMatrix4( this.mesh.matrixWorld );
+
 
 		// Update The Player's Health Value
-		// Todo Remove the following line in the final production, this is just to test that animation works
-		this.health -= 0.05;
-		healthBar.updateHealth(this.health);
+		// healthBar.updateHealth(this.health);
 
 
+	}
+	getPosition(){
+		return this.position;
 	}
 }
