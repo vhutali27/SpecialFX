@@ -1,3 +1,83 @@
+/////////////////////////////////////////////////////
+// LOADING SCREEN                                  //
+/////////////////////////////////////////////////////
+
+var blocker = document.getElementById( 'blocker' );
+blocker.style.display = 'none';
+
+//////////////////////////////////////////////////
+// Renderer                                     //
+//////////////////////////////////////////////////
+var renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setClearColor( 0x000000 );
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.setSize(window.innerWidth, window.innerHeight, false);
+document.body.appendChild(renderer.domElement);
+// shading
+renderer.shadowMap.enabled = true;
+renderer.shadowMapSoft = true;
+
+var loadingScreen = {
+	scene: new THREE.Scene(),
+	camera: new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,1,1000),
+	starGeometry: new THREE.Geometry(),
+	stars: null,
+	//sprite: new THREE.TextureLoader().load('star.png'),
+	starMaterial: null
+};
+
+var LOADING_MANAGER = null;
+var RESOURCES_LOADED = false;
+
+loadingScreen.camera.z = 1;
+loadingScreen.camera.rotation.x = Math.PI/2;
+for(let i = 0; i< 6000; i++){
+	star = new THREE.Vector3(
+		Math.random()*600-300,
+		Math.random()*600-300,
+		Math.random()*600-300
+	);
+	star.velocity = 0;
+	star.acceleration = 0.2;
+	loadingScreen.starGeometry.vertices.push(star);
+}
+
+loadingScreen.starMaterial = new THREE.PointsMaterial({
+	color: 0xaaaaaa, size: 0.7 //,map:loadingScreen.sprite
+});
+loadingScreen.stars = new THREE.Points(loadingScreen.starGeometry,loadingScreen.starMaterial);
+loadingScreen.scene.add(loadingScreen.stars);
+
+loadingManager = new THREE.LoadingManager();
+
+loadingManager.onLoad = function(){
+	blocker.style.display = '-webkit-box';
+	blocker.style.display = '-moz-box';
+	blocker.style.display = 'box';
+	RESOURCES_LOADED=true;
+};
+
+var renderLoadingScreen = function(){
+	if(!RESOURCES_LOADED){
+		requestAnimationFrame(renderLoadingScreen);
+
+		// You can add scene animations here
+		loadingScreen.starGeometry.vertices.forEach(p=>{
+			p.velocity += p.acceleration;
+			p.y -= p.velocity;
+			if(p.y <-200){
+				p.y = 200;
+				p.velocity=0;
+			}
+		});
+		loadingScreen.starGeometry.verticesNeedUpdate = true;
+		loadingScreen.stars.rotation.y += 0.002;
+		renderer.render(loadingScreen.scene ,loadingScreen.camera);
+	}
+};
+//window.setInterval(renderLoadingScreen,0);
+renderLoadingScreen();
+
 //////////////////////////////////////////////////
 //RANDOM DUMMY OBJECTS                          //
 //////////////////////////////////////////////////
@@ -47,7 +127,7 @@ function torus(x,y,z){
 	scene.add(torus);
 	WorldObjects.push(torus);
 }
-    
+
 //Objects (We build a mesh using a geometry and a material)
 
 var Trees = new Array();

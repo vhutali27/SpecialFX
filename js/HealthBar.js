@@ -39,3 +39,7 @@ class HealthBar{
 
     }
 }
+if(window.Worker){
+  const myWorker = new Worker("/js/main.js");
+  console.log(myWorker);
+}

@@ -199,9 +199,9 @@ THREE.PointerLockControls = function ( camera, domElement, playerClass) {
 	    		if(this.speedMult < 1) this.speedMult += 0.005;
 	        // up arrow or 'w' - move forward
           this.cannonMesh.applyImpulse(new CANNON.Vec3(
-													   -cross2.x * 50/2 *this.speedMult,
-													   -cross2.z * 50/2 *this.speedMult,
-													   -cross2.y * 50/2 *this.speedMult
+													   -cross2.x * 25/2 *this.speedMult,
+													   -cross2.z * 25/2 *this.speedMult,
+													   -cross2.y * 25/2 *this.speedMult
 													   ),topOfBall);
 	    }
 
@@ -209,9 +209,9 @@ THREE.PointerLockControls = function ( camera, domElement, playerClass) {
 	    	if(this.speedMult <1) this.speedMult += 0.005;
 	        // down arrow or 's' - move backward
           this.cannonMesh.applyImpulse(new CANNON.Vec3(
-													   cross2.x * 50/2 *this.speedMult,
-													   cross2.z * 50/2 *this.speedMult,
-													   cross2.y * 50/2 *this.speedMult
+													   cross2.x * 25/2 *this.speedMult,
+													   cross2.z * 25/2 *this.speedMult,
+													   cross2.y * 25/2 *this.speedMult
 													   ) ,topOfBall);
 	    }
 
@@ -219,9 +219,9 @@ THREE.PointerLockControls = function ( camera, domElement, playerClass) {
 	    	if(this.speedMult < 1) this.speedMult += 0.005;
 	        // left arrow or 'a' - move left
 	        this.cannonMesh.applyImpulse(new CANNON.Vec3(
-														 -cross1.x * 50/2 * this.speedMult,
-														 -cross1.z * 50/2 * this.speedMult,
-														 -cross1.y * 50/2 * this.speedMult
+														 -cross1.x * 25/2 * this.speedMult,
+														 -cross1.z * 25/2 * this.speedMult,
+														 -cross1.y * 25/2 * this.speedMult
 														 ) ,topOfBall);
 	        this.LeftOrRight -= 1;
 	    }
@@ -230,9 +230,9 @@ THREE.PointerLockControls = function ( camera, domElement, playerClass) {
 	    	if(this.speedMult < 1) this.speedMult += 0.005;
 	        // right arrow or 'd' - move right
             this.cannonMesh.applyImpulse(new CANNON.Vec3(
-														 cross1.x * 50/2 * this.speedMult,
-														 cross1.z * 50/2 * this.speedMult,
-														 cross1.y * 50/2 * this.speedMult
+														 cross1.x * 25/2 * this.speedMult,
+														 cross1.z * 25/2 * this.speedMult,
+														 cross1.y * 25/2 * this.speedMult
 														 ), topOfBall);
             this.LeftOrRight += 1;
 	    }
@@ -244,12 +244,14 @@ THREE.PointerLockControls = function ( camera, domElement, playerClass) {
 			// Planet Switching on 'Key'E' Press
 			if(keyState[69]){
 				playerClass.changePlanet();
+				console.log(GameObjects);
 			}
 
 			// Shoot Bullets
 			if(keyState[0]){
 				//Left click
 				playerClass.shoot();
+				console.log(GameObjects[0]);
 			}
 
 			// Change Ammo Type
