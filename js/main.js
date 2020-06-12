@@ -146,7 +146,7 @@ function startGame(){
 		//places new object in time intervals
 		var timeElapsed = Math.round(clock.getElapsedTime());
 		console.log(timeElapsed);
-		if (timeElapsed % 5 == 0 && timeElapsed != interval){
+		if (timeElapsed % 10 == 0 && timeElapsed != interval){
 			randomPlace();
 			interval = timeElapsed; //This deals with multiple items being dropped at the same second due to rounding
 		}
