@@ -2,68 +2,24 @@
 // LOADING MODELS                               //
 //////////////////////////////////////////////////
 
-var maxCollectable = 100; // cap on resources allowed in scene
+var maxHealth = 100; // cap on resources allowed in scene
 var maxAmmo = 100;		//cap on ammo allowed in scene
-var objectnum = 1; 			//total number of distinct items that can be generated
-
-
-
-//randomise function
-var resourceGroup = new THREE.Group();
-var maxTheta = 0;
-var maxPhi = 0;
-var maxHeight = 1000;
-var planetNum = 0;
+var planetNum = Math.round(Math.random()*PlanetClasses.length);
 function randomPlace(){
-	 var num = 2;//Math.round(Math.random()* (3-1)+1);
-	 var posTheta = Math.round(Math.random()* (maxTheta-(-maxTheta))+(-maxTheta));
-	 var posPhi = Math.round(Math.random()* (87-maxPhi)+maxPhi);
-	 var posHeight = Math.round(Math.random()* (maxHeight-(0))+(0));
 
 	// //substitute shapes in switch with ammo/collectable models
-	if (maxCollectable > 0){
-		switch (num){
-			case 1:{
-				var torusGeometry = new THREE.TorusGeometry(0.25, 1, 60, 60);
-				var phongMaterial = new THREE.MeshPhongMaterial({color: 0xDAA520});
-				var torus = new THREE.Mesh(torusGeometry, phongMaterial);
-				torus.castShadow =true;
-				//torus.position.set(posTheta,posPhi,posHeight);
-				scene.add(torus);
-				WorldObjects.push(torus);
-				maxCollectable -= 5;
-				PlanetClasses[planetNum].addObject(torus,0,0,0);
-				console.log("placed obj 1");
-				break;
-			}
-			case 2:{
-				//adding n
-				var id = resourceGroup.length;
-				console.log("id is ",id);
-				var resource = new Canister(id,PlanetClasses[planetNum],false);
-				resourceGroup.add(resource);
-				maxCollectable -= 5;
-				
-
-				//torus.addEventListener('onCollide',Collision,false);
-				break;
-			}
-			default:{
-				var torusGeometry = new THREE.TorusGeometry(0.25, 1, 60, 60);
-				var phongMaterial = new THREE.MeshPhongMaterial({color: 0xffffff});
-				var torus = new THREE.Mesh(torusGeometry, phongMaterial);
-				torus.castShadow =true;
-				//torus.position.set(posTheta,posPhi,posHeight);
-				//scene.add(torus);
-				WorldObjects.push(torus);
-				maxCollectable -= 5;
-				PlanetClasses[planetNum].addObject(torus,0,0,0);
-				console.log("placed obj 3");
-				break;
-			}
+	if (maxHealth > 0 && maxAmmo > 0){
+			var resource = new Canister(id,PlanetClasses[planetNum],Math.round(Math.random()));
 		}
-	}
+		else if ( maxHealth > 0){
+			var resource = new Canister(id,PlanetClasses[planetNum],true);
+		}else if (maxAmmo > 0){
+			var resource = new Canister(id,PlanetClasses[planetNum],false);
+		}else{
+			//a hold function
+		}
 }
+
 
 
 // Health Pack
@@ -89,13 +45,8 @@ class Canister {
     this.id = id;
 	this.isHealth = isHealth;
     this.mesh;
-<<<<<<< HEAD
-	this.planet = planet;
-    this.eaten = false;
-=======
 		this.box;
 		this.planet = planet;
->>>>>>> e08db15c4405c49f460201c1112a7337bb515053
     this.init();
   }
 
@@ -106,12 +57,14 @@ class Canister {
 		var shape;
     if(this.isHealth){
 			// Health
+			maxHealth -= 5;
 			geometry = new THREE.BoxBufferGeometry( 5, 5, 10 );
 			material = new THREE.MeshPhongMaterial( {color: '#ff0000', shading: THREE.FlatShading} );
 			shape = new CANNON.Box(new CANNON.Vec3(5 / 2, 5 / 2, 10 / 2));
 		}
 		else{
 			// Energy
+			maxAmmo -= 5;
 			geometry = new THREE.TetrahedronBufferGeometry( 5, 1 );
 			material = new THREE.MeshPhongMaterial( {color: '#00ff00', shading: THREE.FlatShading} );
 			shape = new CANNON.Sphere(5);

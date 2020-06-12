@@ -158,7 +158,7 @@ function startGame(){
 		}
 
 		// Update the miniView
-		renderMiniView();
+		//renderMiniView();
 
 		AnimateObject.forEach(function(object){object.animate();});
 		requestAnimationFrame(render);
@@ -170,7 +170,7 @@ function startGame(){
 	// INITIALISE AND RENDER SCENE                  //
 	//////////////////////////////////////////////////
 	// Initialize MiniView
-	miniScene();
+	//miniScene();
 
 	// Initialize GUI Elements
 	initGUIElements();

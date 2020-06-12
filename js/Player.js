@@ -29,7 +29,7 @@ class Player{
 		this.mouse = new THREE.Vector2(0,0);
 
 		// Initial Health Value of the player
-		this.health = 100;
+		this.health = 50; //should be 100
 		// Initial Energy Value of the player
 		this.energy = 100;
 
