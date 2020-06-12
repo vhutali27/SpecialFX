@@ -3,22 +3,12 @@
 //////////////////////////////////////////////////
 
 // Instantiate a loader
-<<<<<<< HEAD
-var loadingManager = new THREE.LoadingManager();
-var loaderJson = new THREE.ObjectLoader();
-var loaderGLTF = new THREE.GLTFLoader(loadingManager);
-//var loaderOBJ = new THREE.OBJLoader();
-var loaderMTL = new THREE.MTLLoader();
-var loaderFBX = new THREE.FBXLoader();
-var loader = new THREE.TextureLoader();
-=======
 var loaderJson = new THREE.ObjectLoader(loadingManager);
 //var loaderGLTF = new THREE.GLTFLoader(loadingManager);
 //var loaderOBJ = new THREE.OBJLoader(loadingManager);
 var loaderMTL = new THREE.MTLLoader(loadingManager);
 var loaderFBX = new THREE.FBXLoader(loadingManager);
 var loader = new THREE.TextureLoader(loadingManager);
->>>>>>> 84e22a108ac099f5f9ac8811c9c5be1517106629
 
 var mixer;											//THREE.js animations mixer
 var loaderAnim = document.getElementById('js-loader');
