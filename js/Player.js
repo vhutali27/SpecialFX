@@ -68,7 +68,6 @@ class Player{
 					//Character's animations
 					let fileAnimations = gltf.animations;
 					model.traverse(o => {
-
 		              if (o.isMesh) {
 		                o.castShadow = true;
 		                o.receiveShadow = true;
@@ -86,13 +85,11 @@ class Player{
 					model.rotation.y += Math.PI;
 					model.position.set( 0, -5, -20);
 					group.add(model);
-
 					loaderAnim.remove();
 					mixer = new THREE.AnimationMixer(model);
 					let idleAnim = THREE.AnimationClip.findByName(fileAnimations, 'idle');
 					idle = mixer.clipAction(idleAnim);
 					idle.play();
-
 				},
 				undefined, // We don't need this function
 				  function (error) {
@@ -340,10 +337,11 @@ class Player{
 
 
 		// Update The Player's Health Value
-		// Todo Remove the following line in the final production, this is just to test that animation works
-		this.health -= 0.5;
-		healthBar.updateHealth(this.health);
+		// healthBar.updateHealth(this.health);
 
 
+	}
+	getPosition(){
+		return this.position;
 	}
 }

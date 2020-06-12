@@ -1,0 +1,23 @@
+@charset "utf-8";
+#canvas {
+    margin: 30px;
+    border: 1px solid lightcoral;
+}
+
+.btn {
+    position: absolute;
+    left: 250px;
+}
+
+#play {
+    top: 400px;
+}
+
+#about {
+    top: 500px;
+}
+
+#tryAgain {
+    top: 400px;
+    display: none;
+}

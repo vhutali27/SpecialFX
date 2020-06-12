@@ -1,0 +1,94 @@
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        position: relative;
+        height: 100vh;
+    }
+    
+    .progress-bar {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        height: 30px;
+        background-color: #3498db;
+        overflow: hidden;
+    }
+    
+    .progress-bar-inner-bar {
+        position: relative;
+        left: 0;
+        top: 0;
+        width: 70%;
+        /* completion bar completed ratio */
+        height: 100%;
+        background-color: #2ecc71;
+        border-right: 2px solid white;
+    }
+    
+    .energy-bar-fade {
+        position: absolute;
+        height: 100%;
+        width: 40%;
+        min-width: 80px;
+        top: 0;
+        right: 0;
+        background: linear-gradient(to right, #2ecc71 0%, #ffdd59 100%);
+    }
+    
+    span.small-energy-bar-1,
+    span.small-energy-bar-2,
+    span.small-energy-bar-3,
+    span.small-energy-bar-4,
+    span.small-energy-bar-5 {
+        position: absolute;
+        height: 40%;
+        width: 25px;
+        top: 0;
+        right: 0;
+        background-color: #ffdd59;
+        animation: floating-left 1s infinite linear;
+    }
+    
+    span.small-energy-bar-2 {
+        top: 15%;
+        animation-delay: 0.75s;
+    }
+    
+    span.small-energy-bar-3 {
+        top: 30%;
+        animation-delay: 1.5s;
+    }
+    
+    span.small-energy-bar-4 {
+        top: 45%;
+        animation-delay: 0.4s;
+    }
+    
+    span.small-energy-bar-5 {
+        top: 60%;
+        animation-delay: 0.2s;
+    }
+    
+    @keyframes floating-left {
+        from {
+            transform: translateX(0);
+        }
+        to {
+            transform: translateX(-170px);
+        }
+    }
+    
+    .energy-bar-cover-up {
+        position: absolute;
+        height: 100%;
+        width: 58%;
+        top: 0;
+        left: 0;
+        background: linear-gradient(to right, #2ecc71 60%, transparent 100%);
+    }

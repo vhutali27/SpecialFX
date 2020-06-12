@@ -23,7 +23,9 @@ window.addEventListener( 'resize', onWindowResize, false );
 
 // Camera and scene variables
 var scene = new THREE.Scene();
-
+// Orthographic Camera to be used for the mini view
+var orthoCamera = new THREE.OrthographicCamera(-5000, 5000, window.innerHeight / 2, window.innerHeight / - 2, 0, 10000 );
+orthoCamera.position.set(3000, 0, 6000);
 
 var camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 15000);
 // The objects added to this array should have an animate() function.
@@ -117,7 +119,7 @@ function startGame(){
 	// INITIALISE AND RENDER SCENE                  //
 	//////////////////////////////////////////////////
 	// Initialize MiniView
-	initMiniView();
+	miniScene();
 
 	// Initialize GUI Elements
 	initGUIElements();
