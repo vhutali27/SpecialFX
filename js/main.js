@@ -1,8 +1,9 @@
 //////////////////////////////////////////////////
-// GLOBAL vARIABLES                             //
+// GLOBAL VARIABLES                             //
 //////////////////////////////////////////////////
 
 // Instantiate a loader
+<<<<<<< HEAD
 var loadingManager = new THREE.LoadingManager();
 var loaderJson = new THREE.ObjectLoader();
 var loaderGLTF = new THREE.GLTFLoader(loadingManager);
@@ -10,6 +11,14 @@ var loaderGLTF = new THREE.GLTFLoader(loadingManager);
 var loaderMTL = new THREE.MTLLoader();
 var loaderFBX = new THREE.FBXLoader();
 var loader = new THREE.TextureLoader();
+=======
+var loaderJson = new THREE.ObjectLoader(loadingManager);
+//var loaderGLTF = new THREE.GLTFLoader(loadingManager);
+//var loaderOBJ = new THREE.OBJLoader(loadingManager);
+var loaderMTL = new THREE.MTLLoader(loadingManager);
+var loaderFBX = new THREE.FBXLoader(loadingManager);
+var loader = new THREE.TextureLoader(loadingManager);
+>>>>>>> 84e22a108ac099f5f9ac8811c9c5be1517106629
 
 var mixer;											//THREE.js animations mixer
 var loaderAnim = document.getElementById('js-loader');
@@ -18,20 +27,9 @@ var loaderAnim = document.getElementById('js-loader');
 //Create clock, set autostart to true
 var clock = new THREE.Clock(true);
 
-//////////////////////////////////////////////////
-// Renderer                                     //
-//////////////////////////////////////////////////
-var renderer = new THREE.WebGLRenderer({antialias: true});
-renderer.setClearColor( 0xEEEEEE );
-renderer.setPixelRatio( window.devicePixelRatio );
-renderer.setSize(window.innerWidth, window.innerHeight, false);
-document.body.appendChild(renderer.domElement);
-// shading
-renderer.shadowMap.enabled = true;
-renderer.shadowMapSoft = true;
+
 
 window.addEventListener( 'resize', onWindowResize, false );
-
 
 // Camera and scene variables
 var scene = new THREE.Scene();
@@ -57,11 +55,11 @@ LoadLevel1(scene);
 var player = new Player(PlanetClasses[0]);
 AnimateObject.push(player);
 
+var START_GAME = false;
 //////////////////////////////////////////////////
 // MENU AND GAME SCREEN.                        //
 //////////////////////////////////////////////////
 
-var blocker = document.getElementById( 'blocker' );
 var instructions = document.getElementById( 'instructions' );
 // https://www.html5rocks.com/en/tutorials/pointerlock/intro/
 var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
@@ -92,6 +90,7 @@ if ( havePointerLock ) {
 	document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
 	document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
 	instructions.addEventListener( 'click', function ( event ) {
+		if(!RESOURCES_LOADED) return;
 		instructions.style.display = 'none';
 		// Ask the browser to lock the pointer
 		element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
@@ -119,53 +118,13 @@ function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize( window.innerWidth, window.innerHeight );
+
+	loadingScreen.camera.aspect = window.innerWidth / window.innerHeight;
+	loadingScreen.camera.updateProjectionMatrix();
+	renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
 function startGame(){
-	//////////////////////////////////////////////////
-	// RENDERING                                    //
-	//////////////////////////////////////////////////
-	var interval = 0;
-	var render = function() {
-		// run physics
-		time = Date.now();
-		if (lastTime !== undefined) {
-			let dt = (time - lastTime) / 1000;
-			world.step(fixedTimeStep, dt, maxSubSteps);
-		}
-		lastTime = time;
-
-		//Get the seconds elapsed since last getDelta call
-		//var timeElapsed = clock.getDelta();
-		//Or get the amount of time elapsed since start of the clock/program
-		//var timeElapsed = clock.getTimeElapsed();
-
-		//light fluctuation for models
-		//flare();
-
-		//places new object in time intervals
-		var timeElapsed = Math.round(clock.getElapsedTime());
-		console.log(timeElapsed);
-		if (timeElapsed % 10 == 0 && timeElapsed != interval){
-			randomPlace();
-			interval = timeElapsed; //This deals with multiple items being dropped at the same second due to rounding
-		}
-
-		//randomPlace();
-		// Animation Mixer for character
-		if (mixer) {
-			mixer.update(clock.getDelta());
-		}
-
-		// Update the miniView
-		//renderMiniView();
-
-		AnimateObject.forEach(function(object){object.animate();});
-		requestAnimationFrame(render);
-		renderer.render(scene, camera);
-
-	};
-
 	//////////////////////////////////////////////////
 	// INITIALISE AND RENDER SCENE                  //
 	//////////////////////////////////////////////////
@@ -174,5 +133,50 @@ function startGame(){
 
 	// Initialize GUI Elements
 	initGUIElements();
-	render();
+	START_GAME = true;
 }
+
+//////////////////////////////////////////////////
+// RENDERING                                    //
+//////////////////////////////////////////////////
+var interval = 0;
+var render = function() {
+	if(START_GAME){
+				// run physics
+				time = Date.now();
+				if (lastTime !== undefined) {
+					 let dt = (time - lastTime) / 1000;
+					 world.step(fixedTimeStep, dt, maxSubSteps);
+				}
+				lastTime = time;
+
+				//Get the seconds elapsed since last getDelta call
+				//var timeElapsed = clock.getDelta();
+				//Or get the amount of time elapsed since start of the clock/program
+				//var timeElapsed = clock.getTimeElapsed();
+
+				//light fluctuation for models
+				//flare();
+
+				//places new object in time intervals
+				var timeElapsed = Math.round(clock.getElapsedTime());
+				if (timeElapsed % 10 == 0 && timeElapsed != interval){
+					randomPlace();
+					interval = timeElapsed; //This deals with multiple items being dropped at the same second due to rounding
+				 }
+
+				//randomPlace();
+				// Animation Mixer for character
+				if (mixer) {
+					mixer.update(clock.getDelta());
+				}
+
+				// Update the miniView
+				// renderMiniView(player.position);
+
+				AnimateObject.forEach(function(object){object.animate();});
+	}
+	requestAnimationFrame(render);
+	if(RESOURCES_LOADED) renderer.render(scene, camera);
+};
+render();

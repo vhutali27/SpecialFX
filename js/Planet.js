@@ -6,6 +6,7 @@ class Planet{
     var planet_material = new THREE.MeshPhongMaterial( { color: '#9f8d4a', shading: THREE.FlatShading});
     this.planet = new THREE.Mesh( planet_geometry, planet_material );
 
+    this.planet.castShadow = true;
     this.planet.receiveShadow = true;
     this.planet.position.set(x,y,z);
 
@@ -90,6 +91,7 @@ class Planet{
 
   positionObject(object,vec){
           object.position.add(vec);
+          object.receiveShadow = true;
           object.castShadow = true;
           var up = object.position.clone().normalize();
           object.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(object.up,up).multiply(object.quaternion));
@@ -106,7 +108,7 @@ class Planet{
     // Loads the material
     loaderMTL.load(materialPath, function ( materials ) {
       materials.preload();
-      var loaderOBJ = new THREE.OBJLoader();
+      var loaderOBJ = new THREE.OBJLoader(loadingManager);
       loaderOBJ.setMaterials(materials);
       loaderOBJ.load(
         path,
@@ -210,6 +212,7 @@ class Planet{
             maxAmmo -=- 5;
             player.energy+=5;
           }
+            player.energy+=5;
         }
         pivot.remove(obj.mesh);
         var index = collectablesArr.indexOf(obj);

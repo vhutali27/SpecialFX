@@ -61,7 +61,7 @@ function  initGUIElements() {
 
     // The canvas used to render onto
     var displayCanvasContext = document.getElementById('displayCanvas').getContext('2d');
-    healthBar = new HealthBar(displayCanvasContext, 5, 5, 50, 5, 100, 100)
+    healthBar = new HealthBar(displayCanvasContext, 5, 5, 50, 5, 100, 100);
 
     // Initialize the timer
     initCountdown(180);
